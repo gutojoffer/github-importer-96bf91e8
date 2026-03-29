@@ -33,9 +33,12 @@ export default function TournamentSetup() {
     if (selectedIds.size < 2) { toast.error('Selecione ao menos 2 jogadores!'); return; }
     const playerIds = Array.from(selectedIds);
     const firstRound = generateFirstRound(playerIds, arenaCount);
+    const now = new Date().toISOString();
     const tournament: Tournament = {
       id: crypto.randomUUID(),
       name: tournamentName || `Torneio ${new Date().toLocaleDateString('pt-BR')}`,
+      date: now,
+      registrationDeadline: now,
       playerIds,
       rounds: [firstRound],
       currentRound: 0,
@@ -43,7 +46,7 @@ export default function TournamentSetup() {
       totalRounds: rounds,
       pointsToWin,
       status: 'active',
-      createdAt: new Date().toISOString(),
+      createdAt: now,
     };
     saveActiveTournament(tournament);
     toast.success('Torneio iniciado! Let it rip! 🌀');
