@@ -22,10 +22,11 @@ const App = () => (
         <div className="min-h-screen bg-background">
           <AppHeader />
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<Index />} />
             <Route path="/players" element={<PlayerManager />} />
             <Route path="/tournament" element={<TournamentSetup />} />
             <Route path="/arena" element={<MatchArena />} />
+            <Route path="/rankings" element={<Leaderboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
