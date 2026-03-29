@@ -174,6 +174,3 @@ export default function PlayerManager() {
     </div>
   );
 }
-
-// Need Users icon for empty state
-import { Users } from 'lucide-react';
