@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import PlayerManager from "@/pages/PlayerManager";
+import PlayerRegister from "@/pages/PlayerRegister";
 import TournamentSetup from "@/pages/TournamentSetup";
 import MatchArena from "@/pages/MatchArena";
 import Leaderboard from "@/pages/Leaderboard";
@@ -20,29 +21,42 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <SidebarProvider>
-          <div className="min-h-screen flex w-full bg-background">
-            <AppSidebar />
-            <div className="flex-1 flex flex-col min-w-0">
-              <header className="h-12 flex items-center border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-                <SidebarTrigger className="ml-3 text-muted-foreground hover:text-foreground" />
-                <span className="ml-3 font-heading text-sm text-muted-foreground tracking-widest uppercase">
-                  Blader Hub X
-                </span>
-              </header>
-              <main className="flex-1 overflow-auto">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/players" element={<PlayerManager />} />
-                  <Route path="/tournament" element={<TournamentSetup />} />
-                  <Route path="/arena" element={<MatchArena />} />
-                  <Route path="/rankings" element={<Leaderboard />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-            </div>
-          </div>
-        </SidebarProvider>
+        <Routes>
+          {/* Self-registration route (no sidebar) */}
+          <Route path="/invite/:code" element={<PlayerRegister />} />
+
+          {/* Main app routes with sidebar */}
+          <Route path="*" element={
+            <SidebarProvider>
+              <div className="min-h-screen flex w-full bg-grid-pattern">
+                <AppSidebar />
+                <div className="flex-1 flex flex-col min-w-0">
+                  <header className="h-12 flex items-center border-b border-border glass-panel sticky top-0 z-50">
+                    <SidebarTrigger className="ml-3 text-muted-foreground hover:text-primary transition-colors" />
+                    <div className="flex-1 flex justify-center">
+                      <span className="font-heading text-sm font-bold tracking-[0.25em] uppercase text-primary text-glow-cyan">
+                        Blader Hub X
+                      </span>
+                      <span className="ml-2 font-heading text-xs text-muted-foreground tracking-wider hidden sm:inline">
+                        — Tournament Management
+                      </span>
+                    </div>
+                  </header>
+                  <main className="flex-1 overflow-auto">
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/players" element={<PlayerManager />} />
+                      <Route path="/tournament" element={<TournamentSetup />} />
+                      <Route path="/arena" element={<MatchArena />} />
+                      <Route path="/rankings" element={<Leaderboard />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </main>
+                </div>
+              </div>
+            </SidebarProvider>
+          } />
+        </Routes>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

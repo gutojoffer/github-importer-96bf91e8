@@ -12,10 +12,10 @@ export default function PlayerCard({ player, selected, onClick, stats }: PlayerC
   return (
     <div
       onClick={onClick}
-      className={`flex items-center gap-3 p-3 border transition-all cursor-pointer
+      className={`flex items-center gap-3 p-3 rounded-lg transition-all cursor-pointer glass-panel
         ${selected
-          ? 'border-primary bg-primary/10'
-          : 'border-border bg-card hover:border-primary/50'
+          ? 'border-primary bg-primary/10 glow-cyan'
+          : 'hover:border-primary/40'
         }`}
     >
       <Avatar className="h-12 w-12 border-2 border-primary/30">
@@ -35,7 +35,7 @@ export default function PlayerCard({ player, selected, onClick, stats }: PlayerC
 
       {stats && (
         <div className="text-right text-xs font-heading">
-          <p className="text-secondary font-bold">{stats.points} pts</p>
+          <p className="text-primary font-bold">{stats.points} pts</p>
           <p className="text-muted-foreground">{stats.wins}W / {stats.losses}L</p>
         </div>
       )}
