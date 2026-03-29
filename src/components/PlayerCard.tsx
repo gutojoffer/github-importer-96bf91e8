@@ -1,4 +1,4 @@
-import { Player, DEFAULT_AVATARS } from '@/types/tournament';
+import { Player } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface PlayerCardProps {
@@ -27,8 +27,10 @@ export default function PlayerCard({ player, selected, onClick, stats }: PlayerC
       </Avatar>
 
       <div className="flex-1 min-w-0">
-        <p className="font-heading font-bold text-foreground truncate">{player.nickname || player.name}</p>
-        <p className="text-xs text-muted-foreground truncate">{player.name}</p>
+        <p className="font-heading font-bold text-foreground truncate">{player.name}</p>
+        {player.nickname && (
+          <p className="text-xs text-muted-foreground truncate font-body">@{player.nickname.replace(/^@/, '')}</p>
+        )}
       </div>
 
       {stats && (

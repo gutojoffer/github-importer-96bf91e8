@@ -15,7 +15,8 @@ export default function TournamentSetup() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [rounds, setRounds] = useState(3);
-  const [arenaCount, setArenaCount] = useState(1);
+  const [arenaCount, setArenaCount] = useState(2);
+  const [pointsToWin, setPointsToWin] = useState(4);
   const [tournamentName, setTournamentName] = useState('');
 
   useEffect(() => { setPlayers(getPlayers()); }, []);
@@ -30,7 +31,6 @@ export default function TournamentSetup() {
 
   const handleStart = () => {
     if (selectedIds.size < 2) { toast.error('Selecione ao menos 2 jogadores!'); return; }
-    if (selectedIds.size % 2 !== 0) { toast.error('Selecione um número par de jogadores!'); return; }
 
     const playerIds = Array.from(selectedIds);
     const firstRound = generateFirstRound(playerIds, arenaCount);
@@ -43,6 +43,7 @@ export default function TournamentSetup() {
       currentRound: 0,
       arenaCount,
       totalRounds: rounds,
+      pointsToWin,
       status: 'active',
       createdAt: new Date().toISOString(),
     };
@@ -53,7 +54,7 @@ export default function TournamentSetup() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl space-y-6">
+    <div className="p-4 max-w-4xl mx-auto space-y-6">
       <h1 className="font-heading text-3xl font-bold tracking-wide text-primary">Configurar Torneio</h1>
 
       <div className="border border-border bg-card p-5 space-y-4">
@@ -62,7 +63,7 @@ export default function TournamentSetup() {
           <Input value={tournamentName} onChange={e => setTournamentName(e.target.value)} placeholder="Ex: Copa Beyblade X" />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label className="font-heading tracking-wide">Rodadas</Label>
             <div className="flex items-center gap-2">
@@ -76,10 +77,19 @@ export default function TournamentSetup() {
             <Label className="font-heading tracking-wide">Arenas</Label>
             <Input type="number" min={1} max={10} value={arenaCount} onChange={e => setArenaCount(parseInt(e.target.value) || 1)} />
           </div>
+          <div className="space-y-2">
+            <Label className="font-heading tracking-wide">Pts p/ Vencer</Label>
+            <Input type="number" min={1} max={10} value={pointsToWin} onChange={e => setPointsToWin(parseInt(e.target.value) || 4)} />
+          </div>
         </div>
+
+        {selectedIds.size % 2 !== 0 && selectedIds.size > 0 && (
+          <div className="border border-secondary/40 bg-secondary/10 px-3 py-2 text-xs font-heading text-secondary">
+            ⚠ Número ímpar de jogadores — um jogador receberá BYE automático a cada rodada.
+          </div>
+        )}
       </div>
 
-      {/* Player Selection */}
       <div>
         <h2 className="font-heading text-xl font-bold mb-3 tracking-wide">
           Selecionar Jogadores ({selectedIds.size}/{players.length})
