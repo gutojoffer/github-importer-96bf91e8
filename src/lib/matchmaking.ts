@@ -5,85 +5,113 @@ export function suggestRounds(playerCount: number): number {
   return Math.max(1, Math.ceil(Math.log2(playerCount)));
 }
 
+function createMatch(p1: string, p2: string, arenaIndex: number, roundIndex: number): Match {
+  return {
+    id: crypto.randomUUID(),
+    player1Id: p1,
+    player2Id: p2,
+    arenaIndex,
+    roundIndex,
+    player1Points: 0,
+    player2Points: 0,
+  };
+}
+
+function createByeMatch(playerId: string, roundIndex: number): Match {
+  return {
+    id: crypto.randomUUID(),
+    player1Id: playerId,
+    player2Id: '',
+    arenaIndex: -1,
+    roundIndex,
+    player1Points: 0,
+    player2Points: 0,
+    isBye: true,
+    result: { winnerId: playerId, finishType: 'spin' },
+  };
+}
+
 export function generateFirstRound(playerIds: string[], arenaCount: number): TournamentRound {
   const shuffled = [...playerIds].sort(() => Math.random() - 0.5);
   const matches: Match[] = [];
+  let byePlayerId: string | undefined;
 
-  for (let i = 0; i < shuffled.length - 1; i += 2) {
-    matches.push({
-      id: crypto.randomUUID(),
-      player1Id: shuffled[i],
-      player2Id: shuffled[i + 1],
-      arenaIndex: matches.length % arenaCount,
-      roundIndex: 0,
-    });
+  // Handle odd number of players
+  if (shuffled.length % 2 !== 0) {
+    const byeIdx = Math.floor(Math.random() * shuffled.length);
+    byePlayerId = shuffled.splice(byeIdx, 1)[0];
+    matches.push(createByeMatch(byePlayerId, 0));
   }
 
-  return { index: 0, matches, completed: false };
+  for (let i = 0; i < shuffled.length - 1; i += 2) {
+    matches.push(createMatch(shuffled[i], shuffled[i + 1], Math.floor(i / 2) % arenaCount, 0));
+  }
+
+  return { index: 0, matches, completed: false, byePlayerId };
 }
 
 export function generateSwissRound(tournament: Tournament): TournamentRound | null {
   const roundIndex = tournament.currentRound;
   if (roundIndex >= tournament.totalRounds) return null;
 
-  // Calculate points per player from previous rounds
   const pointsMap = new Map<string, number>();
   for (const pid of tournament.playerIds) pointsMap.set(pid, 0);
 
   const playedPairs = new Set<string>();
+  const byeHistory = new Set<string>();
 
   for (const round of tournament.rounds) {
+    if (round.byePlayerId) byeHistory.add(round.byePlayerId);
     for (const match of round.matches) {
-      if (match.result) {
+      if (match.result && !match.isBye) {
         const cur = pointsMap.get(match.result.winnerId) || 0;
         pointsMap.set(match.result.winnerId, cur + 1);
       }
-      const pairKey = [match.player1Id, match.player2Id].sort().join('-');
-      playedPairs.add(pairKey);
+      if (!match.isBye) {
+        const pairKey = [match.player1Id, match.player2Id].sort().join('-');
+        playedPairs.add(pairKey);
+      }
     }
   }
 
-  // Sort players by points (desc), then shuffle within same points
   const sorted = [...tournament.playerIds].sort((a, b) => {
     const diff = (pointsMap.get(b) || 0) - (pointsMap.get(a) || 0);
     return diff !== 0 ? diff : Math.random() - 0.5;
   });
 
-  const paired = new Set<string>();
   const matches: Match[] = [];
+  let byePlayerId: string | undefined;
+
+  // Handle odd players - give bye to someone who hasn't had one
+  if (sorted.length % 2 !== 0) {
+    const candidates = sorted.filter(id => !byeHistory.has(id));
+    const byePlayer = candidates.length > 0
+      ? candidates[Math.floor(Math.random() * candidates.length)]
+      : sorted[sorted.length - 1];
+    byePlayerId = byePlayer;
+    const idx = sorted.indexOf(byePlayer);
+    sorted.splice(idx, 1);
+    matches.push(createByeMatch(byePlayer, roundIndex));
+  }
+
+  const paired = new Set<string>();
 
   for (let i = 0; i < sorted.length; i++) {
     if (paired.has(sorted[i])) continue;
-
     for (let j = i + 1; j < sorted.length; j++) {
       if (paired.has(sorted[j])) continue;
-
       const pairKey = [sorted[i], sorted[j]].sort().join('-');
       if (!playedPairs.has(pairKey)) {
-        matches.push({
-          id: crypto.randomUUID(),
-          player1Id: sorted[i],
-          player2Id: sorted[j],
-          arenaIndex: matches.length % tournament.arenaCount,
-          roundIndex,
-        });
+        matches.push(createMatch(sorted[i], sorted[j], matches.filter(m => !m.isBye).length % tournament.arenaCount, roundIndex));
         paired.add(sorted[i]);
         paired.add(sorted[j]);
         break;
       }
     }
-
-    // Fallback: if no unpaired opponent found, allow repeat
     if (!paired.has(sorted[i])) {
       for (let j = i + 1; j < sorted.length; j++) {
         if (!paired.has(sorted[j])) {
-          matches.push({
-            id: crypto.randomUUID(),
-            player1Id: sorted[i],
-            player2Id: sorted[j],
-            arenaIndex: matches.length % tournament.arenaCount,
-            roundIndex,
-          });
+          matches.push(createMatch(sorted[i], sorted[j], matches.filter(m => !m.isBye).length % tournament.arenaCount, roundIndex));
           paired.add(sorted[i]);
           paired.add(sorted[j]);
           break;
@@ -92,5 +120,5 @@ export function generateSwissRound(tournament: Tournament): TournamentRound | nu
     }
   }
 
-  return { index: roundIndex, matches, completed: false };
+  return { index: roundIndex, matches, completed: false, byePlayerId };
 }

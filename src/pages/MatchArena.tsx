@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
 import { getActiveTournament, saveActiveTournament, getPlayers, updatePlayerStats } from '@/lib/storage';
 import { generateSwissRound } from '@/lib/matchmaking';
-import { Tournament, Match, Player, FinishType } from '@/types/tournament';
+import { Tournament, Match, Player, FinishType, FINISH_POINTS } from '@/types/tournament';
 import VersusScreen from '@/components/VersusScreen';
 import ResultButtons from '@/components/ResultButtons';
+import ByeBanner from '@/components/ByeBanner';
+import ArenaMiniatures from '@/components/ArenaMiniatures';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { CheckCircle, ArrowRight, Trophy } from 'lucide-react';
+import { CheckCircle, Trophy, Award } from 'lucide-react';
 
 export default function MatchArena() {
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
-  const [selectedResult, setSelectedResult] = useState<{ matchId: string; winnerId: string; finishType: FinishType } | null>(null);
   const [victoryFlash, setVictoryFlash] = useState<string | null>(null);
 
   useEffect(() => {
@@ -21,13 +21,15 @@ export default function MatchArena() {
     setPlayers(getPlayers());
   }, []);
 
-  const getPlayer = (id: string) => players.find(p => p.id === id)!;
+  const getPlayer = (id: string) => players.find(p => p.id === id);
 
   if (!tournament) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center space-y-4">
-        <p className="font-heading text-xl text-muted-foreground">Nenhum torneio ativo</p>
-        <Link to="/tournament"><Button className="font-heading">Criar Torneio</Button></Link>
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="text-center space-y-4">
+          <p className="font-heading text-xl text-muted-foreground">Nenhum torneio ativo</p>
+          <Link to="/tournament"><Button className="font-heading">Criar Torneio</Button></Link>
+        </div>
       </div>
     );
   }
@@ -35,71 +37,80 @@ export default function MatchArena() {
   const currentRound = tournament.rounds[tournament.currentRound];
   if (!currentRound) return null;
 
-  const arenaNames = Array.from({ length: tournament.arenaCount }, (_, i) => `Arena ${String.fromCharCode(65 + i)}`);
+  const arenaNames = Array.from({ length: tournament.arenaCount }, (_, i) =>
+    `Arena ${String.fromCharCode(65 + i)}`
+  );
+  const arenaColors: ('red' | 'blue')[] = ['red', 'blue'];
 
-  const handleSelectResult = (matchId: string, winnerId: string, finishType: FinishType) => {
-    setSelectedResult({ matchId, winnerId, finishType });
-  };
+  const handleScorePoint = (matchId: string, winnerId: string, finishType: FinishType) => {
+    const matchIdx = currentRound.matches.findIndex(m => m.id === matchId);
+    if (matchIdx === -1) return;
+    const match = currentRound.matches[matchIdx];
+    const pts = FINISH_POINTS[finishType];
 
-  const handleConfirm = () => {
-    if (!selectedResult) return;
+    if (winnerId === match.player1Id) {
+      match.player1Points += pts;
+    } else {
+      match.player2Points += pts;
+    }
 
-    const { matchId, winnerId, finishType } = selectedResult;
-    const match = currentRound.matches.find(m => m.id === matchId)!;
-    const loserId = match.player1Id === winnerId ? match.player2Id : match.player1Id;
+    // Check if match is won
+    const ptw = tournament.pointsToWin;
+    if (match.player1Points >= ptw || match.player2Points >= ptw) {
+      const matchWinnerId = match.player1Points >= ptw ? match.player1Id : match.player2Id;
+      const loserId = matchWinnerId === match.player1Id ? match.player2Id : match.player1Id;
+      match.result = { winnerId: matchWinnerId, finishType };
 
-    // Update match result
-    match.result = { winnerId, finishType };
+      // Stats: winner gets accumulated points, loser gets loss
+      const totalPts = match.player1Points >= ptw ? match.player1Points : match.player2Points;
+      updatePlayerStats(matchWinnerId, true, totalPts);
+      updatePlayerStats(loserId, false, 0);
 
-    // Update stats
-    const isExtreme = finishType === 'extreme';
-    updatePlayerStats(winnerId, true, isExtreme);
-    updatePlayerStats(loserId, false, false);
+      const winner = getPlayer(matchWinnerId);
+      setVictoryFlash(winner?.nickname ? `@${winner.nickname.replace(/^@/, '')}` : winner?.name || 'WINNER');
+      setTimeout(() => setVictoryFlash(null), 1800);
 
-    // Flash victory
-    const winner = getPlayer(winnerId);
-    setVictoryFlash(winner?.nickname || winner?.name || 'Vencedor');
-    setTimeout(() => setVictoryFlash(null), 1500);
-
-    // Check if round is complete
-    const allDone = currentRound.matches.every(m => m.result);
-    if (allDone) {
-      currentRound.completed = true;
-
-      if (tournament.currentRound + 1 < tournament.totalRounds) {
-        // Generate next round (Swiss)
-        const nextRound = generateSwissRound({ ...tournament, currentRound: tournament.currentRound + 1 });
-        if (nextRound) {
-          tournament.rounds.push(nextRound);
-          tournament.currentRound++;
-          toast.success(`Rodada ${tournament.currentRound + 1} gerada!`);
+      // Check round complete
+      const allDone = currentRound.matches.every(m => m.result);
+      if (allDone) {
+        currentRound.completed = true;
+        if (tournament.currentRound + 1 < tournament.totalRounds) {
+          const nextRound = generateSwissRound({ ...tournament, currentRound: tournament.currentRound + 1 });
+          if (nextRound) {
+            tournament.rounds.push(nextRound);
+            tournament.currentRound++;
+            toast.success(`Rodada ${tournament.currentRound + 1} gerada!`);
+          }
+        } else {
+          tournament.status = 'completed';
+          toast.success('🏆 Torneio finalizado!');
         }
-      } else {
-        tournament.status = 'completed';
-        toast.success('🏆 Torneio finalizado!');
       }
     }
 
     saveActiveTournament({ ...tournament });
     setTournament({ ...tournament });
-    setSelectedResult(null);
   };
 
-  const pendingMatchesByArena = (arenaIdx: number) =>
-    currentRound.matches.filter(m => m.arenaIndex === arenaIdx && !m.result);
+  const pendingByArena = (arenaIdx: number) =>
+    currentRound.matches.filter(m => m.arenaIndex === arenaIdx && !m.result && !m.isBye);
 
-  const completedMatchesByArena = (arenaIdx: number) =>
-    currentRound.matches.filter(m => m.arenaIndex === arenaIdx && m.result);
+  const completedByArena = (arenaIdx: number) =>
+    currentRound.matches.filter(m => m.arenaIndex === arenaIdx && m.result && !m.isBye);
+
+  const allPendingNonCurrent = currentRound.matches.filter(m => !m.result && !m.isBye);
+
+  const byePlayer = currentRound.byePlayerId ? getPlayer(currentRound.byePlayerId) : null;
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-5xl space-y-4">
+    <div className="p-4 max-w-7xl mx-auto space-y-4">
       {/* Victory Flash */}
       {victoryFlash && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
           <div className="text-center animate-slide-in">
             <Trophy className="h-16 w-16 mx-auto text-secondary mb-4" />
             <p className="font-heading text-4xl font-bold text-secondary tracking-widest">{victoryFlash}</p>
-            <p className="font-heading text-lg text-muted-foreground mt-2">VENCEU!</p>
+            <p className="font-heading text-lg text-muted-foreground mt-2">WINNER!</p>
           </div>
         </div>
       )}
@@ -113,93 +124,96 @@ export default function MatchArena() {
             {tournament.status === 'completed' && ' — FINALIZADO'}
           </p>
         </div>
+        <div className="flex items-center gap-2">
+          <Award className="h-4 w-4 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground font-heading">PTS TO WIN: {tournament.pointsToWin}</span>
+        </div>
       </div>
 
-      {/* Arena Tabs */}
-      <Tabs defaultValue="0">
-        <TabsList className="bg-muted border border-border">
-          {arenaNames.map((name, i) => (
-            <TabsTrigger key={i} value={String(i)} className="font-heading tracking-wide">
-              {name}
-              {pendingMatchesByArena(i).length > 0 && (
-                <span className="ml-1 text-xs text-accent">({pendingMatchesByArena(i).length})</span>
-              )}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      {/* Bye Banner */}
+      {byePlayer && <ByeBanner player={byePlayer} />}
 
+      {/* Arena Panels - side by side for 2 arenas */}
+      <div className={`grid gap-4 ${tournament.arenaCount >= 2 ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
         {arenaNames.map((arenaName, arenaIdx) => {
-          const pending = pendingMatchesByArena(arenaIdx);
-          const completed = completedMatchesByArena(arenaIdx);
+          const pending = pendingByArena(arenaIdx);
+          const completed = completedByArena(arenaIdx);
           const currentMatch = pending[0];
+          const color = arenaColors[arenaIdx % arenaColors.length];
 
           return (
-            <TabsContent key={arenaIdx} value={String(arenaIdx)} className="mt-4 space-y-4">
+            <div key={arenaIdx} className="border border-border bg-card/30 space-y-3">
               {currentMatch && players.length > 0 ? (
-                <div className="border border-border bg-card p-4 space-y-6">
+                <div className="space-y-3 p-3">
                   <VersusScreen
-                    player1={getPlayer(currentMatch.player1Id)}
-                    player2={getPlayer(currentMatch.player2Id)}
+                    player1={getPlayer(currentMatch.player1Id)!}
+                    player2={getPlayer(currentMatch.player2Id)!}
                     arenaName={arenaName}
+                    arenaColor={color}
+                    player1Points={currentMatch.player1Points}
+                    player2Points={currentMatch.player2Points}
+                    pointsToWin={tournament.pointsToWin}
                   />
 
-                  {/* Judge Interface */}
-                  <div className="grid grid-cols-2 gap-4">
+                  {/* Judge Controls */}
+                  <div className="grid grid-cols-2 gap-3">
                     <ResultButtons
-                      playerName={getPlayer(currentMatch.player1Id)?.nickname || getPlayer(currentMatch.player1Id)?.name}
+                      playerName={getPlayer(currentMatch.player1Id)?.nickname || getPlayer(currentMatch.player1Id)?.name || ''}
                       side="left"
-                      onResult={(ft) => handleSelectResult(currentMatch.id, currentMatch.player1Id, ft)}
-                      disabled={!!selectedResult && selectedResult.matchId !== currentMatch.id}
+                      onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player1Id, ft)}
+                      disabled={!!currentMatch.result}
                     />
                     <ResultButtons
-                      playerName={getPlayer(currentMatch.player2Id)?.nickname || getPlayer(currentMatch.player2Id)?.name}
+                      playerName={getPlayer(currentMatch.player2Id)?.nickname || getPlayer(currentMatch.player2Id)?.name || ''}
                       side="right"
-                      onResult={(ft) => handleSelectResult(currentMatch.id, currentMatch.player2Id, ft)}
-                      disabled={!!selectedResult && selectedResult.matchId !== currentMatch.id}
+                      onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player2Id, ft)}
+                      disabled={!!currentMatch.result}
                     />
                   </div>
 
-                  {selectedResult && selectedResult.matchId === currentMatch.id && (
-                    <Button onClick={handleConfirm} className="w-full h-12 font-heading text-lg tracking-widest gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80">
-                      <CheckCircle className="h-5 w-5" /> CONFIRMAR RESULTADO
-                    </Button>
-                  )}
-
                   {pending.length > 1 && (
-                    <p className="text-xs text-muted-foreground text-center font-body">
-                      +{pending.length - 1} partida(s) na fila desta arena
+                    <p className="text-[10px] text-muted-foreground text-center font-heading tracking-wider">
+                      +{pending.length - 1} MATCH(ES) IN QUEUE
                     </p>
                   )}
                 </div>
               ) : (
-                <div className="text-center py-12 border border-border bg-card">
+                <div className="text-center py-10 px-4">
                   <CheckCircle className="h-8 w-8 mx-auto text-secondary mb-2" />
-                  <p className="font-heading text-lg text-muted-foreground">Todas as partidas desta arena foram concluídas!</p>
+                  <p className="font-heading text-sm text-muted-foreground">{arenaName} — All matches completed</p>
                 </div>
               )}
 
-              {/* Completed matches */}
+              {/* Completed results */}
               {completed.length > 0 && (
-                <div className="space-y-2">
-                  <p className="font-heading text-sm text-muted-foreground tracking-wide">Resultados</p>
+                <div className="px-3 pb-3 space-y-1">
+                  <p className="font-heading text-[10px] text-muted-foreground tracking-widest uppercase">Results</p>
                   {completed.map(m => {
                     const winner = getPlayer(m.result!.winnerId);
-                    const loser = getPlayer(m.player1Id === m.result!.winnerId ? m.player2Id : m.player1Id);
+                    const loserId = m.player1Id === m.result!.winnerId ? m.player2Id : m.player1Id;
+                    const loser = getPlayer(loserId);
                     return (
-                      <div key={m.id} className="flex items-center gap-2 p-2 border border-border bg-card/50 text-sm">
-                        <span className="font-heading font-bold text-secondary">{winner?.nickname || winner?.name}</span>
-                        <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-muted-foreground">{loser?.nickname || loser?.name}</span>
-                        <span className="ml-auto text-xs text-muted-foreground capitalize font-body">{m.result!.finishType}</span>
+                      <div key={m.id} className="flex items-center gap-2 p-1.5 border border-border bg-card/30 text-xs">
+                        <span className="font-heading font-bold text-secondary truncate">{winner?.nickname || winner?.name}</span>
+                        <span className="text-muted-foreground">def.</span>
+                        <span className="text-muted-foreground truncate">{loser?.nickname || loser?.name}</span>
+                        <span className="ml-auto text-[10px] text-muted-foreground uppercase font-heading">{m.result!.finishType}</span>
                       </div>
                     );
                   })}
                 </div>
               )}
-            </TabsContent>
+            </div>
           );
         })}
-      </Tabs>
+      </div>
+
+      {/* Arena Miniatures */}
+      <ArenaMiniatures
+        pendingMatches={allPendingNonCurrent.filter(m => !pendingByArena(0)[0]?.id || m.id !== pendingByArena(0)[0]?.id)}
+        getPlayer={(id) => getPlayer(id)}
+        arenaNames={arenaNames}
+      />
     </div>
   );
 }

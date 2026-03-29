@@ -44,7 +44,7 @@ export function getOrCreateStats(playerId: string): PlayerStats {
   return stats;
 }
 
-export function updatePlayerStats(playerId: string, won: boolean, isExtreme: boolean) {
+export function updatePlayerStats(playerId: string, won: boolean, finishPoints: number) {
   const all = getAllStats();
   const now = new Date();
   const weekNum = getWeekNumber(now);
@@ -59,8 +59,8 @@ export function updatePlayerStats(playerId: string, won: boolean, isExtreme: boo
 
   if (won) {
     all[idx].wins++;
-    if (isExtreme) { all[idx].extremeFinishWins++; all[idx].points += 3; }
-    else { all[idx].finishWins++; all[idx].points += 1; }
+    all[idx].points += finishPoints;
+    all[idx].finishWins++;
   } else {
     all[idx].losses++;
   }

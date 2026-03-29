@@ -2,7 +2,7 @@ export interface Player {
   id: string;
   name: string;
   nickname: string;
-  avatar: string; // URL or avatar key
+  avatar: string;
   createdAt: string;
 }
 
@@ -13,8 +13,8 @@ export interface PlayerStats {
   finishWins: number;
   extremeFinishWins: number;
   points: number;
-  weekKey: string; // e.g. "2026-W13"
-  monthKey: string; // e.g. "2026-03"
+  weekKey: string;
+  monthKey: string;
 }
 
 export type FinishType = 'spin' | 'over' | 'burst' | 'extreme';
@@ -31,12 +31,17 @@ export interface Match {
   result?: MatchResult;
   arenaIndex: number;
   roundIndex: number;
+  isBye?: boolean;
+  /** Points accumulated in a best-of series */
+  player1Points: number;
+  player2Points: number;
 }
 
 export interface TournamentRound {
   index: number;
   matches: Match[];
   completed: boolean;
+  byePlayerId?: string;
 }
 
 export interface Tournament {
@@ -47,6 +52,7 @@ export interface Tournament {
   currentRound: number;
   arenaCount: number;
   totalRounds: number;
+  pointsToWin: number;
   status: 'setup' | 'active' | 'completed';
   createdAt: string;
 }
@@ -54,8 +60,8 @@ export interface Tournament {
 export const FINISH_POINTS: Record<FinishType, number> = {
   spin: 1,
   over: 1,
-  burst: 1,
-  extreme: 3,
+  burst: 2,
+  extreme: 1,
 };
 
 export const DEFAULT_AVATARS = [
