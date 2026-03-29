@@ -4,6 +4,7 @@ export interface Player {
   nickname: string;
   avatar: string;
   createdAt: string;
+  xp: number;
 }
 
 export interface PlayerStats {
@@ -46,16 +47,18 @@ export interface TournamentRound {
 export interface Tournament {
   id: string;
   name: string;
+  date: string;
+  registrationDeadline: string;
   playerIds: string[];
   rounds: TournamentRound[];
   currentRound: number;
   arenaCount: number;
   totalRounds: number;
   pointsToWin: number;
-  status: 'setup' | 'active' | 'completed';
+  status: 'upcoming' | 'active' | 'completed';
   createdAt: string;
-  /** Final standings after tournament ends */
   finalStandings?: TournamentStanding[];
+  maxPlayers?: number;
 }
 
 export interface TournamentStanding {
@@ -63,24 +66,71 @@ export interface TournamentStanding {
   placement: number;
   wins: number;
   losses: number;
-  circuitPoints: number;
+  xpAwarded: number;
 }
 
 export const FINISH_POINTS: Record<FinishType, number> = {
   spin: 1,
   over: 1,
   burst: 2,
-  extreme: 1,
+  extreme: 3,
 };
 
-/** Circuit points awarded by final placement */
-export const CIRCUIT_POINTS: Record<number, number> = {
-  1: 1000,
-  2: 700,
-  3: 500,
+export const POINTS_TO_WIN = 4;
+
+/** XP awarded by placement */
+export const PLACEMENT_XP: Record<number, number> = {
+  1: 50,
+  2: 30,
+  3: 15,
 };
-export const CIRCUIT_POINTS_DEFAULT = 100; // 4th place and beyond
+export const PLACEMENT_XP_DEFAULT = 5;
 
 export const DEFAULT_AVATARS = [
   '🔵', '🔴', '🟢', '🟡', '🟣', '⚡', '🔥', '💎', '🌀', '⭐',
 ];
+
+/** Elo tier system */
+export interface EloTier {
+  name: string;
+  divisions: number; // 0 = no divisions (single tier)
+  color: string; // HSL or hex for badge
+  minXP: number;
+}
+
+export const ELO_TIERS: EloTier[] = [
+  { name: 'Ferro', divisions: 3, color: '0 0% 45%', minXP: 0 },
+  { name: 'Prata', divisions: 3, color: '210 10% 70%', minXP: 300 },
+  { name: 'Ouro', divisions: 3, color: '45 80% 55%', minXP: 600 },
+  { name: 'Platina', divisions: 3, color: '185 50% 60%', minXP: 900 },
+  { name: 'Diamante', divisions: 3, color: '200 80% 70%', minXP: 1200 },
+  { name: 'Mestre', divisions: 0, color: '270 60% 60%', minXP: 1500 },
+  { name: 'Grão-Mestre', divisions: 0, color: '0 75% 55%', minXP: 1700 },
+  { name: 'Profissional', divisions: 0, color: '45 90% 50%', minXP: 2000 },
+];
+
+export function getEloFromXP(xp: number): { tier: EloTier; division: number | null; label: string } {
+  let currentTier = ELO_TIERS[0];
+  for (let i = ELO_TIERS.length - 1; i >= 0; i--) {
+    if (xp >= ELO_TIERS[i].minXP) {
+      currentTier = ELO_TIERS[i];
+      break;
+    }
+  }
+
+  if (currentTier.divisions === 0) {
+    return { tier: currentTier, division: null, label: currentTier.name };
+  }
+
+  // Calculate division within tier (3, 2, 1 — where 1 is highest)
+  const xpInTier = xp - currentTier.minXP;
+  const tierIdx = ELO_TIERS.indexOf(currentTier);
+  const nextTier = ELO_TIERS[tierIdx + 1];
+  const tierRange = nextTier ? nextTier.minXP - currentTier.minXP : 300;
+  const divisionSize = tierRange / currentTier.divisions; // 100 XP per division
+
+  const divisionProgress = Math.floor(xpInTier / divisionSize);
+  const division = Math.max(1, currentTier.divisions - Math.min(divisionProgress, currentTier.divisions - 1));
+
+  return { tier: currentTier, division, label: `${currentTier.name} ${division}` };
+}

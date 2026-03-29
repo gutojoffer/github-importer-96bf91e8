@@ -1,83 +1,83 @@
 import { useEffect, useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getPlayers, getWeeklyLeaderboard, getMonthlyLeaderboard } from '@/lib/storage';
-import { Player } from '@/types/tournament';
+import { getPlayers } from '@/lib/storage';
+import { Player, getEloFromXP, ELO_TIERS } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Crown, Trophy } from 'lucide-react';
+import EloBadge from '@/components/EloBadge';
+import { Crown, Shield } from 'lucide-react';
 
-export default function Leaderboard() {
+export default function Rankings() {
   const [players, setPlayers] = useState<Player[]>([]);
-  const [weeklyLB, setWeeklyLB] = useState<{ playerId: string; points: number; wins: number; losses: number }[]>([]);
-  const [monthlyLB, setMonthlyLB] = useState<{ playerId: string; points: number; wins: number; losses: number }[]>([]);
 
   useEffect(() => {
-    setPlayers(getPlayers());
-    setWeeklyLB(getWeeklyLeaderboard());
-    setMonthlyLB(getMonthlyLeaderboard());
+    const all = getPlayers().sort((a, b) => (b.xp || 0) - (a.xp || 0));
+    setPlayers(all);
   }, []);
-
-  const getPlayer = (id: string) => players.find(p => p.id === id);
-
-  const renderLeaderboard = (data: typeof weeklyLB) => {
-    if (data.length === 0) {
-      return (
-        <div className="paper-panel text-center py-12">
-          <Trophy className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
-          <p className="text-muted-foreground font-body text-sm">Nenhum dado ainda. Encerre torneios para pontuar!</p>
-        </div>
-      );
-    }
-    return (
-      <div className="space-y-2">
-        {data.map((entry, i) => {
-          const player = getPlayer(entry.playerId);
-          if (!player) return null;
-          return (
-            <div key={entry.playerId} className={`flex items-center gap-3 p-4 paper-panel animate-fade-in ${i < 3 ? 'soft-glow' : ''}`}>
-              <span className={`font-heading text-xl font-bold w-10 text-center ${
-                i === 0 ? 'text-accent' : i === 1 ? 'text-secondary' : i === 2 ? 'text-primary' : 'text-muted-foreground'
-              }`}>
-                {i === 0 ? <Crown className="h-6 w-6 inline text-accent" /> : `#${i + 1}`}
-              </span>
-              <Avatar className={`h-10 w-10 border-2 ${
-                i === 0 ? 'border-accent' : i === 1 ? 'border-secondary' : i === 2 ? 'border-primary' : 'border-border'
-              }`}>
-                {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? (
-                  <AvatarImage src={player.avatar} alt={player.name} />
-                ) : (
-                  <AvatarFallback className="bg-muted text-lg">{player.avatar}</AvatarFallback>
-                )}
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="font-heading font-bold truncate text-foreground">{player.name}</p>
-                <p className="text-xs text-muted-foreground font-body">
-                  {player.nickname && `@${player.nickname.replace(/^@/,'')} · `}{entry.wins} Wins
-                </p>
-              </div>
-              <span className="text-primary font-heading text-xl font-bold">{entry.points}</span>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
 
   return (
     <div className="p-5 max-w-4xl mx-auto space-y-6">
-      <h1 className="font-heading text-3xl font-bold tracking-wide text-foreground flex items-center gap-2">
-        <Crown className="h-8 w-8 text-accent" /> Rankings — Circuito
+      <h1 className="font-heading text-3xl font-bold tracking-wider text-foreground italic crimson-line pl-3 flex items-center gap-2">
+        <Shield className="h-7 w-7 text-secondary" /> RANKINGS
       </h1>
-      <p className="text-sm text-muted-foreground font-body -mt-4">
-        Pontos de circuito: 1º = 1000 pts · 2º = 700 pts · 3º = 500 pts · Demais = 100 pts
-      </p>
-      <Tabs defaultValue="weekly">
-        <TabsList className="bg-muted/50 border border-border rounded-lg">
-          <TabsTrigger value="weekly" className="font-heading tracking-wider text-xs">TOP SEMANAL</TabsTrigger>
-          <TabsTrigger value="monthly" className="font-heading tracking-wider text-xs">TOP MENSAL</TabsTrigger>
-        </TabsList>
-        <TabsContent value="weekly" className="mt-4">{renderLeaderboard(weeklyLB)}</TabsContent>
-        <TabsContent value="monthly" className="mt-4">{renderLeaderboard(monthlyLB)}</TabsContent>
-      </Tabs>
+
+      {/* Elo tier legend */}
+      <div className="dark-panel p-4">
+        <p className="font-heading text-xs text-muted-foreground tracking-[0.2em] mb-3 uppercase">Hierarquia de Elos</p>
+        <div className="flex flex-wrap gap-3">
+          {ELO_TIERS.map(tier => (
+            <div key={tier.name} className="flex items-center gap-1.5">
+              <div className="h-3 w-3 rounded-sm" style={{ background: `hsl(${tier.color})` }} />
+              <span className="text-[10px] font-heading" style={{ color: `hsl(${tier.color})` }}>{tier.name}</span>
+              {tier.divisions > 0 && <span className="text-[8px] text-muted-foreground">(3-1)</span>}
+            </div>
+          ))}
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-2 font-body">
+          +100 XP = sobe 1 divisão · 1º = +50XP · 2º = +30XP · 3º = +15XP · Demais = +5XP
+        </p>
+      </div>
+
+      {/* Player rankings */}
+      {players.length === 0 ? (
+        <div className="dark-panel p-12 text-center">
+          <Shield className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
+          <p className="text-muted-foreground font-body text-sm">Nenhum blader cadastrado. Encerre torneios para gerar XP!</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {players.map((player, i) => {
+            const elo = getEloFromXP(player.xp || 0);
+            return (
+              <div
+                key={player.id}
+                className={`dark-panel flex items-center gap-3 p-4 anim-fade-up ${i < 3 ? 'border-l-4' : ''}`}
+                style={{
+                  animationDelay: `${i * 50}ms`,
+                  borderLeftColor: i < 3 ? `hsl(${i === 0 ? '45 80% 55%' : i === 1 ? '210 10% 70%' : '25 60% 50%'})` : undefined,
+                }}
+              >
+                <span className={`font-heading text-xl font-bold w-8 text-center italic ${
+                  i === 0 ? 'text-secondary' : i === 1 ? 'text-muted-foreground' : i === 2 ? 'text-accent' : 'text-muted-foreground/50'
+                }`}>
+                  {i === 0 ? <Crown className="h-5 w-5 inline text-secondary" /> : `#${i + 1}`}
+                </span>
+                <Avatar className={`h-10 w-10 border-2`} style={{ borderColor: `hsl(${elo.tier.color} / 0.5)` }}>
+                  {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? (
+                    <AvatarImage src={player.avatar} alt={player.name} />
+                  ) : (
+                    <AvatarFallback className="bg-muted text-lg">{player.avatar}</AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="font-heading font-bold truncate text-foreground">{player.name}</p>
+                  {player.nickname && <p className="text-[10px] text-muted-foreground">@{player.nickname.replace(/^@/,'')}</p>}
+                </div>
+                <EloBadge xp={player.xp || 0} size="md" />
+                <span className="font-heading text-lg font-bold text-muted-foreground">{player.xp || 0} XP</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

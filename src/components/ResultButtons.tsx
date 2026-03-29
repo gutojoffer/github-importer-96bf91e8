@@ -9,35 +9,30 @@ interface ResultButtonsProps {
   disabled?: boolean;
 }
 
-const finishTypes: { type: FinishType; label: string; icon: React.ReactNode }[] = [
-  { type: 'spin', label: 'FINISH (SPIN)', icon: <RotateCcw className="h-5 w-5" /> },
-  { type: 'over', label: 'FINISH (OVER)', icon: <ArrowDown className="h-5 w-5" /> },
-  { type: 'burst', label: 'BURST', icon: <Flame className="h-5 w-5" /> },
-  { type: 'extreme', label: 'EXTREME', icon: <Zap className="h-5 w-5" /> },
+const finishTypes: { type: FinishType; label: string; icon: React.ReactNode; accent?: string }[] = [
+  { type: 'spin', label: 'SPIN FINISH', icon: <RotateCcw className="h-4 w-4" /> },
+  { type: 'over', label: 'OVER FINISH', icon: <ArrowDown className="h-4 w-4" /> },
+  { type: 'burst', label: 'BURST FINISH', icon: <Flame className="h-4 w-4" />, accent: 'border-primary/50 text-primary hover:bg-primary/10' },
+  { type: 'extreme', label: 'XTREME FINISH', icon: <Zap className="h-4 w-4" />, accent: 'border-secondary/50 text-secondary hover:bg-secondary/10' },
 ];
 
 export default function ResultButtons({ playerName, side, onResult, disabled }: ResultButtonsProps) {
   return (
     <div className={`flex flex-col gap-1.5 ${side === 'right' ? 'items-end' : 'items-start'}`}>
-      <p className={`font-heading text-xs font-bold tracking-wider mb-1 uppercase ${side === 'left' ? 'text-primary' : 'text-accent'}`}>
+      <p className={`font-heading text-[10px] font-bold tracking-[0.15em] mb-1 uppercase ${side === 'left' ? 'text-primary' : 'text-accent'}`}>
         {playerName}
       </p>
-      {finishTypes.map(({ type, label, icon }) => (
+      {finishTypes.map(({ type, label, icon, accent }) => (
         <Button
           key={type}
           variant="outline"
           disabled={disabled}
           onClick={() => onResult(type)}
-          className={`w-full justify-between gap-2 font-heading tracking-wide text-xs h-9
-            ${type === 'burst'
-              ? 'border-destructive/30 text-destructive hover:bg-destructive/10'
-              : type === 'extreme'
-                ? 'border-accent/40 text-accent-foreground hover:bg-accent/15'
-                : 'border-border hover:border-primary/40 hover:bg-primary/5'
-            }`}
+          className={`w-full justify-between gap-2 font-heading tracking-wider text-[10px] h-8
+            ${accent || 'border-border hover:border-muted-foreground/30'}`}
         >
-          <span className="flex items-center gap-2">{icon} {label}</span>
-          <span className="text-[10px] opacity-70 font-bold">+{FINISH_POINTS[type]}</span>
+          <span className="flex items-center gap-1.5">{icon} {label}</span>
+          <span className="font-bold opacity-70">+{FINISH_POINTS[type]}</span>
         </Button>
       ))}
     </div>

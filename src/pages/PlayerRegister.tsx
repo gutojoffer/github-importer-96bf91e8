@@ -33,6 +33,7 @@ export default function PlayerRegister() {
       nickname: nickname.trim().replace(/^@/, ''),
       avatar: customAvatar || selectedAvatar,
       createdAt: new Date().toISOString(),
+      xp: 0,
     };
     const all = getPlayers();
     all.push(player);

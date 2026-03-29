@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { getActiveTournament, saveActiveTournament, getPlayers, saveCompletedTournament, calculateStandings, awardCircuitPoints } from '@/lib/storage';
+import { getActiveTournament, saveActiveTournament, getPlayers, saveCompletedTournament, calculateStandings, awardXP } from '@/lib/storage';
 import { generateSwissRound } from '@/lib/matchmaking';
 import { Tournament, Player, FinishType, FINISH_POINTS } from '@/types/tournament';
 import VersusScreen from '@/components/VersusScreen';
@@ -16,6 +16,7 @@ export default function MatchArena() {
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [victoryFlash, setVictoryFlash] = useState<string | null>(null);
+  const [vsKey, setVsKey] = useState(0); // for re-triggering animations
 
   useEffect(() => {
     setTournament(getActiveTournament());
@@ -27,11 +28,11 @@ export default function MatchArena() {
   const handleEndTournament = () => {
     if (!tournament) return;
     const standings = calculateStandings(tournament);
-    awardCircuitPoints(standings);
+    awardXP(standings);
     const completed: Tournament = { ...tournament, status: 'completed', finalStandings: standings };
     saveCompletedTournament(completed);
     saveActiveTournament(null);
-    toast.success('🏆 Torneio encerrado oficialmente!');
+    toast.success('🏆 Torneio encerrado!');
     navigate(`/history/${completed.id}`);
   };
 
@@ -39,8 +40,8 @@ export default function MatchArena() {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center space-y-4">
-          <p className="font-heading text-xl text-muted-foreground">Nenhum torneio ativo</p>
-          <Link to="/tournament"><Button className="font-heading">Criar Torneio</Button></Link>
+          <p className="font-heading text-xl text-muted-foreground italic">Nenhum torneio ativo</p>
+          <Link to="/admin"><Button className="font-heading tracking-wider">Painel Admin</Button></Link>
         </div>
       </div>
     );
@@ -50,7 +51,6 @@ export default function MatchArena() {
   if (!currentRound) return null;
 
   const arenaNames = Array.from({ length: tournament.arenaCount }, (_, i) => `Arena ${String.fromCharCode(65 + i)}`);
-  const arenaColors: ('red' | 'blue')[] = ['red', 'blue'];
 
   const handleScorePoint = (matchId: string, winnerId: string, finishType: FinishType) => {
     const matchIdx = currentRound.matches.findIndex(m => m.id === matchId);
@@ -68,7 +68,10 @@ export default function MatchArena() {
 
       const winner = getPlayer(matchWinnerId);
       setVictoryFlash(winner?.nickname ? `@${winner.nickname.replace(/^@/, '')}` : winner?.name || 'WINNER');
-      setTimeout(() => setVictoryFlash(null), 1800);
+      setTimeout(() => {
+        setVictoryFlash(null);
+        setVsKey(k => k + 1); // re-trigger slide-in for next match
+      }, 1800);
 
       const allDone = currentRound.matches.every(m => m.result);
       if (allDone) {
@@ -81,7 +84,7 @@ export default function MatchArena() {
             toast.success(`Rodada ${tournament.currentRound + 1} gerada!`);
           }
         } else {
-          toast.info('Todas as rodadas concluídas! Encerre o torneio oficialmente.');
+          toast.info('Todas as rodadas concluídas! Encerre o torneio.');
         }
       }
     }
@@ -92,60 +95,61 @@ export default function MatchArena() {
 
   const pendingByArena = (arenaIdx: number) => currentRound.matches.filter(m => m.arenaIndex === arenaIdx && !m.result && !m.isBye);
   const completedByArena = (arenaIdx: number) => currentRound.matches.filter(m => m.arenaIndex === arenaIdx && m.result && !m.isBye);
-  const allPendingNonCurrent = currentRound.matches.filter(m => !m.result && !m.isBye);
+  const allPending = currentRound.matches.filter(m => !m.result && !m.isBye);
   const byePlayer = currentRound.byePlayerId ? getPlayer(currentRound.byePlayerId) : null;
 
   return (
     <div className="p-5 max-w-7xl mx-auto space-y-4">
+      {/* Victory Flash */}
       {victoryFlash && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm">
-          <div className="text-center animate-fade-in">
-            <Trophy className="h-16 w-16 mx-auto text-accent mb-4" />
-            <p className="font-heading text-4xl font-bold text-foreground tracking-widest">{victoryFlash}</p>
-            <p className="font-heading text-lg text-muted-foreground mt-2">WINNER!</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm anim-victory">
+          <div className="text-center anim-fade-up">
+            <Trophy className="h-16 w-16 mx-auto text-secondary mb-4" />
+            <p className="font-heading text-5xl font-bold text-secondary tracking-widest italic">{victoryFlash}</p>
+            <p className="font-heading text-lg text-muted-foreground mt-2 tracking-[0.3em]">WINNER!</p>
           </div>
         </div>
       )}
 
+      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="font-heading text-2xl font-bold tracking-wide text-foreground">{tournament.name}</h1>
+        <div className="crimson-line pl-3">
+          <h1 className="font-heading text-2xl font-bold tracking-wider text-foreground italic">{tournament.name}</h1>
           <p className="text-xs text-muted-foreground font-body">Rodada {tournament.currentRound + 1} de {tournament.totalRounds}</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Award className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground font-heading">PTS TO WIN: {tournament.pointsToWin}</span>
-          </div>
-          <Button onClick={handleEndTournament} className="font-heading tracking-wide gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/80">
-            <XOctagon className="h-4 w-4" /> Encerrar Torneio
+          <span className="text-xs text-muted-foreground font-heading flex items-center gap-1">
+            <Award className="h-3 w-3" /> PTS TO WIN: {tournament.pointsToWin}
+          </span>
+          <Button onClick={handleEndTournament} className="font-heading tracking-wider gap-2 bg-primary text-primary-foreground hover:bg-primary/80">
+            <XOctagon className="h-4 w-4" /> Encerrar
           </Button>
         </div>
       </div>
 
       {byePlayer && <ByeBanner player={byePlayer} />}
 
+      {/* Arenas */}
       <div className={`grid gap-4 ${tournament.arenaCount >= 2 ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
         {arenaNames.map((arenaName, arenaIdx) => {
           const pending = pendingByArena(arenaIdx);
           const completed = completedByArena(arenaIdx);
           const currentMatch = pending[0];
-          const color = arenaColors[arenaIdx % arenaColors.length];
 
           return (
-            <div key={arenaIdx} className="paper-panel space-y-3">
+            <div key={arenaIdx} className="dark-panel space-y-3">
               {currentMatch && players.length > 0 ? (
-                <div className="space-y-3 p-4">
+                <div className="space-y-3 p-3" key={`${currentMatch.id}-${vsKey}`}>
                   <VersusScreen
                     player1={getPlayer(currentMatch.player1Id)!}
                     player2={getPlayer(currentMatch.player2Id)!}
                     arenaName={arenaName}
-                    arenaColor={color}
+                    arenaColor={arenaIdx % 2 === 0 ? 'red' : 'blue'}
                     player1Points={currentMatch.player1Points}
                     player2Points={currentMatch.player2Points}
                     pointsToWin={tournament.pointsToWin}
                   />
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3 px-1">
                     <ResultButtons
                       playerName={getPlayer(currentMatch.player1Id)?.nickname || getPlayer(currentMatch.player1Id)?.name || ''}
                       side="left"
@@ -160,24 +164,27 @@ export default function MatchArena() {
                     />
                   </div>
                   {pending.length > 1 && (
-                    <p className="text-[10px] text-muted-foreground text-center font-heading tracking-wider">+{pending.length - 1} MATCH(ES) IN QUEUE</p>
+                    <p className="text-[10px] text-muted-foreground text-center font-heading tracking-[0.2em]">
+                      +{pending.length - 1} MATCH(ES) IN QUEUE
+                    </p>
                   )}
                 </div>
               ) : (
-                <div className="text-center py-10 px-4">
-                  <CheckCircle className="h-8 w-8 mx-auto text-primary mb-2" />
-                  <p className="font-heading text-sm text-muted-foreground">{arenaName} — All matches completed</p>
+                <div className="text-center py-10">
+                  <CheckCircle className="h-8 w-8 mx-auto text-accent mb-2" />
+                  <p className="font-heading text-sm text-muted-foreground">{arenaName} — Completo</p>
                 </div>
               )}
+
               {completed.length > 0 && (
-                <div className="px-4 pb-3 space-y-1">
-                  <p className="font-heading text-[10px] text-muted-foreground tracking-widest uppercase">Results</p>
+                <div className="px-3 pb-3 space-y-1">
+                  <p className="font-heading text-[10px] text-muted-foreground tracking-[0.2em] uppercase">Resultados</p>
                   {completed.map(m => {
                     const winner = getPlayer(m.result!.winnerId);
                     const loserId = m.player1Id === m.result!.winnerId ? m.player2Id : m.player1Id;
                     const loser = getPlayer(loserId);
                     return (
-                      <div key={m.id} className="flex items-center gap-2 p-1.5 bg-muted/40 rounded text-xs">
+                      <div key={m.id} className="flex items-center gap-2 p-1.5 bg-muted/30 text-xs">
                         <span className="font-heading font-bold text-primary truncate">{winner?.nickname || winner?.name}</span>
                         <span className="text-muted-foreground">def.</span>
                         <span className="text-muted-foreground truncate">{loser?.nickname || loser?.name}</span>
@@ -192,11 +199,7 @@ export default function MatchArena() {
         })}
       </div>
 
-      <ArenaMiniatures
-        pendingMatches={allPendingNonCurrent.filter(m => !pendingByArena(0)[0]?.id || m.id !== pendingByArena(0)[0]?.id)}
-        getPlayer={(id) => getPlayer(id)}
-        arenaNames={arenaNames}
-      />
+      <ArenaMiniatures pendingMatches={allPending.slice(tournament.arenaCount)} getPlayer={getPlayer} arenaNames={arenaNames} />
     </div>
   );
 }
