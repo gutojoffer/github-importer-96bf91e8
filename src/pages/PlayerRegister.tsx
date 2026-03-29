@@ -1,0 +1,142 @@
+import { useState, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { getPlayers, savePlayers } from '@/lib/storage';
+import { Player, DEFAULT_AVATARS } from '@/types/tournament';
+import { Camera, UserPlus, CheckCircle } from 'lucide-react';
+
+export default function PlayerRegister() {
+  const [name, setName] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [selectedAvatar, setSelectedAvatar] = useState(DEFAULT_AVATARS[0]);
+  const [customAvatar, setCustomAvatar] = useState('');
+  const [registered, setRegistered] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCustomAvatar(reader.result as string);
+      setSelectedAvatar('');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRegister = () => {
+    if (!name.trim()) return;
+    const player: Player = {
+      id: crypto.randomUUID(),
+      name: name.trim(),
+      nickname: nickname.trim().replace(/^@/, ''),
+      avatar: customAvatar || selectedAvatar,
+      createdAt: new Date().toISOString(),
+    };
+    const all = getPlayers();
+    all.push(player);
+    savePlayers(all);
+    setRegistered(true);
+  };
+
+  if (registered) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-grid-pattern p-4"
+           style={{ background: 'linear-gradient(135deg, hsl(252 60% 11%) 0%, hsl(215 70% 8%) 100%)' }}>
+        <div className="glass-panel rounded-xl p-10 text-center max-w-md w-full glow-cyan animate-slide-in">
+          <CheckCircle className="h-16 w-16 mx-auto text-primary mb-4" />
+          <h1 className="font-heading text-3xl font-bold text-primary text-glow-cyan mb-2">
+            Registro Completo!
+          </h1>
+          <p className="text-muted-foreground font-body text-sm">
+            Seu perfil de Blader foi cadastrado com sucesso. Aguarde o início do torneio!
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-grid-pattern p-4"
+         style={{ background: 'linear-gradient(135deg, hsl(252 60% 11%) 0%, hsl(215 70% 8%) 100%)' }}>
+      <div className="glass-panel rounded-xl p-8 max-w-md w-full glow-cyan">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="font-heading text-2xl font-bold tracking-[0.2em] text-primary text-glow-cyan mb-1">
+            BLADER HUB X
+          </h1>
+          <p className="text-muted-foreground font-body text-sm">Registro de Blader</p>
+        </div>
+
+        <div className="space-y-5">
+          {/* Photo upload */}
+          <div className="flex justify-center">
+            <button
+              onClick={() => fileRef.current?.click()}
+              className={`h-24 w-24 flex items-center justify-center rounded-full border-2 border-dashed transition-all
+                ${customAvatar ? 'border-primary glow-cyan' : 'border-border hover:border-primary/50'}`}
+            >
+              {customAvatar ? (
+                <img src={customAvatar} alt="avatar" className="h-full w-full rounded-full object-cover" />
+              ) : (
+                <Camera className="h-8 w-8 text-muted-foreground" />
+              )}
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+          </div>
+
+          {/* Avatar selection */}
+          {!customAvatar && (
+            <div className="flex flex-wrap justify-center gap-2">
+              {DEFAULT_AVATARS.map(a => (
+                <button
+                  key={a}
+                  onClick={() => setSelectedAvatar(a)}
+                  className={`h-10 w-10 flex items-center justify-center text-xl rounded-lg border transition-all
+                    ${selectedAvatar === a
+                      ? 'border-primary bg-primary/20 glow-cyan'
+                      : 'border-border bg-muted/30 hover:border-primary/50'}`}
+                >
+                  {a}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label className="font-heading tracking-wide text-muted-foreground">Nome</Label>
+            <Input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="Seu nome completo"
+              className="bg-muted/50 border-border focus:border-primary"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="font-heading tracking-wide text-muted-foreground">Nickname</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+              <Input
+                value={nickname}
+                onChange={e => setNickname(e.target.value)}
+                placeholder="seu_nick"
+                className="pl-7 bg-muted/50 border-border focus:border-primary"
+              />
+            </div>
+          </div>
+
+          <Button
+            onClick={handleRegister}
+            disabled={!name.trim()}
+            className="w-full font-heading tracking-wider text-lg gap-2 h-12 glow-cyan"
+          >
+            <UserPlus className="h-5 w-5" />
+            REGISTRAR BLADER
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
