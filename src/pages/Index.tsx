@@ -1,132 +1,116 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getPlayers, getWeeklyLeaderboard, getMonthlyLeaderboard, getActiveTournament } from '@/lib/storage';
-import { Player } from '@/types/tournament';
+import { getTournaments, getPlayers } from '@/lib/storage';
+import { Tournament, Player } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Users, Trophy, Swords, Crown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Swords, Calendar, Users, ChevronRight } from 'lucide-react';
 
 const Index = () => {
+  const [upcoming, setUpcoming] = useState<Tournament[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
-  const [weeklyLB, setWeeklyLB] = useState<{ playerId: string; points: number; wins: number; losses: number }[]>([]);
-  const [monthlyLB, setMonthlyLB] = useState<{ playerId: string; points: number; wins: number; losses: number }[]>([]);
-  const activeTournament = getActiveTournament();
 
   useEffect(() => {
     setPlayers(getPlayers());
-    setWeeklyLB(getWeeklyLeaderboard());
-    setMonthlyLB(getMonthlyLeaderboard());
+    const all = getTournaments();
+    setUpcoming(all.filter(t => t.status === 'upcoming'));
   }, []);
 
-  const getPlayer = (id: string) => players.find(p => p.id === id);
-
-  const renderLeaderboard = (data: typeof weeklyLB) => {
-    if (data.length === 0) {
-      return <p className="text-center text-muted-foreground py-8 font-body text-sm">Nenhum dado de ranking ainda. Jogue torneios!</p>;
-    }
-    return (
-      <div className="space-y-2">
-        {data.slice(0, 10).map((entry, i) => {
-          const player = getPlayer(entry.playerId);
-          if (!player) return null;
-          return (
-            <div key={entry.playerId} className={`flex items-center gap-3 p-3 rounded-lg paper-panel animate-fade-in ${i < 3 ? 'soft-glow' : ''}`}>
-              <span className={`font-heading text-lg font-bold w-8 text-center ${
-                i === 0 ? 'text-accent' : i === 1 ? 'text-primary' : i === 2 ? 'text-secondary' : 'text-muted-foreground'
-              }`}>
-                {i === 0 ? <Crown className="h-5 w-5 inline text-accent" /> : `#${i + 1}`}
-              </span>
-              <Avatar className="h-8 w-8 border-2 border-secondary">
-                {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? (
-                  <AvatarImage src={player.avatar} alt={player.name} />
-                ) : (
-                  <AvatarFallback className="bg-muted text-sm">{player.avatar}</AvatarFallback>
-                )}
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <span className="font-heading font-bold truncate block text-foreground">{player.name}</span>
-                {player.nickname && <span className="text-[10px] text-muted-foreground">@{player.nickname.replace(/^@/,'')}</span>}
-              </div>
-              <span className="text-xs text-muted-foreground font-body">{entry.wins} Wins</span>
-              <span className="text-primary font-heading font-bold">{entry.points}</span>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
   return (
-    <div className="p-5 max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen">
       {/* Hero */}
-      <div className="flex items-center justify-center py-6">
-        <div className="text-center">
-          <h1 className="font-heading text-4xl font-bold tracking-[0.15em] text-foreground">
+      <section className="relative py-20 px-4 text-center overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
+        <div className="relative z-10 max-w-3xl mx-auto">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Swords className="h-10 w-10 text-primary" />
+          </div>
+          <h1 className="font-heading text-5xl sm:text-6xl font-bold tracking-[0.15em] text-foreground italic">
             BLADER HUB X
           </h1>
-          <p className="text-xs text-muted-foreground font-heading tracking-[0.25em] mt-1">
-            TOURNAMENT MANAGEMENT SYSTEM
+          <p className="font-heading text-sm text-muted-foreground tracking-[0.3em] mt-2 uppercase">
+            Tournament Management System
           </p>
+          <div className="w-24 h-[2px] bg-primary mx-auto mt-6" />
         </div>
-      </div>
+      </section>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="paper-panel p-4 text-center">
-          <Users className="h-6 w-6 mx-auto text-primary mb-1" />
-          <p className="font-heading text-2xl font-bold text-foreground">{players.length}</p>
-          <p className="text-xs text-muted-foreground font-body">Bladers</p>
-        </div>
-        <div className="paper-panel p-4 text-center">
-          <Trophy className="h-6 w-6 mx-auto text-accent mb-1" />
-          <p className="font-heading text-2xl font-bold text-foreground">{activeTournament ? 1 : 0}</p>
-          <p className="text-xs text-muted-foreground font-body">Torneio Ativo</p>
-        </div>
-        <div className="paper-panel p-4 text-center">
-          <Swords className="h-6 w-6 mx-auto text-secondary mb-1" />
-          <p className="font-heading text-2xl font-bold text-foreground">
-            {activeTournament ? activeTournament.rounds.reduce((sum, r) => sum + r.matches.filter(m => m.result).length, 0) : 0}
-          </p>
-          <p className="text-xs text-muted-foreground font-body">Partidas</p>
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex flex-wrap gap-3">
-        <Link to="/players">
-          <Button className="font-heading tracking-wide gap-2 bg-primary text-primary-foreground hover:bg-primary/80">
-            <Users className="h-4 w-4" /> Cadastrar Blader
-          </Button>
-        </Link>
-        <Link to="/tournament">
-          <Button variant="outline" className="font-heading tracking-wide gap-2 border-accent text-accent-foreground hover:bg-accent/15">
-            <Trophy className="h-4 w-4" /> Novo Torneio
-          </Button>
-        </Link>
-        {activeTournament && (
-          <Link to="/arena">
-            <Button variant="outline" className="font-heading tracking-wide gap-2 border-secondary text-secondary-foreground hover:bg-secondary/15">
-              <Swords className="h-4 w-4" /> Ir para Arena
-            </Button>
-          </Link>
-        )}
-      </div>
-
-      {/* Rankings */}
-      <div>
-        <h2 className="font-heading text-2xl font-bold mb-4 tracking-wide flex items-center gap-2 text-foreground">
-          <Crown className="h-6 w-6 text-accent" /> Rankings
+      {/* Upcoming Tournaments */}
+      <section className="max-w-4xl mx-auto px-4 pb-16 space-y-6">
+        <h2 className="font-heading text-2xl font-bold tracking-wider text-foreground flex items-center gap-2 crimson-line pl-3">
+          PRÓXIMOS TORNEIOS
         </h2>
-        <Tabs defaultValue="weekly">
-          <TabsList className="bg-muted/50 border border-border rounded-lg">
-            <TabsTrigger value="weekly" className="font-heading tracking-wider text-xs">TOP SEMANAL</TabsTrigger>
-            <TabsTrigger value="monthly" className="font-heading tracking-wider text-xs">TOP MENSAL</TabsTrigger>
-          </TabsList>
-          <TabsContent value="weekly" className="mt-4">{renderLeaderboard(weeklyLB)}</TabsContent>
-          <TabsContent value="monthly" className="mt-4">{renderLeaderboard(monthlyLB)}</TabsContent>
-        </Tabs>
-      </div>
+
+        {upcoming.length === 0 ? (
+          <div className="dark-panel p-12 text-center">
+            <Swords className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+            <p className="text-muted-foreground font-body text-sm">Nenhum torneio agendado no momento.</p>
+            <p className="text-muted-foreground font-body text-xs mt-1">Organizadores podem criar torneios no painel Admin.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {upcoming.map((t, i) => {
+              const registeredPlayers = t.playerIds.map(id => players.find(p => p.id === id)).filter(Boolean) as Player[];
+              const spotsLeft = (t.maxPlayers || 32) - t.playerIds.length;
+              return (
+                <div key={t.id} className="dark-panel p-0 overflow-hidden anim-fade-up" style={{ animationDelay: `${i * 100}ms` }}>
+                  <div className="border-l-4 border-primary p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <h3 className="font-heading text-xl font-bold text-foreground italic tracking-wide">{t.name}</h3>
+                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground font-body">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {new Date(t.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {t.playerIds.length} / {t.maxPlayers || 32} inscritos
+                          </span>
+                        </div>
+
+                        {/* Registered avatars */}
+                        {registeredPlayers.length > 0 && (
+                          <div className="flex items-center mt-3 -space-x-2">
+                            {registeredPlayers.slice(0, 6).map(p => (
+                              <Avatar key={p.id} className="h-7 w-7 border-2 border-card">
+                                {p.avatar.startsWith('http') || p.avatar.startsWith('data:') ? (
+                                  <AvatarImage src={p.avatar} alt={p.name} />
+                                ) : (
+                                  <AvatarFallback className="bg-muted text-[10px]">{p.avatar}</AvatarFallback>
+                                )}
+                              </Avatar>
+                            ))}
+                            {registeredPlayers.length > 6 && (
+                              <span className="text-[10px] text-muted-foreground ml-3 font-heading">+{registeredPlayers.length - 6}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <Link to={`/signup/${t.id}`}>
+                        <Button
+                          className="font-heading tracking-wider gap-2 text-sm bg-primary text-primary-foreground hover:bg-primary/80 h-12 px-6"
+                          disabled={spotsLeft <= 0}
+                        >
+                          {spotsLeft > 0 ? 'INSCREVER-SE' : 'LOTADO'}
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+
+                    {spotsLeft > 0 && spotsLeft <= 5 && (
+                      <p className="text-[10px] text-primary font-heading mt-2 tracking-wider">
+                        ⚠ APENAS {spotsLeft} VAGA{spotsLeft > 1 ? 'S' : ''} RESTANTE{spotsLeft > 1 ? 'S' : ''}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 };
