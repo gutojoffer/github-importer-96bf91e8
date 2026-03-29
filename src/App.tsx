@@ -4,10 +4,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import AppHeader from "@/components/AppHeader";
-import Dashboard from "@/pages/Dashboard";
 import PlayerManager from "@/pages/PlayerManager";
 import TournamentSetup from "@/pages/TournamentSetup";
 import MatchArena from "@/pages/MatchArena";
+import Leaderboard from "@/pages/Leaderboard";
+import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
