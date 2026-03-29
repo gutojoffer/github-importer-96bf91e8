@@ -31,16 +31,13 @@ const Index = () => {
           const player = getPlayer(entry.playerId);
           if (!player) return null;
           return (
-            <div key={entry.playerId} className={`flex items-center gap-3 p-3 rounded-lg glass-panel animate-slide-in ${i < 3 ? 'glow-cyan' : ''}`}>
+            <div key={entry.playerId} className={`flex items-center gap-3 p-3 rounded-lg paper-panel animate-fade-in ${i < 3 ? 'soft-glow' : ''}`}>
               <span className={`font-heading text-lg font-bold w-8 text-center ${
-                i === 0 ? 'text-primary text-glow-cyan' :
-                i === 1 ? 'text-secondary' :
-                i === 2 ? 'text-accent' :
-                'text-muted-foreground'
+                i === 0 ? 'text-accent' : i === 1 ? 'text-primary' : i === 2 ? 'text-secondary' : 'text-muted-foreground'
               }`}>
-                {i === 0 ? <Crown className="h-5 w-5 inline" /> : `#${i + 1}`}
+                {i === 0 ? <Crown className="h-5 w-5 inline text-accent" /> : `#${i + 1}`}
               </span>
-              <Avatar className="h-8 w-8 border border-primary/20">
+              <Avatar className="h-8 w-8 border-2 border-secondary">
                 {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? (
                   <AvatarImage src={player.avatar} alt={player.name} />
                 ) : (
@@ -48,7 +45,7 @@ const Index = () => {
                 )}
               </Avatar>
               <div className="flex-1 min-w-0">
-                <span className="font-heading font-bold truncate block">{player.name}</span>
+                <span className="font-heading font-bold truncate block text-foreground">{player.name}</span>
                 {player.nickname && <span className="text-[10px] text-muted-foreground">@{player.nickname.replace(/^@/,'')}</span>}
               </div>
               <span className="text-xs text-muted-foreground font-body">{entry.wins} Wins</span>
@@ -61,14 +58,14 @@ const Index = () => {
   };
 
   return (
-    <div className="p-4 max-w-4xl mx-auto space-y-6">
+    <div className="p-5 max-w-4xl mx-auto space-y-6">
       {/* Hero */}
-      <div className="flex items-center justify-center gap-4 py-6">
+      <div className="flex items-center justify-center py-6">
         <div className="text-center">
-          <h1 className="font-heading text-4xl font-bold tracking-[0.2em] text-primary text-glow-cyan">
+          <h1 className="font-heading text-4xl font-bold tracking-[0.15em] text-foreground">
             BLADER HUB X
           </h1>
-          <p className="text-xs text-muted-foreground font-heading tracking-[0.3em] mt-1">
+          <p className="text-xs text-muted-foreground font-heading tracking-[0.25em] mt-1">
             TOURNAMENT MANAGEMENT SYSTEM
           </p>
         </div>
@@ -76,18 +73,18 @@ const Index = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="glass-panel rounded-lg p-4 text-center">
+        <div className="paper-panel p-4 text-center">
           <Users className="h-6 w-6 mx-auto text-primary mb-1" />
           <p className="font-heading text-2xl font-bold text-foreground">{players.length}</p>
           <p className="text-xs text-muted-foreground font-body">Bladers</p>
         </div>
-        <div className="glass-panel rounded-lg p-4 text-center">
-          <Trophy className="h-6 w-6 mx-auto text-secondary mb-1" />
+        <div className="paper-panel p-4 text-center">
+          <Trophy className="h-6 w-6 mx-auto text-accent mb-1" />
           <p className="font-heading text-2xl font-bold text-foreground">{activeTournament ? 1 : 0}</p>
           <p className="text-xs text-muted-foreground font-body">Torneio Ativo</p>
         </div>
-        <div className="glass-panel rounded-lg p-4 text-center">
-          <Swords className="h-6 w-6 mx-auto text-accent mb-1" />
+        <div className="paper-panel p-4 text-center">
+          <Swords className="h-6 w-6 mx-auto text-secondary mb-1" />
           <p className="font-heading text-2xl font-bold text-foreground">
             {activeTournament ? activeTournament.rounds.reduce((sum, r) => sum + r.matches.filter(m => m.result).length, 0) : 0}
           </p>
@@ -98,18 +95,18 @@ const Index = () => {
       {/* Actions */}
       <div className="flex flex-wrap gap-3">
         <Link to="/players">
-          <Button className="font-heading tracking-wide gap-2 glow-cyan">
+          <Button className="font-heading tracking-wide gap-2 bg-primary text-primary-foreground hover:bg-primary/80">
             <Users className="h-4 w-4" /> Cadastrar Blader
           </Button>
         </Link>
         <Link to="/tournament">
-          <Button variant="outline" className="font-heading tracking-wide gap-2 border-secondary text-secondary hover:bg-secondary/10">
+          <Button variant="outline" className="font-heading tracking-wide gap-2 border-accent text-accent-foreground hover:bg-accent/15">
             <Trophy className="h-4 w-4" /> Novo Torneio
           </Button>
         </Link>
         {activeTournament && (
           <Link to="/arena">
-            <Button variant="outline" className="font-heading tracking-wide gap-2 border-accent text-accent hover:bg-accent/10">
+            <Button variant="outline" className="font-heading tracking-wide gap-2 border-secondary text-secondary-foreground hover:bg-secondary/15">
               <Swords className="h-4 w-4" /> Ir para Arena
             </Button>
           </Link>
@@ -119,12 +116,12 @@ const Index = () => {
       {/* Rankings */}
       <div>
         <h2 className="font-heading text-2xl font-bold mb-4 tracking-wide flex items-center gap-2 text-foreground">
-          <Crown className="h-6 w-6 text-primary" /> Rankings
+          <Crown className="h-6 w-6 text-accent" /> Rankings
         </h2>
         <Tabs defaultValue="weekly">
           <TabsList className="bg-muted/50 border border-border rounded-lg">
-            <TabsTrigger value="weekly" className="font-heading tracking-wider text-xs data-[state=active]:text-primary">TOP SEMANAL</TabsTrigger>
-            <TabsTrigger value="monthly" className="font-heading tracking-wider text-xs data-[state=active]:text-primary">TOP MENSAL</TabsTrigger>
+            <TabsTrigger value="weekly" className="font-heading tracking-wider text-xs">TOP SEMANAL</TabsTrigger>
+            <TabsTrigger value="monthly" className="font-heading tracking-wider text-xs">TOP MENSAL</TabsTrigger>
           </TabsList>
           <TabsContent value="weekly" className="mt-4">{renderLeaderboard(weeklyLB)}</TabsContent>
           <TabsContent value="monthly" className="mt-4">{renderLeaderboard(monthlyLB)}</TabsContent>

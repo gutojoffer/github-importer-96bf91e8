@@ -1,20 +1,14 @@
-import { Home, Users, Trophy, Swords, Crown, History } from 'lucide-react';
+import { Home, Users, Trophy, Swords, Crown, History, Settings } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar,
 } from '@/components/ui/sidebar';
 
 const items = [
   { title: 'Home', url: '/', icon: Home },
-  { title: 'Jogadores', url: '/players', icon: Users },
+  { title: 'Bladers', url: '/players', icon: Users },
   { title: 'Torneio', url: '/tournament', icon: Trophy },
   { title: 'Arena', url: '/arena', icon: Swords },
   { title: 'Histórico', url: '/history', icon: History },
@@ -29,13 +23,15 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
-      <SidebarContent className="bg-sidebar pt-6">
-        <div className={`flex items-center justify-center px-3 pb-5 mb-4 ${collapsed ? 'px-1' : 'gap-3'}`}>
-          {!collapsed && (
-            <span className="font-heading text-lg font-bold text-primary tracking-[0.2em] text-glow-cyan">BHX</span>
-          )}
-          {collapsed && (
-            <span className="font-heading text-sm font-bold text-primary text-glow-cyan">B</span>
+      <SidebarContent className="bg-sidebar pt-5">
+        {/* Logo */}
+        <div className={`flex items-center justify-center px-3 pb-4 mb-3 border-b border-border ${collapsed ? 'px-1' : 'gap-2'}`}>
+          {!collapsed ? (
+            <span className="font-heading text-base font-bold text-foreground tracking-widest">
+              ⚙ BHX
+            </span>
+          ) : (
+            <span className="font-heading text-sm font-bold text-foreground">⚙</span>
           )}
         </div>
 
@@ -48,10 +44,10 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.url === '/'}
-                      className="flex items-center gap-3 px-3 py-2.5 text-sm font-heading tracking-wide text-muted-foreground hover:text-primary transition-all duration-200 rounded-lg mx-1"
-                      activeClassName="bg-primary/10 text-primary glow-cyan"
+                      className="flex items-center gap-3 px-3 py-2.5 text-sm font-heading tracking-wide text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors rounded-lg mx-1"
+                      activeClassName="bg-primary/15 text-primary-foreground font-semibold soft-glow"
                     >
-                      <item.icon className={`h-5 w-5 shrink-0 ${isActive(item.url) ? 'drop-shadow-[0_0_6px_hsl(185_100%_50%/0.6)]' : ''}`} />
+                      <item.icon className={`h-5 w-5 shrink-0 ${isActive(item.url) ? 'text-primary' : ''}`} />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>

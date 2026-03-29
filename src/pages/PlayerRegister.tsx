@@ -42,11 +42,10 @@ export default function PlayerRegister() {
 
   if (registered) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-grid-pattern p-4"
-           style={{ background: 'linear-gradient(135deg, hsl(252 60% 11%) 0%, hsl(215 70% 8%) 100%)' }}>
-        <div className="glass-panel rounded-xl p-10 text-center max-w-md w-full glow-cyan animate-slide-in">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="paper-panel p-10 text-center max-w-md w-full animate-fade-in">
           <CheckCircle className="h-16 w-16 mx-auto text-primary mb-4" />
-          <h1 className="font-heading text-3xl font-bold text-primary text-glow-cyan mb-2">
+          <h1 className="font-heading text-3xl font-bold text-foreground mb-2">
             Registro Completo!
           </h1>
           <p className="text-muted-foreground font-body text-sm">
@@ -58,12 +57,11 @@ export default function PlayerRegister() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-grid-pattern p-4"
-         style={{ background: 'linear-gradient(135deg, hsl(252 60% 11%) 0%, hsl(215 70% 8%) 100%)' }}>
-      <div className="glass-panel rounded-xl p-8 max-w-md w-full glow-cyan">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="paper-panel p-8 max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="font-heading text-2xl font-bold tracking-[0.2em] text-primary text-glow-cyan mb-1">
+          <h1 className="font-heading text-2xl font-bold tracking-[0.15em] text-foreground mb-1">
             BLADER HUB X
           </h1>
           <p className="text-muted-foreground font-body text-sm">Registro de Blader</p>
@@ -75,7 +73,7 @@ export default function PlayerRegister() {
             <button
               onClick={() => fileRef.current?.click()}
               className={`h-24 w-24 flex items-center justify-center rounded-full border-2 border-dashed transition-all
-                ${customAvatar ? 'border-primary glow-cyan' : 'border-border hover:border-primary/50'}`}
+                ${customAvatar ? 'border-secondary soft-glow' : 'border-border hover:border-secondary/60'}`}
             >
               {customAvatar ? (
                 <img src={customAvatar} alt="avatar" className="h-full w-full rounded-full object-cover" />
@@ -93,10 +91,10 @@ export default function PlayerRegister() {
                 <button
                   key={a}
                   onClick={() => setSelectedAvatar(a)}
-                  className={`h-10 w-10 flex items-center justify-center text-xl rounded-lg border transition-all
+                  className={`h-10 w-10 flex items-center justify-center text-xl rounded-full border-2 transition-all
                     ${selectedAvatar === a
-                      ? 'border-primary bg-primary/20 glow-cyan'
-                      : 'border-border bg-muted/30 hover:border-primary/50'}`}
+                      ? 'border-primary bg-primary/15 soft-glow'
+                      : 'border-border bg-background hover:border-primary/40'}`}
                 >
                   {a}
                 </button>
@@ -110,7 +108,7 @@ export default function PlayerRegister() {
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Seu nome completo"
-              className="bg-muted/50 border-border focus:border-primary"
+              className="bg-background border-border"
             />
           </div>
 
@@ -122,7 +120,7 @@ export default function PlayerRegister() {
                 value={nickname}
                 onChange={e => setNickname(e.target.value)}
                 placeholder="seu_nick"
-                className="pl-7 bg-muted/50 border-border focus:border-primary"
+                className="pl-7 bg-background border-border"
               />
             </div>
           </div>
@@ -130,7 +128,7 @@ export default function PlayerRegister() {
           <Button
             onClick={handleRegister}
             disabled={!name.trim()}
-            className="w-full font-heading tracking-wider text-lg gap-2 h-12 glow-cyan"
+            className="w-full font-heading tracking-wider text-lg gap-2 h-12 bg-accent text-accent-foreground hover:bg-accent/80"
           >
             <UserPlus className="h-5 w-5" />
             REGISTRAR BLADER
