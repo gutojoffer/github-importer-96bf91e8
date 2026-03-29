@@ -3,7 +3,11 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
+import AppHeader from "@/components/AppHeader";
+import Dashboard from "@/pages/Dashboard";
+import PlayerManager from "@/pages/PlayerManager";
+import TournamentSetup from "@/pages/TournamentSetup";
+import MatchArena from "@/pages/MatchArena";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -14,11 +18,16 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <div className="min-h-screen bg-background">
+          <AppHeader />
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/players" element={<PlayerManager />} />
+            <Route path="/tournament" element={<TournamentSetup />} />
+            <Route path="/arena" element={<MatchArena />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
