@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { getPlayers, savePlayers, deletePlayer } from '@/lib/storage';
 import { Player, DEFAULT_AVATARS } from '@/types/tournament';
 import PlayerCard from '@/components/PlayerCard';
-import { Plus, Trash2, Camera, Link2, Copy } from 'lucide-react';
+import { Plus, Trash2, Camera, Link2, Copy, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function PlayerManager() {
