@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { getPlayers, savePlayers, deletePlayer } from '@/lib/storage';
 import { Player, DEFAULT_AVATARS } from '@/types/tournament';
 import PlayerCard from '@/components/PlayerCard';
-import { Plus, Trash2, Camera, Link2, Copy } from 'lucide-react';
+import { Plus, Trash2, Camera, Link2, Copy, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function PlayerManager() {
@@ -55,25 +55,22 @@ export default function PlayerManager() {
     const code = Math.random().toString(36).substring(2, 8);
     const link = `${window.location.origin}/invite/${code}`;
     navigator.clipboard.writeText(link).then(() => {
-      toast.success('Link Copiado!', {
-        description: link,
-        duration: 4000,
-      });
+      toast.success('Link Copiado!', { description: link, duration: 4000 });
     }).catch(() => {
       toast.info(link, { description: 'Copie o link acima', duration: 6000 });
     });
   };
 
   return (
-    <div className="p-4 max-w-4xl mx-auto space-y-6">
-      {/* Header with invite link */}
+    <div className="p-5 max-w-4xl mx-auto space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h1 className="font-heading text-3xl font-bold tracking-wide text-primary text-glow-cyan">
-          Jogadores
+        <h1 className="font-heading text-3xl font-bold tracking-wide text-foreground">
+          Bladers
         </h1>
         <Button
           onClick={handleGenerateLink}
-          className="font-heading tracking-wide gap-2 bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan"
+          className="font-heading tracking-wide gap-2 bg-primary text-primary-foreground hover:bg-primary/80"
         >
           <Link2 className="h-4 w-4" />
           Gerar Link de Cadastro
@@ -81,8 +78,8 @@ export default function PlayerManager() {
         </Button>
       </div>
 
-      {/* Add player form */}
-      <div className="glass-panel rounded-lg p-5 space-y-4 glow-cyan">
+      {/* Form */}
+      <div className="paper-panel p-5 space-y-4">
         <h2 className="font-heading text-lg font-bold tracking-wide text-foreground">
           Adicionar Blader
         </h2>
@@ -93,7 +90,7 @@ export default function PlayerManager() {
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder='Ex: RODRIGO "DRO" SOUZA'
-              className="bg-muted/50 border-border focus:border-primary"
+              className="bg-background border-border"
             />
           </div>
           <div className="space-y-2">
@@ -104,7 +101,7 @@ export default function PlayerManager() {
                 value={nickname}
                 onChange={e => setNickname(e.target.value)}
                 placeholder="dro_beys"
-                className="pl-7 bg-muted/50 border-border focus:border-primary"
+                className="pl-7 bg-background border-border"
               />
             </div>
           </div>
@@ -115,8 +112,8 @@ export default function PlayerManager() {
           <div className="flex flex-wrap gap-2 items-center">
             <button
               onClick={() => fileRef.current?.click()}
-              className={`h-12 w-12 flex items-center justify-center border-2 border-dashed transition-all rounded-full
-                ${customAvatar ? 'border-primary glow-cyan' : 'border-border hover:border-primary/50'}`}
+              className={`h-14 w-14 flex items-center justify-center border-2 border-dashed transition-all rounded-full
+                ${customAvatar ? 'border-primary soft-glow' : 'border-border hover:border-primary/50'}`}
             >
               {customAvatar ? (
                 <img src={customAvatar} alt="avatar" className="h-full w-full rounded-full object-cover" />
@@ -130,10 +127,10 @@ export default function PlayerManager() {
               <button
                 key={a}
                 onClick={() => { setSelectedAvatar(a); setCustomAvatar(''); }}
-                className={`h-10 w-10 flex items-center justify-center text-xl rounded-lg border transition-all
+                className={`h-10 w-10 flex items-center justify-center text-xl rounded-full border-2 transition-all
                   ${selectedAvatar === a && !customAvatar
-                    ? 'border-primary bg-primary/20 glow-cyan'
-                    : 'border-border bg-muted/30 hover:border-primary/50'}`}
+                    ? 'border-primary bg-primary/15 soft-glow'
+                    : 'border-border bg-card hover:border-primary/40'}`}
               >
                 {a}
               </button>
@@ -141,7 +138,7 @@ export default function PlayerManager() {
           </div>
         </div>
 
-        <Button onClick={handleAdd} className="font-heading tracking-wide gap-2">
+        <Button onClick={handleAdd} className="font-heading tracking-wide gap-2 bg-accent text-accent-foreground hover:bg-accent/80">
           <Plus className="h-4 w-4" /> Cadastrar
         </Button>
       </div>
@@ -152,19 +149,20 @@ export default function PlayerManager() {
           Bladers Cadastrados ({players.length})
         </h2>
         {players.length === 0 ? (
-          <div className="glass-panel rounded-lg text-center py-12">
+          <div className="paper-panel text-center py-12">
+            <Users className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
             <p className="text-muted-foreground text-sm font-body">
               Nenhum blader cadastrado ainda. Adicione acima ou gere um link de convite!
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {players.map(p => (
-              <div key={p.id} className="relative group animate-slide-in">
+              <div key={p.id} className="relative group animate-fade-in">
                 <PlayerCard player={p} />
                 <button
                   onClick={() => handleDelete(p.id)}
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md bg-destructive/80 text-destructive-foreground"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-full bg-destructive/80 text-destructive-foreground"
                 >
                   <Trash2 className="h-3 w-3" />
                 </button>

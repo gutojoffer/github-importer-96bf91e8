@@ -27,13 +27,13 @@ const App = () => (
           <Route path="/invite/:code" element={<PlayerRegister />} />
           <Route path="*" element={
             <SidebarProvider>
-              <div className="min-h-screen flex w-full bg-grid-pattern">
+              <div className="min-h-screen flex w-full">
                 <AppSidebar />
                 <div className="flex-1 flex flex-col min-w-0">
-                  <header className="h-12 flex items-center border-b border-border glass-panel sticky top-0 z-50">
-                    <SidebarTrigger className="ml-3 text-muted-foreground hover:text-primary transition-colors" />
+                  <header className="h-12 flex items-center border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
+                    <SidebarTrigger className="ml-3 text-muted-foreground hover:text-foreground transition-colors" />
                     <div className="flex-1 flex justify-center">
-                      <span className="font-heading text-sm font-bold tracking-[0.25em] uppercase text-primary text-glow-cyan">
+                      <span className="font-heading text-sm font-bold tracking-[0.2em] uppercase text-foreground">
                         Blader Hub X
                       </span>
                       <span className="ml-2 font-heading text-xs text-muted-foreground tracking-wider hidden sm:inline">

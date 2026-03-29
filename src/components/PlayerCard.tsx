@@ -12,13 +12,13 @@ export default function PlayerCard({ player, selected, onClick, stats }: PlayerC
   return (
     <div
       onClick={onClick}
-      className={`flex items-center gap-3 p-3 rounded-lg transition-all cursor-pointer glass-panel
+      className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all cursor-pointer bg-card
         ${selected
-          ? 'border-primary bg-primary/10 glow-cyan'
-          : 'hover:border-primary/40'
+          ? 'border-primary soft-glow'
+          : 'border-border hover:border-primary/40'
         }`}
     >
-      <Avatar className="h-12 w-12 border-2 border-primary/30">
+      <Avatar className="h-12 w-12 border-2 border-secondary">
         {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? (
           <AvatarImage src={player.avatar} alt={player.name} />
         ) : (

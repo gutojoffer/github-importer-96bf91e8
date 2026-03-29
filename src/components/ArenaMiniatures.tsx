@@ -19,8 +19,8 @@ export default function ArenaMiniatures({ pendingMatches, getPlayer, arenaNames 
           const p2 = getPlayer(m.player2Id);
           if (!p1 || !p2) return null;
           return (
-            <div key={m.id} className="border border-border bg-card/30 p-2 flex items-center gap-1.5 text-[10px]">
-              <Avatar className="h-5 w-5 border border-primary/30">
+            <div key={m.id} className="paper-panel p-2 flex items-center gap-1.5 text-[10px]">
+              <Avatar className="h-5 w-5 border border-secondary/40">
                 {p1.avatar.startsWith('http') || p1.avatar.startsWith('data:') ? (
                   <AvatarImage src={p1.avatar} alt={p1.name} />
                 ) : (
@@ -28,7 +28,7 @@ export default function ArenaMiniatures({ pendingMatches, getPlayer, arenaNames 
                 )}
               </Avatar>
               <span className="text-muted-foreground font-heading">VS</span>
-              <Avatar className="h-5 w-5 border border-accent/30">
+              <Avatar className="h-5 w-5 border border-accent/40">
                 {p2.avatar.startsWith('http') || p2.avatar.startsWith('data:') ? (
                   <AvatarImage src={p2.avatar} alt={p2.name} />
                 ) : (

@@ -30,10 +30,10 @@ export default function ResultButtons({ playerName, side, onResult, disabled }: 
           onClick={() => onResult(type)}
           className={`w-full justify-between gap-2 font-heading tracking-wide text-xs h-9
             ${type === 'burst'
-              ? 'border-accent/50 text-accent hover:bg-accent/10'
+              ? 'border-destructive/30 text-destructive hover:bg-destructive/10'
               : type === 'extreme'
-                ? 'border-secondary/50 text-secondary hover:bg-secondary/10'
-                : 'border-border hover:border-primary/50'
+                ? 'border-accent/40 text-accent-foreground hover:bg-accent/15'
+                : 'border-border hover:border-primary/40 hover:bg-primary/5'
             }`}
         >
           <span className="flex items-center gap-2">{icon} {label}</span>
