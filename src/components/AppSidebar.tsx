@@ -1,4 +1,4 @@
-import { Home, Users, Trophy, Swords, Crown, Settings } from 'lucide-react';
+import { Home, Users, Trophy, Swords, Crown, History } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
@@ -17,6 +17,7 @@ const items = [
   { title: 'Jogadores', url: '/players', icon: Users },
   { title: 'Torneio', url: '/tournament', icon: Trophy },
   { title: 'Arena', url: '/arena', icon: Swords },
+  { title: 'Histórico', url: '/history', icon: History },
   { title: 'Rankings', url: '/rankings', icon: Crown },
 ];
 
@@ -24,19 +25,14 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const location = useLocation();
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarContent className="bg-sidebar pt-6">
-        {/* Logo */}
         <div className={`flex items-center justify-center px-3 pb-5 mb-4 ${collapsed ? 'px-1' : 'gap-3'}`}>
           {!collapsed && (
-            <div className="text-center">
-              <span className="font-heading text-lg font-bold text-primary tracking-[0.2em] text-glow-cyan">
-                BHX
-              </span>
-            </div>
+            <span className="font-heading text-lg font-bold text-primary tracking-[0.2em] text-glow-cyan">BHX</span>
           )}
           {collapsed && (
             <span className="font-heading text-sm font-bold text-primary text-glow-cyan">B</span>

@@ -8,6 +8,8 @@ import { AppSidebar } from "@/components/AppSidebar";
 import PlayerManager from "@/pages/PlayerManager";
 import PlayerRegister from "@/pages/PlayerRegister";
 import TournamentSetup from "@/pages/TournamentSetup";
+import TournamentHistory from "@/pages/TournamentHistory";
+import TournamentPodium from "@/pages/TournamentPodium";
 import MatchArena from "@/pages/MatchArena";
 import Leaderboard from "@/pages/Leaderboard";
 import Index from "./pages/Index";
@@ -22,10 +24,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Self-registration route (no sidebar) */}
           <Route path="/invite/:code" element={<PlayerRegister />} />
-
-          {/* Main app routes with sidebar */}
           <Route path="*" element={
             <SidebarProvider>
               <div className="min-h-screen flex w-full bg-grid-pattern">
@@ -47,6 +46,8 @@ const App = () => (
                       <Route path="/" element={<Index />} />
                       <Route path="/players" element={<PlayerManager />} />
                       <Route path="/tournament" element={<TournamentSetup />} />
+                      <Route path="/history" element={<TournamentHistory />} />
+                      <Route path="/history/:id" element={<TournamentPodium />} />
                       <Route path="/arena" element={<MatchArena />} />
                       <Route path="/rankings" element={<Leaderboard />} />
                       <Route path="*" element={<NotFound />} />

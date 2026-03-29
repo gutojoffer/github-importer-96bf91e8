@@ -32,7 +32,6 @@ export interface Match {
   arenaIndex: number;
   roundIndex: number;
   isBye?: boolean;
-  /** Points accumulated in a best-of series */
   player1Points: number;
   player2Points: number;
 }
@@ -55,6 +54,16 @@ export interface Tournament {
   pointsToWin: number;
   status: 'setup' | 'active' | 'completed';
   createdAt: string;
+  /** Final standings after tournament ends */
+  finalStandings?: TournamentStanding[];
+}
+
+export interface TournamentStanding {
+  playerId: string;
+  placement: number;
+  wins: number;
+  losses: number;
+  circuitPoints: number;
 }
 
 export const FINISH_POINTS: Record<FinishType, number> = {
@@ -63,6 +72,14 @@ export const FINISH_POINTS: Record<FinishType, number> = {
   burst: 2,
   extreme: 1,
 };
+
+/** Circuit points awarded by final placement */
+export const CIRCUIT_POINTS: Record<number, number> = {
+  1: 1000,
+  2: 700,
+  3: 500,
+};
+export const CIRCUIT_POINTS_DEFAULT = 100; // 4th place and beyond
 
 export const DEFAULT_AVATARS = [
   '🔵', '🔴', '🟢', '🟡', '🟣', '⚡', '🔥', '💎', '🌀', '⭐',

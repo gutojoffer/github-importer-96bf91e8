@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getActiveTournament, saveActiveTournament, getPlayers, updatePlayerStats } from '@/lib/storage';
+import { useNavigate } from 'react-router-dom';
+import { getActiveTournament, saveActiveTournament, getPlayers, saveCompletedTournament, calculateStandings, awardCircuitPoints } from '@/lib/storage';
 import { generateSwissRound } from '@/lib/matchmaking';
 import { Tournament, Match, Player, FinishType, FINISH_POINTS } from '@/types/tournament';
 import VersusScreen from '@/components/VersusScreen';
@@ -9,9 +10,10 @@ import ArenaMiniatures from '@/components/ArenaMiniatures';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { CheckCircle, Trophy, Award } from 'lucide-react';
+import { CheckCircle, Trophy, Award, XOctagon } from 'lucide-react';
 
 export default function MatchArena() {
+  const navigate = useNavigate();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [victoryFlash, setVictoryFlash] = useState<string | null>(null);
@@ -22,6 +24,28 @@ export default function MatchArena() {
   }, []);
 
   const getPlayer = (id: string) => players.find(p => p.id === id);
+
+  const handleEndTournament = () => {
+    if (!tournament) return;
+
+    // Calculate standings
+    const standings = calculateStandings(tournament);
+
+    // Award circuit points
+    awardCircuitPoints(standings);
+
+    // Save completed tournament with standings
+    const completed: Tournament = {
+      ...tournament,
+      status: 'completed',
+      finalStandings: standings,
+    };
+    saveCompletedTournament(completed);
+    saveActiveTournament(null);
+
+    toast.success('🏆 Torneio encerrado oficialmente!');
+    navigate(`/history/${completed.id}`);
+  };
 
   if (!tournament) {
     return (
@@ -54,23 +78,15 @@ export default function MatchArena() {
       match.player2Points += pts;
     }
 
-    // Check if match is won
     const ptw = tournament.pointsToWin;
     if (match.player1Points >= ptw || match.player2Points >= ptw) {
       const matchWinnerId = match.player1Points >= ptw ? match.player1Id : match.player2Id;
-      const loserId = matchWinnerId === match.player1Id ? match.player2Id : match.player1Id;
       match.result = { winnerId: matchWinnerId, finishType };
-
-      // Stats: winner gets accumulated points, loser gets loss
-      const totalPts = match.player1Points >= ptw ? match.player1Points : match.player2Points;
-      updatePlayerStats(matchWinnerId, true, totalPts);
-      updatePlayerStats(loserId, false, 0);
 
       const winner = getPlayer(matchWinnerId);
       setVictoryFlash(winner?.nickname ? `@${winner.nickname.replace(/^@/, '')}` : winner?.name || 'WINNER');
       setTimeout(() => setVictoryFlash(null), 1800);
 
-      // Check round complete
       const allDone = currentRound.matches.every(m => m.result);
       if (allDone) {
         currentRound.completed = true;
@@ -82,8 +98,7 @@ export default function MatchArena() {
             toast.success(`Rodada ${tournament.currentRound + 1} gerada!`);
           }
         } else {
-          tournament.status = 'completed';
-          toast.success('🏆 Torneio finalizado!');
+          toast.info('Todas as rodadas concluídas! Encerre o torneio oficialmente.');
         }
       }
     }
@@ -99,8 +114,8 @@ export default function MatchArena() {
     currentRound.matches.filter(m => m.arenaIndex === arenaIdx && m.result && !m.isBye);
 
   const allPendingNonCurrent = currentRound.matches.filter(m => !m.result && !m.isBye);
-
   const byePlayer = currentRound.byePlayerId ? getPlayer(currentRound.byePlayerId) : null;
+  const allMatchesDone = currentRound.matches.every(m => m.result || m.isBye);
 
   return (
     <div className="p-4 max-w-7xl mx-auto space-y-4">
@@ -108,32 +123,39 @@ export default function MatchArena() {
       {victoryFlash && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
           <div className="text-center animate-slide-in">
-            <Trophy className="h-16 w-16 mx-auto text-secondary mb-4" />
-            <p className="font-heading text-4xl font-bold text-secondary tracking-widest">{victoryFlash}</p>
+            <Trophy className="h-16 w-16 mx-auto text-primary mb-4" />
+            <p className="font-heading text-4xl font-bold text-primary tracking-widest text-glow-cyan">{victoryFlash}</p>
             <p className="font-heading text-lg text-muted-foreground mt-2">WINNER!</p>
           </div>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="font-heading text-2xl font-bold tracking-wide text-primary">{tournament.name}</h1>
+          <h1 className="font-heading text-2xl font-bold tracking-wide text-primary text-glow-cyan">{tournament.name}</h1>
           <p className="text-xs text-muted-foreground font-body">
             Rodada {tournament.currentRound + 1} de {tournament.totalRounds}
-            {tournament.status === 'completed' && ' — FINALIZADO'}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Award className="h-4 w-4 text-muted-foreground" />
-          <span className="text-xs text-muted-foreground font-heading">PTS TO WIN: {tournament.pointsToWin}</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Award className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground font-heading">PTS TO WIN: {tournament.pointsToWin}</span>
+          </div>
+          <Button
+            onClick={handleEndTournament}
+            className="font-heading tracking-wide gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 glow-magenta"
+          >
+            <XOctagon className="h-4 w-4" /> Encerrar Torneio
+          </Button>
         </div>
       </div>
 
       {/* Bye Banner */}
       {byePlayer && <ByeBanner player={byePlayer} />}
 
-      {/* Arena Panels - side by side for 2 arenas */}
+      {/* Arena Panels */}
       <div className={`grid gap-4 ${tournament.arenaCount >= 2 ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
         {arenaNames.map((arenaName, arenaIdx) => {
           const pending = pendingByArena(arenaIdx);
@@ -142,7 +164,7 @@ export default function MatchArena() {
           const color = arenaColors[arenaIdx % arenaColors.length];
 
           return (
-            <div key={arenaIdx} className="border border-border bg-card/30 space-y-3">
+            <div key={arenaIdx} className="glass-panel rounded-lg space-y-3">
               {currentMatch && players.length > 0 ? (
                 <div className="space-y-3 p-3">
                   <VersusScreen
@@ -154,8 +176,6 @@ export default function MatchArena() {
                     player2Points={currentMatch.player2Points}
                     pointsToWin={tournament.pointsToWin}
                   />
-
-                  {/* Judge Controls */}
                   <div className="grid grid-cols-2 gap-3">
                     <ResultButtons
                       playerName={getPlayer(currentMatch.player1Id)?.nickname || getPlayer(currentMatch.player1Id)?.name || ''}
@@ -170,7 +190,6 @@ export default function MatchArena() {
                       disabled={!!currentMatch.result}
                     />
                   </div>
-
                   {pending.length > 1 && (
                     <p className="text-[10px] text-muted-foreground text-center font-heading tracking-wider">
                       +{pending.length - 1} MATCH(ES) IN QUEUE
@@ -179,12 +198,11 @@ export default function MatchArena() {
                 </div>
               ) : (
                 <div className="text-center py-10 px-4">
-                  <CheckCircle className="h-8 w-8 mx-auto text-secondary mb-2" />
+                  <CheckCircle className="h-8 w-8 mx-auto text-primary mb-2" />
                   <p className="font-heading text-sm text-muted-foreground">{arenaName} — All matches completed</p>
                 </div>
               )}
 
-              {/* Completed results */}
               {completed.length > 0 && (
                 <div className="px-3 pb-3 space-y-1">
                   <p className="font-heading text-[10px] text-muted-foreground tracking-widest uppercase">Results</p>
@@ -193,8 +211,8 @@ export default function MatchArena() {
                     const loserId = m.player1Id === m.result!.winnerId ? m.player2Id : m.player1Id;
                     const loser = getPlayer(loserId);
                     return (
-                      <div key={m.id} className="flex items-center gap-2 p-1.5 border border-border bg-card/30 text-xs">
-                        <span className="font-heading font-bold text-secondary truncate">{winner?.nickname || winner?.name}</span>
+                      <div key={m.id} className="flex items-center gap-2 p-1.5 glass-panel rounded text-xs">
+                        <span className="font-heading font-bold text-primary truncate">{winner?.nickname || winner?.name}</span>
                         <span className="text-muted-foreground">def.</span>
                         <span className="text-muted-foreground truncate">{loser?.nickname || loser?.name}</span>
                         <span className="ml-auto text-[10px] text-muted-foreground uppercase font-heading">{m.result!.finishType}</span>
@@ -208,7 +226,6 @@ export default function MatchArena() {
         })}
       </div>
 
-      {/* Arena Miniatures */}
       <ArenaMiniatures
         pendingMatches={allPendingNonCurrent.filter(m => !pendingByArena(0)[0]?.id || m.id !== pendingByArena(0)[0]?.id)}
         getPlayer={(id) => getPlayer(id)}
