@@ -9,8 +9,7 @@ export default function Rankings() {
   const [players, setPlayers] = useState<Player[]>([]);
 
   useEffect(() => {
-    const all = getPlayers().sort((a, b) => (b.xp || 0) - (a.xp || 0));
-    setPlayers(all);
+    getPlayers().then(all => setPlayers(all.sort((a, b) => (b.xp || 0) - (a.xp || 0))));
   }, []);
 
   return (
@@ -19,7 +18,6 @@ export default function Rankings() {
         <Shield className="h-7 w-7 text-secondary" /> RANKINGS
       </h1>
 
-      {/* Elo tier legend */}
       <div className="dark-panel p-4">
         <p className="font-heading text-xs text-muted-foreground tracking-[0.2em] mb-3 uppercase">Hierarquia de Elos</p>
         <div className="flex flex-wrap gap-3">
@@ -36,7 +34,6 @@ export default function Rankings() {
         </p>
       </div>
 
-      {/* Player rankings */}
       {players.length === 0 ? (
         <div className="dark-panel p-12 text-center">
           <Shield className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
@@ -47,25 +44,14 @@ export default function Rankings() {
           {players.map((player, i) => {
             const elo = getEloFromXP(player.xp || 0);
             return (
-              <div
-                key={player.id}
+              <div key={player.id}
                 className={`dark-panel flex items-center gap-3 p-4 anim-fade-up ${i < 3 ? 'border-l-4' : ''}`}
-                style={{
-                  animationDelay: `${i * 50}ms`,
-                  borderLeftColor: i < 3 ? `hsl(${i === 0 ? '45 80% 55%' : i === 1 ? '210 10% 70%' : '25 60% 50%'})` : undefined,
-                }}
-              >
-                <span className={`font-heading text-xl font-bold w-8 text-center italic ${
-                  i === 0 ? 'text-secondary' : i === 1 ? 'text-muted-foreground' : i === 2 ? 'text-accent' : 'text-muted-foreground/50'
-                }`}>
+                style={{ animationDelay: `${i * 50}ms`, borderLeftColor: i < 3 ? `hsl(${i === 0 ? '45 80% 55%' : i === 1 ? '210 10% 70%' : '25 60% 50%'})` : undefined }}>
+                <span className={`font-heading text-xl font-bold w-8 text-center italic ${i === 0 ? 'text-secondary' : i === 1 ? 'text-muted-foreground' : i === 2 ? 'text-accent' : 'text-muted-foreground/50'}`}>
                   {i === 0 ? <Crown className="h-5 w-5 inline text-secondary" /> : `#${i + 1}`}
                 </span>
-                <Avatar className={`h-10 w-10 border-2`} style={{ borderColor: `hsl(${elo.tier.color} / 0.5)` }}>
-                  {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? (
-                    <AvatarImage src={player.avatar} alt={player.name} />
-                  ) : (
-                    <AvatarFallback className="bg-muted text-lg">{player.avatar}</AvatarFallback>
-                  )}
+                <Avatar className="h-10 w-10 border-2" style={{ borderColor: `hsl(${elo.tier.color} / 0.5)` }}>
+                  {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? <AvatarImage src={player.avatar} alt={player.name} /> : <AvatarFallback className="bg-muted text-lg">{player.avatar}</AvatarFallback>}
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="font-heading font-bold truncate text-foreground">{player.name}</p>

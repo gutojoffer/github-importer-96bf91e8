@@ -19,7 +19,7 @@ export default function TournamentSetup() {
   const [pointsToWin, setPointsToWin] = useState(4);
   const [tournamentName, setTournamentName] = useState('');
 
-  useEffect(() => { setPlayers(getPlayers()); }, []);
+  useEffect(() => { getPlayers().then(setPlayers); }, []);
 
   const togglePlayer = (id: string) => {
     const next = new Set(selectedIds);
@@ -29,7 +29,7 @@ export default function TournamentSetup() {
 
   const suggested = suggestRounds(selectedIds.size);
 
-  const handleStart = () => {
+  const handleStart = async () => {
     if (selectedIds.size < 2) { toast.error('Selecione ao menos 2 jogadores!'); return; }
     const playerIds = Array.from(selectedIds);
     const firstRound = generateFirstRound(playerIds, arenaCount);
@@ -48,7 +48,7 @@ export default function TournamentSetup() {
       status: 'active',
       createdAt: now,
     };
-    saveActiveTournament(tournament);
+    await saveActiveTournament(tournament);
     toast.success('Torneio iniciado! Let it rip! 🌀');
     navigate('/arena');
   };
@@ -57,34 +57,32 @@ export default function TournamentSetup() {
     <div className="p-5 max-w-4xl mx-auto space-y-6">
       <h1 className="font-heading text-3xl font-bold tracking-wide text-foreground">Configurar Torneio</h1>
 
-      <div className="paper-panel p-5 space-y-4">
+      <div className="dark-panel p-5 space-y-4">
         <div className="space-y-2">
           <Label className="font-heading tracking-wide text-muted-foreground">Nome do Torneio</Label>
-          <Input value={tournamentName} onChange={e => setTournamentName(e.target.value)} placeholder="Ex: Copa Beyblade X" className="bg-background border-border" />
+          <Input value={tournamentName} onChange={e => setTournamentName(e.target.value)} placeholder="Ex: Copa Beyblade X" className="bg-muted/30 border-border" />
         </div>
-
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label className="font-heading tracking-wide text-muted-foreground">Rodadas</Label>
             <div className="flex items-center gap-2">
-              <Input type="number" min={1} max={20} value={rounds} onChange={e => setRounds(parseInt(e.target.value) || 1)} className="bg-background border-border" />
-              <Button variant="outline" size="sm" onClick={() => setRounds(suggested)} className="gap-1 text-xs font-heading shrink-0 border-accent text-accent-foreground hover:bg-accent/15">
+              <Input type="number" min={1} max={20} value={rounds} onChange={e => setRounds(parseInt(e.target.value) || 1)} className="bg-muted/30 border-border" />
+              <Button variant="outline" size="sm" onClick={() => setRounds(suggested)} className="gap-1 text-xs font-heading shrink-0 border-secondary text-secondary">
                 <Lightbulb className="h-3 w-3" /> {suggested}
               </Button>
             </div>
           </div>
           <div className="space-y-2">
             <Label className="font-heading tracking-wide text-muted-foreground">Arenas</Label>
-            <Input type="number" min={1} max={10} value={arenaCount} onChange={e => setArenaCount(parseInt(e.target.value) || 1)} className="bg-background border-border" />
+            <Input type="number" min={1} max={10} value={arenaCount} onChange={e => setArenaCount(parseInt(e.target.value) || 1)} className="bg-muted/30 border-border" />
           </div>
           <div className="space-y-2">
             <Label className="font-heading tracking-wide text-muted-foreground">Pts p/ Vencer</Label>
-            <Input type="number" min={1} max={10} value={pointsToWin} onChange={e => setPointsToWin(parseInt(e.target.value) || 4)} className="bg-background border-border" />
+            <Input type="number" min={1} max={10} value={pointsToWin} onChange={e => setPointsToWin(parseInt(e.target.value) || 4)} className="bg-muted/30 border-border" />
           </div>
         </div>
-
         {selectedIds.size % 2 !== 0 && selectedIds.size > 0 && (
-          <div className="border border-accent/40 bg-accent/10 rounded-lg px-3 py-2 text-xs font-heading text-accent-foreground">
+          <div className="border border-accent/40 bg-accent/10 px-3 py-2 text-xs font-heading text-accent-foreground">
             ⚠ Número ímpar de jogadores — um jogador receberá BYE automático a cada rodada.
           </div>
         )}
@@ -105,11 +103,7 @@ export default function TournamentSetup() {
         )}
       </div>
 
-      <Button
-        onClick={handleStart}
-        disabled={selectedIds.size < 2}
-        className="w-full font-heading text-lg tracking-widest gap-2 h-12 bg-primary text-primary-foreground hover:bg-primary/80"
-      >
+      <Button onClick={handleStart} disabled={selectedIds.size < 2} className="w-full font-heading text-lg tracking-widest gap-2 h-12 bg-primary text-primary-foreground hover:bg-primary/80">
         <Play className="h-5 w-5" /> INICIAR TORNEIO
       </Button>
     </div>

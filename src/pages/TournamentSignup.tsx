@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getTournaments, getPlayers, savePlayers, registerPlayerToTournament } from '@/lib/storage';
+import { getTournaments, addPlayer, registerPlayerToTournament } from '@/lib/storage';
 import { Player, DEFAULT_AVATARS, Tournament } from '@/types/tournament';
 import { Camera, UserPlus, CheckCircle, Swords } from 'lucide-react';
 
@@ -19,9 +19,10 @@ export default function TournamentSignup() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const all = getTournaments();
-    const found = all.find(t => t.id === tournamentId);
-    if (found) setTournament(found);
+    getTournaments().then(all => {
+      const found = all.find(t => t.id === tournamentId);
+      if (found) setTournament(found);
+    });
   }, [tournamentId]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,7 +33,7 @@ export default function TournamentSignup() {
     reader.readAsDataURL(file);
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!name.trim() || !tournament) return;
     const player: Player = {
       id: crypto.randomUUID(),
@@ -42,10 +43,8 @@ export default function TournamentSignup() {
       createdAt: new Date().toISOString(),
       xp: 0,
     };
-    const all = getPlayers();
-    all.push(player);
-    savePlayers(all);
-    registerPlayerToTournament(tournament.id, player.id);
+    await addPlayer(player);
+    await registerPlayerToTournament(tournament.id, player.id);
     setRegistered(true);
   };
 
@@ -66,12 +65,8 @@ export default function TournamentSignup() {
         <div className="dark-panel p-10 text-center max-w-md w-full anim-fade-up">
           <CheckCircle className="h-16 w-16 mx-auto text-primary mb-4" />
           <h1 className="font-heading text-3xl font-bold text-foreground italic">INSCRIÇÃO CONFIRMADA!</h1>
-          <p className="text-muted-foreground font-body text-sm mt-2">
-            Você está inscrito no <strong>{tournament.name}</strong>. Prepare-se para batalhar!
-          </p>
-          <Button onClick={() => navigate('/')} className="mt-6 font-heading tracking-wider">
-            Voltar ao Hub
-          </Button>
+          <p className="text-muted-foreground font-body text-sm mt-2">Você está inscrito no <strong>{tournament.name}</strong>. Prepare-se para batalhar!</p>
+          <Button onClick={() => navigate('/')} className="mt-6 font-heading tracking-wider">Voltar ao Hub</Button>
         </div>
       </div>
     );
@@ -84,38 +79,24 @@ export default function TournamentSignup() {
           <h1 className="font-heading text-2xl font-bold tracking-[0.15em] text-foreground italic">INSCRIÇÃO</h1>
           <p className="text-primary font-heading text-sm font-bold mt-1">{tournament.name}</p>
         </div>
-
         <div className="space-y-5">
           <div className="flex justify-center">
-            <button
-              onClick={() => fileRef.current?.click()}
-              className={`h-24 w-24 flex items-center justify-center rounded-full border-2 border-dashed transition-all
-                ${customAvatar ? 'border-primary' : 'border-muted hover:border-primary/50'}`}
-            >
-              {customAvatar ? (
-                <img src={customAvatar} alt="avatar" className="h-full w-full rounded-full object-cover" />
-              ) : (
-                <Camera className="h-8 w-8 text-muted-foreground" />
-              )}
+            <button onClick={() => fileRef.current?.click()}
+              className={`h-24 w-24 flex items-center justify-center rounded-full border-2 border-dashed transition-all ${customAvatar ? 'border-primary' : 'border-muted hover:border-primary/50'}`}>
+              {customAvatar ? <img src={customAvatar} alt="avatar" className="h-full w-full rounded-full object-cover" /> : <Camera className="h-8 w-8 text-muted-foreground" />}
             </button>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
           </div>
-
           {!customAvatar && (
             <div className="flex flex-wrap justify-center gap-2">
               {DEFAULT_AVATARS.map(a => (
-                <button
-                  key={a}
-                  onClick={() => setSelectedAvatar(a)}
-                  className={`h-10 w-10 flex items-center justify-center text-xl border transition-all
-                    ${selectedAvatar === a ? 'border-primary bg-primary/10' : 'border-muted bg-card hover:border-primary/30'}`}
-                >
+                <button key={a} onClick={() => setSelectedAvatar(a)}
+                  className={`h-10 w-10 flex items-center justify-center text-xl border transition-all ${selectedAvatar === a ? 'border-primary bg-primary/10' : 'border-muted bg-card hover:border-primary/30'}`}>
                   {a}
                 </button>
               ))}
             </div>
           )}
-
           <div className="space-y-2">
             <Label className="font-heading tracking-wide text-muted-foreground">Nome</Label>
             <Input value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome completo" className="bg-muted/30 border-border" />
@@ -127,12 +108,7 @@ export default function TournamentSignup() {
               <Input value={nickname} onChange={e => setNickname(e.target.value)} placeholder="seu_nick" className="pl-7 bg-muted/30 border-border" />
             </div>
           </div>
-
-          <Button
-            onClick={handleRegister}
-            disabled={!name.trim()}
-            className="w-full font-heading tracking-wider text-lg gap-2 h-12 bg-primary text-primary-foreground hover:bg-primary/80"
-          >
+          <Button onClick={handleRegister} disabled={!name.trim()} className="w-full font-heading tracking-wider text-lg gap-2 h-12 bg-primary text-primary-foreground hover:bg-primary/80">
             <UserPlus className="h-5 w-5" /> REGISTRAR BLADER
           </Button>
         </div>

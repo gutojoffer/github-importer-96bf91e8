@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { getCompletedTournaments, getPlayers } from '@/lib/storage';
 import { Tournament, Player } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -12,8 +12,11 @@ export default function TournamentHistory() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setPlayers(getPlayers());
-    setTournaments(getCompletedTournaments());
+    const load = async () => {
+      setPlayers(await getPlayers());
+      setTournaments(await getCompletedTournaments());
+    };
+    load();
   }, []);
 
   const getPlayer = (id: string) => players.find(p => p.id === id);
@@ -41,13 +44,9 @@ export default function TournamentHistory() {
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-heading text-lg font-bold text-foreground italic">{t.name}</h3>
-                  <p className="text-xs text-muted-foreground font-body">
-                    {new Date(t.createdAt).toLocaleDateString('pt-BR')}
-                  </p>
+                  <p className="text-xs text-muted-foreground font-body">{new Date(t.createdAt).toLocaleDateString('pt-BR')}</p>
                 </div>
-                <span className="text-[10px] font-heading tracking-wider text-primary bg-primary/10 px-2 py-0.5">
-                  {t.playerIds.length} bladers
-                </span>
+                <span className="text-[10px] font-heading tracking-wider text-primary bg-primary/10 px-2 py-0.5">{t.playerIds.length} bladers</span>
               </div>
               {top3.length > 0 && (
                 <div className="flex items-center justify-center gap-4">
@@ -59,11 +58,7 @@ export default function TournamentHistory() {
                       <div key={s.playerId} className="flex flex-col items-center gap-1">
                         {idx === 0 && <Crown className="h-4 w-4 text-secondary" />}
                         <Avatar className={`h-10 w-10 border-2 ${bc}`}>
-                          {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? (
-                            <AvatarImage src={player.avatar} alt={player.name} />
-                          ) : (
-                            <AvatarFallback className="bg-muted text-sm">{player.avatar}</AvatarFallback>
-                          )}
+                          {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? <AvatarImage src={player.avatar} alt={player.name} /> : <AvatarFallback className="bg-muted text-sm">{player.avatar}</AvatarFallback>}
                         </Avatar>
                         <span className="text-[10px] font-heading text-muted-foreground">#{idx + 1}</span>
                       </div>
