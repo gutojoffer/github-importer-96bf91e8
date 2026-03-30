@@ -7,16 +7,19 @@ import VersusScreen from '@/components/VersusScreen';
 import ResultButtons from '@/components/ResultButtons';
 import ByeBanner from '@/components/ByeBanner';
 import ArenaMiniatures from '@/components/ArenaMiniatures';
+import TournamentHUD from '@/components/TournamentHUD';
+import VictorySplash from '@/components/VictorySplash';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { CheckCircle, Trophy, Award, XOctagon } from 'lucide-react';
+import { CheckCircle, Award, XOctagon } from 'lucide-react';
 
 export default function MatchArena() {
   const navigate = useNavigate();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
-  const [victoryFlash, setVictoryFlash] = useState<string | null>(null);
-  const [vsKey, setVsKey] = useState(0); // for re-triggering animations
+  const [victoryWinner, setVictoryWinner] = useState<Player | null>(null);
+  const [victoryFinish, setVictoryFinish] = useState<string | undefined>();
+  const [vsKey, setVsKey] = useState(0);
 
   useEffect(() => {
     setTournament(getActiveTournament());
@@ -67,11 +70,15 @@ export default function MatchArena() {
       match.result = { winnerId: matchWinnerId, finishType };
 
       const winner = getPlayer(matchWinnerId);
-      setVictoryFlash(winner?.nickname ? `@${winner.nickname.replace(/^@/, '')}` : winner?.name || 'WINNER');
+      if (winner) {
+        setVictoryWinner(winner);
+        setVictoryFinish(finishType);
+      }
       setTimeout(() => {
-        setVictoryFlash(null);
-        setVsKey(k => k + 1); // re-trigger slide-in for next match
-      }, 1800);
+        setVictoryWinner(null);
+        setVictoryFinish(undefined);
+        setVsKey(k => k + 1);
+      }, 3500);
 
       const allDone = currentRound.matches.every(m => m.result);
       if (allDone) {
@@ -95,21 +102,23 @@ export default function MatchArena() {
 
   const pendingByArena = (arenaIdx: number) => currentRound.matches.filter(m => m.arenaIndex === arenaIdx && !m.result && !m.isBye);
   const completedByArena = (arenaIdx: number) => currentRound.matches.filter(m => m.arenaIndex === arenaIdx && m.result && !m.isBye);
-  const allPending = currentRound.matches.filter(m => !m.result && !m.isBye);
+  const allNonBye = currentRound.matches.filter(m => !m.isBye);
+  const allPending = allNonBye.filter(m => !m.result);
   const byePlayer = currentRound.byePlayerId ? getPlayer(currentRound.byePlayerId) : null;
 
   return (
     <div className="p-5 max-w-7xl mx-auto space-y-4">
-      {/* Victory Flash */}
-      {victoryFlash && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm anim-victory">
-          <div className="text-center anim-fade-up">
-            <Trophy className="h-16 w-16 mx-auto text-secondary mb-4" />
-            <p className="font-heading text-5xl font-bold text-secondary tracking-widest italic">{victoryFlash}</p>
-            <p className="font-heading text-lg text-muted-foreground mt-2 tracking-[0.3em]">WINNER!</p>
-          </div>
-        </div>
+      {/* Victory Splash */}
+      {victoryWinner && (
+        <VictorySplash winner={victoryWinner} finishType={victoryFinish} />
       )}
+
+      {/* HUD */}
+      <TournamentHUD
+        tournament={tournament}
+        pendingCount={allPending.length}
+        totalMatches={allNonBye.length}
+      />
 
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">

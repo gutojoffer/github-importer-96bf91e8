@@ -105,3 +105,52 @@
 .anim-vs-flash { animation: vs-flash 0.6s ease-out both; }
 .anim-victory { animation: victory-flash 1.8s ease-out both; }
 .anim-pulse { animation: pulse-crimson 2s ease-in-out infinite; }
+
+/* Victory splash animations */
+@keyframes victory-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes victory-card-in {
+  0% { opacity: 0; transform: scale(0.6) translateY(30px); }
+  60% { opacity: 1; transform: scale(1.05) translateY(-5px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes crown-drop {
+  0% { opacity: 0; transform: translateY(-40px) scale(0.5); }
+  60% { opacity: 1; transform: translateY(5px) scale(1.1); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.15); }
+}
+@keyframes text-glow {
+  0%, 100% { text-shadow: 0 0 10px hsl(var(--secondary) / 0.3); }
+  50% { text-shadow: 0 0 30px hsl(var(--secondary) / 0.6), 0 0 60px hsl(var(--secondary) / 0.2); }
+}
+
+.anim-victory-overlay { animation: victory-overlay-in 0.4s ease-out both; }
+.anim-victory-card { animation: victory-card-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
+.anim-crown-drop { animation: crown-drop 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both; }
+.anim-glow-pulse { animation: glow-pulse 2s ease-in-out infinite; }
+.anim-text-glow { animation: text-glow 2s ease-in-out infinite; }
+
+/* Score impact animations */
+@keyframes score-impact {
+  0% { transform: scale(1); filter: brightness(1); }
+  15% { transform: scale(1.4); filter: brightness(2); }
+  30% { transform: scale(0.9); filter: brightness(1.2); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+@keyframes score-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+.anim-score-impact { animation: score-impact 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.anim-score-shake { animation: score-shake 0.3s ease-out; }
