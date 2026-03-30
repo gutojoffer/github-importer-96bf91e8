@@ -14,7 +14,128 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      player_stats: {
+        Row: {
+          extreme_finish_wins: number
+          finish_wins: number
+          id: string
+          losses: number
+          month_key: string
+          player_id: string
+          points: number
+          week_key: string
+          wins: number
+        }
+        Insert: {
+          extreme_finish_wins?: number
+          finish_wins?: number
+          id?: string
+          losses?: number
+          month_key: string
+          player_id: string
+          points?: number
+          week_key: string
+          wins?: number
+        }
+        Update: {
+          extreme_finish_wins?: number
+          finish_wins?: number
+          id?: string
+          losses?: number
+          month_key?: string
+          player_id?: string
+          points?: number
+          week_key?: string
+          wins?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_stats_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      players: {
+        Row: {
+          avatar: string
+          created_at: string
+          id: string
+          name: string
+          nickname: string
+          xp: number
+        }
+        Insert: {
+          avatar?: string
+          created_at?: string
+          id?: string
+          name: string
+          nickname?: string
+          xp?: number
+        }
+        Update: {
+          avatar?: string
+          created_at?: string
+          id?: string
+          name?: string
+          nickname?: string
+          xp?: number
+        }
+        Relationships: []
+      }
+      tournaments: {
+        Row: {
+          arena_count: number
+          created_at: string
+          current_round: number
+          date: string
+          final_standings: Json | null
+          id: string
+          max_players: number | null
+          name: string
+          player_ids: string[]
+          points_to_win: number
+          rounds: Json
+          signup_deadline: string
+          status: string
+          total_rounds: number
+        }
+        Insert: {
+          arena_count?: number
+          created_at?: string
+          current_round?: number
+          date: string
+          final_standings?: Json | null
+          id?: string
+          max_players?: number | null
+          name: string
+          player_ids?: string[]
+          points_to_win?: number
+          rounds?: Json
+          signup_deadline?: string
+          status?: string
+          total_rounds?: number
+        }
+        Update: {
+          arena_count?: number
+          created_at?: string
+          current_round?: number
+          date?: string
+          final_standings?: Json | null
+          id?: string
+          max_players?: number | null
+          name?: string
+          player_ids?: string[]
+          points_to_win?: number
+          rounds?: Json
+          signup_deadline?: string
+          status?: string
+          total_rounds?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
