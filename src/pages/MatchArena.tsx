@@ -22,19 +22,21 @@ export default function MatchArena() {
   const [vsKey, setVsKey] = useState(0);
 
   useEffect(() => {
-    setTournament(getActiveTournament());
-    setPlayers(getPlayers());
+    const load = async () => {
+      setTournament(await getActiveTournament());
+      setPlayers(await getPlayers());
+    };
+    load();
   }, []);
 
   const getPlayer = (id: string) => players.find(p => p.id === id);
 
-  const handleEndTournament = () => {
+  const handleEndTournament = async () => {
     if (!tournament) return;
     const standings = calculateStandings(tournament);
-    awardXP(standings);
+    await awardXP(standings);
     const completed: Tournament = { ...tournament, status: 'completed', finalStandings: standings };
-    saveCompletedTournament(completed);
-    saveActiveTournament(null);
+    await saveCompletedTournament(completed);
     toast.success('🏆 Torneio encerrado!');
     navigate(`/history/${completed.id}`);
   };
@@ -55,7 +57,7 @@ export default function MatchArena() {
 
   const arenaNames = Array.from({ length: tournament.arenaCount }, (_, i) => `Arena ${String.fromCharCode(65 + i)}`);
 
-  const handleScorePoint = (matchId: string, winnerId: string, finishType: FinishType) => {
+  const handleScorePoint = async (matchId: string, winnerId: string, finishType: FinishType) => {
     const matchIdx = currentRound.matches.findIndex(m => m.id === matchId);
     if (matchIdx === -1) return;
     const match = currentRound.matches[matchIdx];
@@ -96,7 +98,7 @@ export default function MatchArena() {
       }
     }
 
-    saveActiveTournament({ ...tournament });
+    await saveActiveTournament({ ...tournament });
     setTournament({ ...tournament });
   };
 
@@ -108,19 +110,10 @@ export default function MatchArena() {
 
   return (
     <div className="p-5 max-w-7xl mx-auto space-y-4">
-      {/* Victory Splash */}
-      {victoryWinner && (
-        <VictorySplash winner={victoryWinner} finishType={victoryFinish} />
-      )}
+      {victoryWinner && <VictorySplash winner={victoryWinner} finishType={victoryFinish} />}
 
-      {/* HUD */}
-      <TournamentHUD
-        tournament={tournament}
-        pendingCount={allPending.length}
-        totalMatches={allNonBye.length}
-      />
+      <TournamentHUD tournament={tournament} pendingCount={allPending.length} totalMatches={allNonBye.length} />
 
-      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="crimson-line pl-3">
           <h1 className="font-heading text-2xl font-bold tracking-wider text-foreground italic">{tournament.name}</h1>
@@ -138,7 +131,6 @@ export default function MatchArena() {
 
       {byePlayer && <ByeBanner player={byePlayer} />}
 
-      {/* Arenas */}
       <div className={`grid gap-4 ${tournament.arenaCount >= 2 ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
         {arenaNames.map((arenaName, arenaIdx) => {
           const pending = pendingByArena(arenaIdx);
@@ -159,23 +151,11 @@ export default function MatchArena() {
                     pointsToWin={tournament.pointsToWin}
                   />
                   <div className="grid grid-cols-2 gap-3 px-1">
-                    <ResultButtons
-                      playerName={getPlayer(currentMatch.player1Id)?.nickname || getPlayer(currentMatch.player1Id)?.name || ''}
-                      side="left"
-                      onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player1Id, ft)}
-                      disabled={!!currentMatch.result}
-                    />
-                    <ResultButtons
-                      playerName={getPlayer(currentMatch.player2Id)?.nickname || getPlayer(currentMatch.player2Id)?.name || ''}
-                      side="right"
-                      onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player2Id, ft)}
-                      disabled={!!currentMatch.result}
-                    />
+                    <ResultButtons playerName={getPlayer(currentMatch.player1Id)?.nickname || getPlayer(currentMatch.player1Id)?.name || ''} side="left" onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player1Id, ft)} disabled={!!currentMatch.result} />
+                    <ResultButtons playerName={getPlayer(currentMatch.player2Id)?.nickname || getPlayer(currentMatch.player2Id)?.name || ''} side="right" onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player2Id, ft)} disabled={!!currentMatch.result} />
                   </div>
                   {pending.length > 1 && (
-                    <p className="text-[10px] text-muted-foreground text-center font-heading tracking-[0.2em]">
-                      +{pending.length - 1} MATCH(ES) IN QUEUE
-                    </p>
+                    <p className="text-[10px] text-muted-foreground text-center font-heading tracking-[0.2em]">+{pending.length - 1} MATCH(ES) IN QUEUE</p>
                   )}
                 </div>
               ) : (

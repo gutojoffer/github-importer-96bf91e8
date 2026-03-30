@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getPlayers, savePlayers, deletePlayer } from '@/lib/storage';
+import { getPlayers, addPlayer, deletePlayer } from '@/lib/storage';
 import { Player, DEFAULT_AVATARS } from '@/types/tournament';
 import PlayerCard from '@/components/PlayerCard';
 import { Plus, Trash2, Camera, Users } from 'lucide-react';
@@ -16,7 +16,7 @@ export default function PlayerManager() {
   const [customAvatar, setCustomAvatar] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { setPlayers(getPlayers()); }, []);
+  useEffect(() => { getPlayers().then(setPlayers); }, []);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -26,7 +26,7 @@ export default function PlayerManager() {
     reader.readAsDataURL(file);
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!name.trim()) { toast.error('Nome é obrigatório!'); return; }
     const player: Player = {
       id: crypto.randomUUID(),
@@ -36,16 +36,15 @@ export default function PlayerManager() {
       createdAt: new Date().toISOString(),
       xp: 0,
     };
-    const updated = [...players, player];
-    savePlayers(updated);
-    setPlayers(updated);
+    await addPlayer(player);
+    setPlayers(await getPlayers());
     setName(''); setNickname(''); setCustomAvatar(''); setSelectedAvatar(DEFAULT_AVATARS[0]);
     toast.success(`${player.nickname ? `@${player.nickname}` : player.name} cadastrado!`);
   };
 
-  const handleDelete = (id: string) => {
-    deletePlayer(id);
-    setPlayers(getPlayers());
+  const handleDelete = async (id: string) => {
+    await deletePlayer(id);
+    setPlayers(await getPlayers());
     toast.success('Jogador removido!');
   };
 
@@ -71,10 +70,8 @@ export default function PlayerManager() {
         <div className="space-y-2">
           <Label className="font-heading text-muted-foreground">Foto / Avatar</Label>
           <div className="flex flex-wrap gap-2 items-center">
-            <button
-              onClick={() => fileRef.current?.click()}
-              className={`h-14 w-14 flex items-center justify-center border-2 border-dashed transition-all rounded-full ${customAvatar ? 'border-primary' : 'border-muted hover:border-primary/50'}`}
-            >
+            <button onClick={() => fileRef.current?.click()}
+              className={`h-14 w-14 flex items-center justify-center border-2 border-dashed transition-all rounded-full ${customAvatar ? 'border-primary' : 'border-muted hover:border-primary/50'}`}>
               {customAvatar ? <img src={customAvatar} alt="avatar" className="h-full w-full rounded-full object-cover" /> : <Camera className="h-5 w-5 text-muted-foreground" />}
             </button>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
@@ -92,9 +89,7 @@ export default function PlayerManager() {
       </div>
 
       <div>
-        <h2 className="font-heading text-xl font-bold mb-3 tracking-wider text-muted-foreground">
-          CADASTRADOS ({players.length})
-        </h2>
+        <h2 className="font-heading text-xl font-bold mb-3 tracking-wider text-muted-foreground">CADASTRADOS ({players.length})</h2>
         {players.length === 0 ? (
           <div className="dark-panel p-12 text-center">
             <Users className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />

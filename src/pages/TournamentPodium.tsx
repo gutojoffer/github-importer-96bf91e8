@@ -13,9 +13,13 @@ export default function TournamentPodium() {
   const [players, setPlayers] = useState<Player[]>([]);
 
   useEffect(() => {
-    setPlayers(getPlayers());
-    const found = getCompletedTournaments().find(t => t.id === id);
-    if (found) setTournament(found);
+    const load = async () => {
+      setPlayers(await getPlayers());
+      const all = await getCompletedTournaments();
+      const found = all.find(t => t.id === id);
+      if (found) setTournament(found);
+    };
+    load();
   }, [id]);
 
   const getPlayer = (pid: string) => players.find(p => p.id === pid);
@@ -52,12 +56,9 @@ export default function TournamentPodium() {
 
       <div className="text-center space-y-2">
         <h1 className="font-heading text-3xl font-bold tracking-[0.15em] text-foreground italic">{tournament.name}</h1>
-        <p className="text-sm text-muted-foreground font-body">
-          {new Date(tournament.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
-        </p>
+        <p className="text-sm text-muted-foreground font-body">{new Date(tournament.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
       </div>
 
-      {/* Podium */}
       <div className="flex items-end justify-center gap-6 sm:gap-10 pt-8 pb-4">
         {podiumOrder.map((standing, displayIdx) => {
           if (!standing) return null;
@@ -65,17 +66,11 @@ export default function TournamentPodium() {
           if (!player) return null;
           const config = top3.length >= 3 ? configs[displayIdx] : configs[1];
           const isFirst = standing.placement === 1;
-
           return (
-            <div key={standing.playerId} className={`flex flex-col items-center gap-2 ${isFirst ? '-mt-8' : 'mt-4'} anim-fade-up`}
-              style={{ animationDelay: `${displayIdx * 150}ms` }}>
+            <div key={standing.playerId} className={`flex flex-col items-center gap-2 ${isFirst ? '-mt-8' : 'mt-4'} anim-fade-up`} style={{ animationDelay: `${displayIdx * 150}ms` }}>
               {isFirst && <Crown className="h-8 w-8 text-secondary" />}
               <Avatar className={`${config.size} border-4 ${config.border}`}>
-                {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? (
-                  <AvatarImage src={player.avatar} alt={player.name} />
-                ) : (
-                  <AvatarFallback className="bg-muted text-3xl">{player.avatar}</AvatarFallback>
-                )}
+                {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? <AvatarImage src={player.avatar} alt={player.name} /> : <AvatarFallback className="bg-muted text-3xl">{player.avatar}</AvatarFallback>}
               </Avatar>
               <div className="text-center">
                 <span className="font-heading text-2xl font-bold italic" style={{ color: `hsl(${config.color})` }}>{config.label}</span>
@@ -90,22 +85,14 @@ export default function TournamentPodium() {
         })}
       </div>
 
-      {/* Podium bases */}
       {top3.length >= 3 && (
         <div className="flex items-end justify-center gap-2 sm:gap-4 -mt-2">
-          <div className="w-24 sm:w-28 h-16 dark-panel rounded-t border-t-2 border-muted-foreground/30 flex items-center justify-center">
-            <Medal className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <div className="w-24 sm:w-28 h-24 dark-panel rounded-t border-t-2 border-secondary/50 flex items-center justify-center anim-pulse">
-            <Trophy className="h-6 w-6 text-secondary" />
-          </div>
-          <div className="w-24 sm:w-28 h-12 dark-panel rounded-t border-t-2 border-accent/30 flex items-center justify-center">
-            <Medal className="h-5 w-5 text-accent" />
-          </div>
+          <div className="w-24 sm:w-28 h-16 dark-panel rounded-t border-t-2 border-muted-foreground/30 flex items-center justify-center"><Medal className="h-5 w-5 text-muted-foreground" /></div>
+          <div className="w-24 sm:w-28 h-24 dark-panel rounded-t border-t-2 border-secondary/50 flex items-center justify-center anim-pulse"><Trophy className="h-6 w-6 text-secondary" /></div>
+          <div className="w-24 sm:w-28 h-12 dark-panel rounded-t border-t-2 border-accent/30 flex items-center justify-center"><Medal className="h-5 w-5 text-accent" /></div>
         </div>
       )}
 
-      {/* Other placements */}
       {rest.length > 0 && (
         <div className="space-y-3">
           <h2 className="font-heading text-lg font-bold tracking-wider text-muted-foreground italic">OUTRAS COLOCAÇÕES</h2>
@@ -117,15 +104,9 @@ export default function TournamentPodium() {
                 <div key={s.playerId} className="dark-panel flex items-center gap-3 p-3">
                   <span className="font-heading text-lg font-bold w-8 text-center text-muted-foreground italic">#{s.placement}</span>
                   <Avatar className="h-8 w-8 border border-border">
-                    {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? (
-                      <AvatarImage src={player.avatar} alt={player.name} />
-                    ) : (
-                      <AvatarFallback className="bg-muted text-sm">{player.avatar}</AvatarFallback>
-                    )}
+                    {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? <AvatarImage src={player.avatar} alt={player.name} /> : <AvatarFallback className="bg-muted text-sm">{player.avatar}</AvatarFallback>}
                   </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-heading font-bold text-sm truncate">{player.name}</p>
-                  </div>
+                  <div className="flex-1 min-w-0"><p className="font-heading font-bold text-sm truncate">{player.name}</p></div>
                   <EloBadge xp={player.xp || 0} size="sm" />
                   <span className="text-xs text-muted-foreground font-body">{s.wins}W/{s.losses}L</span>
                   <span className="text-secondary font-heading font-bold text-sm">+{s.xpAwarded} XP</span>

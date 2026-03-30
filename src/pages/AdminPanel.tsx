@@ -7,7 +7,7 @@ import { getTournaments, saveTournaments, getPlayers, saveActiveTournament, crea
 import { Tournament, Player } from '@/types/tournament';
 import { suggestRounds, generateFirstRound } from '@/lib/matchmaking';
 import PlayerCard from '@/components/PlayerCard';
-import { Plus, Play, Lightbulb, Calendar, Users, Eye, Swords } from 'lucide-react';
+import { Plus, Play, Lightbulb, Calendar, Users, Swords } from 'lucide-react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -20,19 +20,20 @@ export default function AdminPanel() {
   const [tDate, setTDate] = useState('');
   const [tDeadline, setTDeadline] = useState('');
   const [tMaxPlayers, setTMaxPlayers] = useState(32);
-
-  // Start tournament modal
   const [startingTournament, setStartingTournament] = useState<Tournament | null>(null);
   const [arenaCount, setArenaCount] = useState(2);
   const [rounds, setRounds] = useState(3);
   const [pointsToWin, setPointsToWin] = useState(4);
 
   useEffect(() => {
-    setPlayers(getPlayers());
-    setTournaments(getTournaments());
+    const load = async () => {
+      setPlayers(await getPlayers());
+      setTournaments(await getTournaments());
+    };
+    load();
   }, []);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!tName.trim() || !tDate) { toast.error('Preencha nome e data!'); return; }
     const t: Tournament = {
       id: crypto.randomUUID(),
@@ -49,14 +50,14 @@ export default function AdminPanel() {
       createdAt: new Date().toISOString(),
       maxPlayers: tMaxPlayers,
     };
-    createUpcomingTournament(t);
-    setTournaments(getTournaments());
+    await createUpcomingTournament(t);
+    setTournaments(await getTournaments());
     setShowCreate(false);
     setTName(''); setTDate(''); setTDeadline('');
     toast.success('Torneio criado! Ele agora aparece na Home pública.');
   };
 
-  const handleStartTournament = () => {
+  const handleStartTournament = async () => {
     if (!startingTournament) return;
     if (startingTournament.playerIds.length < 2) { toast.error('Mínimo 2 jogadores inscritos!'); return; }
 
@@ -71,10 +72,9 @@ export default function AdminPanel() {
       currentRound: 0,
     };
 
-    // Remove from upcoming
-    const all = getTournaments().filter(t => t.id !== startingTournament.id);
-    saveTournaments(all);
-    saveActiveTournament(active);
+    const all = (await getTournaments()).filter(t => t.id !== startingTournament.id);
+    await saveTournaments(all);
+    await saveActiveTournament(active);
     toast.success('Torneio iniciado! Let it rip! 🌀');
     navigate('/arena');
   };
@@ -85,15 +85,12 @@ export default function AdminPanel() {
   return (
     <div className="p-5 max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-heading text-3xl font-bold tracking-wider text-foreground italic crimson-line pl-3">
-          PAINEL ADMIN
-        </h1>
+        <h1 className="font-heading text-3xl font-bold tracking-wider text-foreground italic crimson-line pl-3">PAINEL ADMIN</h1>
         <Button onClick={() => setShowCreate(!showCreate)} className="font-heading tracking-wider gap-2 bg-primary text-primary-foreground">
           <Plus className="h-4 w-4" /> Criar Torneio
         </Button>
       </div>
 
-      {/* Create form */}
       {showCreate && (
         <div className="dark-panel p-5 space-y-4 border-l-4 border-secondary anim-fade-up">
           <h2 className="font-heading text-lg font-bold text-secondary tracking-wider">NOVO TORNEIO</h2>
@@ -121,12 +118,9 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* Start Tournament Modal */}
       {startingTournament && (
         <div className="dark-panel p-5 space-y-4 border-l-4 border-primary anim-fade-up">
-          <h2 className="font-heading text-lg font-bold text-primary tracking-wider">
-            INICIAR: {startingTournament.name}
-          </h2>
+          <h2 className="font-heading text-lg font-bold text-primary tracking-wider">INICIAR: {startingTournament.name}</h2>
           <p className="text-xs text-muted-foreground font-body">{startingTournament.playerIds.length} jogadores inscritos</p>
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
@@ -156,7 +150,6 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* Tournament list */}
       <div className="space-y-4">
         <h2 className="font-heading text-xl font-bold tracking-wider text-muted-foreground">TORNEIOS AGENDADOS</h2>
         {tournaments.filter(t => t.status === 'upcoming').length === 0 ? (
@@ -173,7 +166,6 @@ export default function AdminPanel() {
                     <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{new Date(t.date).toLocaleDateString('pt-BR')}</span>
                     <span className="flex items-center gap-1"><Users className="h-3 w-3" />{t.playerIds.length} inscritos</span>
                   </div>
-                  {/* Registered player mini avatars */}
                   {t.playerIds.length > 0 && (
                     <div className="flex -space-x-2 mt-2">
                       {t.playerIds.slice(0, 8).map(pid => {
@@ -181,11 +173,7 @@ export default function AdminPanel() {
                         if (!p) return null;
                         return (
                           <Avatar key={pid} className="h-6 w-6 border border-card">
-                            {p.avatar.startsWith('http') || p.avatar.startsWith('data:') ? (
-                              <AvatarImage src={p.avatar} alt={p.name} />
-                            ) : (
-                              <AvatarFallback className="bg-muted text-[8px]">{p.avatar}</AvatarFallback>
-                            )}
+                            {p.avatar.startsWith('http') || p.avatar.startsWith('data:') ? <AvatarImage src={p.avatar} alt={p.name} /> : <AvatarFallback className="bg-muted text-[8px]">{p.avatar}</AvatarFallback>}
                           </Avatar>
                         );
                       })}
@@ -193,17 +181,10 @@ export default function AdminPanel() {
                     </div>
                   )}
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setStartingTournament(t)}
-                    className="font-heading tracking-wider gap-1 border-primary text-primary hover:bg-primary/10"
-                    disabled={t.playerIds.length < 2}
-                  >
-                    <Swords className="h-3 w-3" /> Iniciar
-                  </Button>
-                </div>
+                <Button variant="outline" size="sm" onClick={() => setStartingTournament(t)}
+                  className="font-heading tracking-wider gap-1 border-primary text-primary hover:bg-primary/10" disabled={t.playerIds.length < 2}>
+                  <Swords className="h-3 w-3" /> Iniciar
+                </Button>
               </div>
             </div>
           ))
