@@ -42,8 +42,8 @@ export default function TournamentPodium() {
 
   const configs = [
     { border: 'border-muted-foreground', label: '2º', size: 'h-20 w-20', color: '210 10% 70%' },
-    { border: 'border-secondary', label: '1º', size: 'h-28 w-28', color: '45 80% 55%' },
-    { border: 'border-accent', label: '3º', size: 'h-20 w-20', color: '25 60% 50%' },
+    { border: 'border-accent', label: '1º', size: 'h-28 w-28', color: '45 90% 55%' },
+    { border: 'border-secondary', label: '3º', size: 'h-20 w-20', color: '310 80% 60%' },
   ];
 
   return (
@@ -68,7 +68,7 @@ export default function TournamentPodium() {
           const isFirst = standing.placement === 1;
           return (
             <div key={standing.playerId} className={`flex flex-col items-center gap-2 ${isFirst ? '-mt-8' : 'mt-4'} anim-fade-up`} style={{ animationDelay: `${displayIdx * 150}ms` }}>
-              {isFirst && <Crown className="h-8 w-8 text-secondary" />}
+              {isFirst && <Crown className="h-8 w-8 text-accent" />}
               <Avatar className={`${config.size} border-4 ${config.border}`}>
                 {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? <AvatarImage src={player.avatar} alt={player.name} /> : <AvatarFallback className="bg-muted text-3xl">{player.avatar}</AvatarFallback>}
               </Avatar>
@@ -77,7 +77,7 @@ export default function TournamentPodium() {
                 <p className="font-heading font-bold text-foreground text-sm mt-1">{player.name}</p>
                 {player.nickname && <p className="text-[10px] text-muted-foreground">@{player.nickname.replace(/^@/, '')}</p>}
                 <EloBadge xp={player.xp || 0} size="sm" />
-                <p className="text-xs text-secondary font-heading font-bold mt-1">+{standing.xpAwarded} XP</p>
+                <p className="text-xs text-primary font-heading font-bold mt-1">+{standing.xpAwarded} XP</p>
                 <p className="text-[10px] text-muted-foreground">{standing.wins}W / {standing.losses}L</p>
               </div>
             </div>
@@ -87,9 +87,9 @@ export default function TournamentPodium() {
 
       {top3.length >= 3 && (
         <div className="flex items-end justify-center gap-2 sm:gap-4 -mt-2">
-          <div className="w-24 sm:w-28 h-16 dark-panel rounded-t border-t-2 border-muted-foreground/30 flex items-center justify-center"><Medal className="h-5 w-5 text-muted-foreground" /></div>
-          <div className="w-24 sm:w-28 h-24 dark-panel rounded-t border-t-2 border-secondary/50 flex items-center justify-center anim-pulse"><Trophy className="h-6 w-6 text-secondary" /></div>
-          <div className="w-24 sm:w-28 h-12 dark-panel rounded-t border-t-2 border-accent/30 flex items-center justify-center"><Medal className="h-5 w-5 text-accent" /></div>
+          <div className="w-24 sm:w-28 h-16 glass-panel rounded-t-xl border-t-2 border-muted-foreground/30 flex items-center justify-center"><Medal className="h-5 w-5 text-muted-foreground" /></div>
+          <div className="w-24 sm:w-28 h-24 glass-panel rounded-t-xl border-t-2 border-accent/50 flex items-center justify-center anim-pulse"><Trophy className="h-6 w-6 text-accent" /></div>
+          <div className="w-24 sm:w-28 h-12 glass-panel rounded-t-xl border-t-2 border-secondary/30 flex items-center justify-center"><Medal className="h-5 w-5 text-secondary" /></div>
         </div>
       )}
 
@@ -101,7 +101,7 @@ export default function TournamentPodium() {
               const player = getPlayer(s.playerId);
               if (!player) return null;
               return (
-                <div key={s.playerId} className="dark-panel flex items-center gap-3 p-3">
+                <div key={s.playerId} className="glass-panel flex items-center gap-3 p-3">
                   <span className="font-heading text-lg font-bold w-8 text-center text-muted-foreground italic">#{s.placement}</span>
                   <Avatar className="h-8 w-8 border border-border">
                     {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? <AvatarImage src={player.avatar} alt={player.name} /> : <AvatarFallback className="bg-muted text-sm">{player.avatar}</AvatarFallback>}
@@ -109,7 +109,7 @@ export default function TournamentPodium() {
                   <div className="flex-1 min-w-0"><p className="font-heading font-bold text-sm truncate">{player.name}</p></div>
                   <EloBadge xp={player.xp || 0} size="sm" />
                   <span className="text-xs text-muted-foreground font-body">{s.wins}W/{s.losses}L</span>
-                  <span className="text-secondary font-heading font-bold text-sm">+{s.xpAwarded} XP</span>
+                  <span className="text-primary font-heading font-bold text-sm">+{s.xpAwarded} XP</span>
                 </div>
               );
             })}

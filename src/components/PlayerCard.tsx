@@ -13,7 +13,7 @@ export default function PlayerCard({ player, selected, onClick, showElo = true }
   return (
     <div
       onClick={onClick}
-      className={`flex items-center gap-3 p-3 transition-all cursor-pointer dark-panel anim-fade-up
+      className={`flex items-center gap-3 p-3 transition-all cursor-pointer glass-panel anim-fade-up
         ${selected ? 'border-primary bg-primary/5 anim-pulse' : 'hover:border-primary/40'}`}
     >
       <Avatar className="h-11 w-11 border-2 border-muted">

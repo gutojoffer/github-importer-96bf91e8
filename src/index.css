@@ -6,44 +6,44 @@
 
 @layer base {
   :root {
-    --background: 225 30% 7%;
-    --foreground: 0 0% 93%;
+    --background: 220 30% 5%;
+    --foreground: 210 20% 93%;
 
-    --card: 225 25% 10%;
-    --card-foreground: 0 0% 93%;
+    --card: 220 25% 8%;
+    --card-foreground: 210 20% 93%;
 
-    --popover: 225 25% 10%;
-    --popover-foreground: 0 0% 93%;
+    --popover: 220 25% 8%;
+    --popover-foreground: 210 20% 93%;
 
-    --primary: 0 75% 55%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 185 100% 50%;
+    --primary-foreground: 220 30% 5%;
 
-    --secondary: 45 80% 55%;
-    --secondary-foreground: 225 30% 7%;
+    --secondary: 310 80% 60%;
+    --secondary-foreground: 220 30% 5%;
 
-    --muted: 225 20% 16%;
-    --muted-foreground: 225 15% 50%;
+    --muted: 220 20% 14%;
+    --muted-foreground: 220 15% 50%;
 
-    --accent: 185 80% 50%;
-    --accent-foreground: 225 30% 7%;
+    --accent: 45 90% 55%;
+    --accent-foreground: 220 30% 5%;
 
     --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 225 20% 18%;
-    --input: 225 20% 18%;
-    --ring: 0 75% 55%;
+    --border: 220 20% 15%;
+    --input: 220 20% 15%;
+    --ring: 185 100% 50%;
 
-    --radius: 0.25rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 225 28% 8%;
-    --sidebar-foreground: 0 0% 93%;
-    --sidebar-primary: 0 75% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 225 20% 16%;
-    --sidebar-accent-foreground: 0 0% 93%;
-    --sidebar-border: 225 20% 15%;
-    --sidebar-ring: 0 75% 55%;
+    --sidebar-background: 220 28% 6%;
+    --sidebar-foreground: 210 20% 93%;
+    --sidebar-primary: 185 100% 50%;
+    --sidebar-primary-foreground: 220 30% 5%;
+    --sidebar-accent: 220 20% 14%;
+    --sidebar-accent-foreground: 210 20% 93%;
+    --sidebar-border: 220 20% 12%;
+    --sidebar-ring: 185 100% 50%;
   }
 }
 
@@ -59,15 +59,36 @@
   }
 }
 
-/* Dark panels */
+/* Glassmorphism panel */
+.glass-panel {
+  background: hsl(var(--card) / 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid hsl(var(--border) / 0.5);
+  border-radius: var(--radius);
+}
+
+/* Dark panel (solid variant) */
 .dark-panel {
   background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
 }
 
-/* Crimson accent line */
-.crimson-line {
+/* Neon accent lines */
+.neon-line-cyan {
   border-left: 3px solid hsl(var(--primary));
+}
+.neon-line-magenta {
+  border-left: 3px solid hsl(var(--secondary));
+}
+
+/* Neon glow utilities */
+.glow-cyan {
+  box-shadow: 0 0 20px hsl(var(--primary) / 0.2), 0 0 40px hsl(var(--primary) / 0.1);
+}
+.glow-magenta {
+  box-shadow: 0 0 20px hsl(var(--secondary) / 0.2), 0 0 40px hsl(var(--secondary) / 0.1);
 }
 
 /* Slide-in animations */
@@ -88,23 +109,30 @@
   50% { opacity: 1; transform: scale(1.2); }
   100% { opacity: 1; transform: scale(1); }
 }
+@keyframes vs-clash {
+  0% { opacity: 0; transform: scale(0.3) rotate(-15deg); filter: brightness(3); }
+  40% { opacity: 1; transform: scale(1.4) rotate(5deg); filter: brightness(2); }
+  60% { transform: scale(0.9) rotate(-2deg); filter: brightness(1.5); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); filter: brightness(1); }
+}
 @keyframes victory-flash {
   0% { opacity: 0; }
   20% { opacity: 1; }
   80% { opacity: 1; }
   100% { opacity: 0; }
 }
-@keyframes pulse-crimson {
-  0%, 100% { box-shadow: 0 0 8px hsl(0 75% 55% / 0.3); }
-  50% { box-shadow: 0 0 20px hsl(0 75% 55% / 0.6); }
+@keyframes pulse-neon {
+  0%, 100% { box-shadow: 0 0 8px hsl(var(--primary) / 0.3); }
+  50% { box-shadow: 0 0 24px hsl(var(--primary) / 0.6), 0 0 48px hsl(var(--primary) / 0.2); }
 }
 
 .anim-slide-left { animation: slide-from-left 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .anim-slide-right { animation: slide-from-right 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .anim-fade-up { animation: fade-up 0.4s ease-out both; }
 .anim-vs-flash { animation: vs-flash 0.6s ease-out both; }
+.anim-vs-clash { animation: vs-clash 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .anim-victory { animation: victory-flash 1.8s ease-out both; }
-.anim-pulse { animation: pulse-crimson 2s ease-in-out infinite; }
+.anim-pulse { animation: pulse-neon 2s ease-in-out infinite; }
 
 /* Victory splash animations */
 @keyframes victory-overlay-in {
@@ -126,8 +154,8 @@
   50% { opacity: 0.6; transform: scale(1.15); }
 }
 @keyframes text-glow {
-  0%, 100% { text-shadow: 0 0 10px hsl(var(--secondary) / 0.3); }
-  50% { text-shadow: 0 0 30px hsl(var(--secondary) / 0.6), 0 0 60px hsl(var(--secondary) / 0.2); }
+  0%, 100% { text-shadow: 0 0 10px hsl(var(--primary) / 0.3); }
+  50% { text-shadow: 0 0 30px hsl(var(--primary) / 0.6), 0 0 60px hsl(var(--primary) / 0.2); }
 }
 
 .anim-victory-overlay { animation: victory-overlay-in 0.4s ease-out both; }
@@ -139,7 +167,7 @@
 /* Score impact animations */
 @keyframes score-impact {
   0% { transform: scale(1); filter: brightness(1); }
-  15% { transform: scale(1.4); filter: brightness(2); }
+  15% { transform: scale(1.4); filter: brightness(2.5); }
   30% { transform: scale(0.9); filter: brightness(1.2); }
   50% { transform: scale(1.1); }
   100% { transform: scale(1); filter: brightness(1); }
