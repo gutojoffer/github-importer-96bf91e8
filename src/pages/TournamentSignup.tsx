@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { getTournaments, addPlayer, registerPlayerToTournament } from '@/lib/storage';
 import { Player, DEFAULT_AVATARS, Tournament } from '@/types/tournament';
-import { Camera, UserPlus, CheckCircle, Swords } from 'lucide-react';
+import { Camera, UserPlus, CheckCircle, Trophy } from 'lucide-react';
 
 export default function TournamentSignup() {
   const { tournamentId } = useParams<{ tournamentId: string }>();
@@ -36,12 +36,10 @@ export default function TournamentSignup() {
   const handleRegister = async () => {
     if (!name.trim() || !tournament) return;
     const player: Player = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
+      id: crypto.randomUUID(), name: name.trim(),
       nickname: nickname.trim().replace(/^@/, ''),
       avatar: customAvatar || selectedAvatar,
-      createdAt: new Date().toISOString(),
-      xp: 0,
+      createdAt: new Date().toISOString(), xp: 0,
     };
     await addPlayer(player);
     await registerPlayerToTournament(tournament.id, player.id);
@@ -50,9 +48,9 @@ export default function TournamentSignup() {
 
   if (!tournament) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="dark-panel p-10 text-center max-w-md w-full">
-          <Swords className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <div className="glass-panel p-10 text-center max-w-md w-full">
+          <Trophy className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-muted-foreground font-body">Torneio não encontrado.</p>
         </div>
       </div>
@@ -61,20 +59,20 @@ export default function TournamentSignup() {
 
   if (registered) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="dark-panel p-10 text-center max-w-md w-full anim-fade-up">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <div className="glass-panel p-10 text-center max-w-md w-full anim-fade-up glow-cyan">
           <CheckCircle className="h-16 w-16 mx-auto text-primary mb-4" />
           <h1 className="font-heading text-3xl font-bold text-foreground italic">INSCRIÇÃO CONFIRMADA!</h1>
-          <p className="text-muted-foreground font-body text-sm mt-2">Você está inscrito no <strong>{tournament.name}</strong>. Prepare-se para batalhar!</p>
-          <Button onClick={() => navigate('/')} className="mt-6 font-heading tracking-wider">Voltar ao Hub</Button>
+          <p className="text-muted-foreground font-body text-sm mt-2">Você está inscrito no <strong className="text-primary">{tournament.name}</strong>. Prepare-se!</p>
+          <Button onClick={() => navigate('/')} className="mt-6 font-heading tracking-wider bg-primary text-primary-foreground">Voltar ao Hub</Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="dark-panel p-8 max-w-md w-full border-l-4 border-primary">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="glass-panel p-8 max-w-md w-full neon-line-cyan glow-cyan">
         <div className="text-center mb-6">
           <h1 className="font-heading text-2xl font-bold tracking-[0.15em] text-foreground italic">INSCRIÇÃO</h1>
           <p className="text-primary font-heading text-sm font-bold mt-1">{tournament.name}</p>
@@ -91,18 +89,18 @@ export default function TournamentSignup() {
             <div className="flex flex-wrap justify-center gap-2">
               {DEFAULT_AVATARS.map(a => (
                 <button key={a} onClick={() => setSelectedAvatar(a)}
-                  className={`h-10 w-10 flex items-center justify-center text-xl border transition-all ${selectedAvatar === a ? 'border-primary bg-primary/10' : 'border-muted bg-card hover:border-primary/30'}`}>
+                  className={`h-10 w-10 flex items-center justify-center text-xl border transition-all rounded-lg ${selectedAvatar === a ? 'border-primary bg-primary/10' : 'border-muted bg-card hover:border-primary/30'}`}>
                   {a}
                 </button>
               ))}
             </div>
           )}
           <div className="space-y-2">
-            <Label className="font-heading tracking-wide text-muted-foreground">Nome</Label>
+            <Label className="font-heading tracking-wide text-muted-foreground text-xs">Nome</Label>
             <Input value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome completo" className="bg-muted/30 border-border" />
           </div>
           <div className="space-y-2">
-            <Label className="font-heading tracking-wide text-muted-foreground">Nickname</Label>
+            <Label className="font-heading tracking-wide text-muted-foreground text-xs">Nickname</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
               <Input value={nickname} onChange={e => setNickname(e.target.value)} placeholder="seu_nick" className="pl-7 bg-muted/30 border-border" />

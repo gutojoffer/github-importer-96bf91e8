@@ -29,12 +29,10 @@ export default function PlayerManager() {
   const handleAdd = async () => {
     if (!name.trim()) { toast.error('Nome é obrigatório!'); return; }
     const player: Player = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
+      id: crypto.randomUUID(), name: name.trim(),
       nickname: nickname.trim().replace(/^@/, ''),
       avatar: customAvatar || selectedAvatar,
-      createdAt: new Date().toISOString(),
-      xp: 0,
+      createdAt: new Date().toISOString(), xp: 0,
     };
     await addPlayer(player);
     setPlayers(await getPlayers());
@@ -50,17 +48,19 @@ export default function PlayerManager() {
 
   return (
     <div className="p-5 max-w-4xl mx-auto space-y-6">
-      <h1 className="font-heading text-3xl font-bold tracking-wider text-foreground italic crimson-line pl-3">BLADERS</h1>
+      <h1 className="font-heading text-3xl font-bold tracking-wider text-foreground italic neon-line-cyan pl-3 flex items-center gap-2">
+        <Users className="h-7 w-7 text-primary" /> BLADERS
+      </h1>
 
-      <div className="dark-panel p-5 space-y-4 border-l-4 border-secondary">
+      <div className="glass-panel p-5 space-y-4 neon-line-magenta">
         <h2 className="font-heading text-lg font-bold tracking-wider text-secondary">ADICIONAR BLADER</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="font-heading text-muted-foreground">Nome Completo</Label>
+            <Label className="font-heading text-muted-foreground text-xs">Nome Completo</Label>
             <Input value={name} onChange={e => setName(e.target.value)} placeholder='Ex: RODRIGO "DRO" SOUZA' className="bg-muted/30 border-border" />
           </div>
           <div className="space-y-2">
-            <Label className="font-heading text-muted-foreground">Nickname</Label>
+            <Label className="font-heading text-muted-foreground text-xs">Nickname</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
               <Input value={nickname} onChange={e => setNickname(e.target.value)} placeholder="dro_beys" className="pl-7 bg-muted/30 border-border" />
@@ -68,7 +68,7 @@ export default function PlayerManager() {
           </div>
         </div>
         <div className="space-y-2">
-          <Label className="font-heading text-muted-foreground">Foto / Avatar</Label>
+          <Label className="font-heading text-muted-foreground text-xs">Foto / Avatar</Label>
           <div className="flex flex-wrap gap-2 items-center">
             <button onClick={() => fileRef.current?.click()}
               className={`h-14 w-14 flex items-center justify-center border-2 border-dashed transition-all rounded-full ${customAvatar ? 'border-primary' : 'border-muted hover:border-primary/50'}`}>
@@ -78,12 +78,13 @@ export default function PlayerManager() {
             <span className="text-muted-foreground text-xs font-body">ou:</span>
             {DEFAULT_AVATARS.map(a => (
               <button key={a} onClick={() => { setSelectedAvatar(a); setCustomAvatar(''); }}
-                className={`h-9 w-9 flex items-center justify-center text-lg border transition-all ${selectedAvatar === a && !customAvatar ? 'border-primary bg-primary/10' : 'border-muted bg-card hover:border-primary/30'}`}
-              >{a}</button>
+                className={`h-9 w-9 flex items-center justify-center text-lg border transition-all rounded-lg ${selectedAvatar === a && !customAvatar ? 'border-primary bg-primary/10' : 'border-muted bg-card hover:border-primary/30'}`}>
+                {a}
+              </button>
             ))}
           </div>
         </div>
-        <Button onClick={handleAdd} className="font-heading tracking-wider gap-2 bg-secondary text-secondary-foreground">
+        <Button onClick={handleAdd} className="font-heading tracking-wider gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80">
           <Plus className="h-4 w-4" /> Cadastrar
         </Button>
       </div>
@@ -91,7 +92,7 @@ export default function PlayerManager() {
       <div>
         <h2 className="font-heading text-xl font-bold mb-3 tracking-wider text-muted-foreground">CADASTRADOS ({players.length})</h2>
         {players.length === 0 ? (
-          <div className="dark-panel p-12 text-center">
+          <div className="glass-panel p-12 text-center">
             <Users className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
             <p className="text-muted-foreground text-sm font-body">Nenhum blader cadastrado.</p>
           </div>
@@ -101,7 +102,7 @@ export default function PlayerManager() {
               <div key={p.id} className="relative group">
                 <PlayerCard player={p} />
                 <button onClick={() => handleDelete(p.id)}
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-destructive/80 text-destructive-foreground">
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-destructive/80 text-destructive-foreground rounded-lg">
                   <Trash2 className="h-3 w-3" />
                 </button>
               </div>

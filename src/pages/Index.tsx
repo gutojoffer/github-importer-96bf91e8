@@ -4,7 +4,7 @@ import { getTournaments, getPlayers } from '@/lib/storage';
 import { Tournament, Player } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Swords, Calendar, Users, ChevronRight } from 'lucide-react';
+import { Trophy, Calendar, Users, ChevronRight } from 'lucide-react';
 
 const Index = () => {
   const [upcoming, setUpcoming] = useState<Tournament[]>([]);
@@ -22,24 +22,31 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <section className="relative py-20 px-4 text-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-secondary/3 to-transparent" />
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[100px]" />
+          <div className="absolute top-1/3 left-1/4 w-[300px] h-[300px] bg-secondary/5 rounded-full blur-[80px]" />
+        </div>
         <div className="relative z-10 max-w-3xl mx-auto">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <Swords className="h-10 w-10 text-primary" />
+            <div className="relative">
+              <Trophy className="h-12 w-12 text-primary" />
+              <div className="absolute -inset-2 bg-primary/10 rounded-full blur-md anim-glow-pulse" />
+            </div>
           </div>
           <h1 className="font-heading text-5xl sm:text-6xl font-bold tracking-[0.15em] text-foreground italic">BLADER HUB X</h1>
           <p className="font-heading text-sm text-muted-foreground tracking-[0.3em] mt-2 uppercase">Tournament Management System</p>
-          <div className="w-24 h-[2px] bg-primary mx-auto mt-6" />
+          <div className="w-24 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent mx-auto mt-6" />
         </div>
       </section>
 
       <section className="max-w-4xl mx-auto px-4 pb-16 space-y-6">
-        <h2 className="font-heading text-2xl font-bold tracking-wider text-foreground flex items-center gap-2 crimson-line pl-3">PRÓXIMOS TORNEIOS</h2>
+        <h2 className="font-heading text-2xl font-bold tracking-wider text-foreground flex items-center gap-2 neon-line-cyan pl-3">PRÓXIMOS TORNEIOS</h2>
         {upcoming.length === 0 ? (
-          <div className="dark-panel p-12 text-center">
-            <Swords className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+          <div className="glass-panel p-12 text-center">
+            <Trophy className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
             <p className="text-muted-foreground font-body text-sm">Nenhum torneio agendado no momento.</p>
-            <p className="text-muted-foreground font-body text-xs mt-1">Organizadores podem criar torneios no painel Admin.</p>
+            <p className="text-muted-foreground font-body text-xs mt-1">Organizadores podem criar torneios na aba Torneio.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -47,8 +54,8 @@ const Index = () => {
               const registeredPlayers = t.playerIds.map(id => players.find(p => p.id === id)).filter(Boolean) as Player[];
               const spotsLeft = (t.maxPlayers || 32) - t.playerIds.length;
               return (
-                <div key={t.id} className="dark-panel p-0 overflow-hidden anim-fade-up" style={{ animationDelay: `${i * 100}ms` }}>
-                  <div className="border-l-4 border-primary p-5">
+                <div key={t.id} className="glass-panel p-0 overflow-hidden anim-fade-up" style={{ animationDelay: `${i * 100}ms` }}>
+                  <div className="neon-line-cyan p-5">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <h3 className="font-heading text-xl font-bold text-foreground italic tracking-wide">{t.name}</h3>
@@ -75,7 +82,7 @@ const Index = () => {
                       </Link>
                     </div>
                     {spotsLeft > 0 && spotsLeft <= 5 && (
-                      <p className="text-[10px] text-primary font-heading mt-2 tracking-wider">⚠ APENAS {spotsLeft} VAGA{spotsLeft > 1 ? 'S' : ''} RESTANTE{spotsLeft > 1 ? 'S' : ''}</p>
+                      <p className="text-[10px] text-secondary font-heading mt-2 tracking-wider">⚠ APENAS {spotsLeft} VAGA{spotsLeft > 1 ? 'S' : ''} RESTANTE{spotsLeft > 1 ? 'S' : ''}</p>
                     )}
                   </div>
                 </div>
