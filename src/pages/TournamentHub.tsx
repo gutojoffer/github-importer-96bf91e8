@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import {
   getTournaments, saveTournaments, getPlayers, saveActiveTournament, getActiveTournament,
   createUpcomingTournament, addPlayer, registerPlayerToTournament, saveCompletedTournament,
-  calculateStandings, awardXP,
+  calculateStandings, awardXP, deleteTournament,
 } from '@/lib/storage';
 import { Tournament, Player, FinishType, FINISH_POINTS, DEFAULT_AVATARS } from '@/types/tournament';
 import { suggestRounds, generateFirstRound, generateSwissRound } from '@/lib/matchmaking';
@@ -16,11 +16,12 @@ import ResultButtons from '@/components/ResultButtons';
 import ByeBanner from '@/components/ByeBanner';
 import TournamentHUD from '@/components/TournamentHUD';
 import VictorySplash from '@/components/VictorySplash';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import EloBadge from '@/components/EloBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Plus, Play, Lightbulb, Calendar, Users, Trophy, XOctagon, Award,
-  CheckCircle, Camera, UserPlus, X, Search, Check,
+  CheckCircle, Camera, UserPlus, X, Search, Check, Trash2, UserMinus,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -60,6 +61,12 @@ export default function TournamentHub() {
   const [victoryFinish, setVictoryFinish] = useState<string | undefined>();
   const [vsKey, setVsKey] = useState(0);
 
+  // Confirmations
+  const [confirmEndTournament, setConfirmEndTournament] = useState(false);
+  const [confirmCancelTournament, setConfirmCancelTournament] = useState(false);
+  const [confirmDeleteTournament, setConfirmDeleteTournament] = useState<string | null>(null);
+  const [confirmRemovePlayer, setConfirmRemovePlayer] = useState<string | null>(null);
+
   useEffect(() => {
     const load = async () => {
       setPlayers(await getPlayers());
@@ -73,11 +80,11 @@ export default function TournamentHub() {
     load();
   }, []);
 
-  const getPlayer = (id: string) => players.find(p => p.id === id);
+  const getPlayer = useCallback((id: string) => players.find(p => p.id === id), [players]);
   const suggested = startingTournament ? suggestRounds(startingTournament.playerIds.length) : 3;
 
   // ─── Create Tournament ───
-  const handleCreate = async () => {
+  const handleCreate = useCallback(async () => {
     if (!tName.trim() || !tDate) { toast.error('Preencha nome e data!'); return; }
     const t: Tournament = {
       id: crypto.randomUUID(), name: tName.trim(), date: tDate,
@@ -90,13 +97,12 @@ export default function TournamentHub() {
     setShowCreate(false);
     setTName(''); setTDate('');
     toast.success('Torneio criado!');
-  };
+  }, [tName, tDate, tMaxPlayers]);
 
   // ─── Enrollment ───
-  const handleEnroll = async (playerId: string) => {
+  const handleEnroll = useCallback(async (playerId: string) => {
     if (!enrollModal) return;
     if (enrollModal.playerIds.includes(playerId)) {
-      // Remove
       enrollModal.playerIds = enrollModal.playerIds.filter(id => id !== playerId);
     } else {
       enrollModal.playerIds.push(playerId);
@@ -104,9 +110,9 @@ export default function TournamentHub() {
     await saveTournaments([...(await getTournaments()).filter(t => t.id !== enrollModal.id), enrollModal]);
     setTournaments(await getTournaments());
     setEnrollModal({ ...enrollModal });
-  };
+  }, [enrollModal]);
 
-  const handleQuickAdd = async () => {
+  const handleQuickAdd = useCallback(async () => {
     if (!qaName.trim() || !enrollModal) { toast.error('Nome obrigatório!'); return; }
     const player: Player = {
       id: crypto.randomUUID(), name: qaName.trim(),
@@ -123,10 +129,10 @@ export default function TournamentHub() {
     setQaName(''); setQaNick(''); setQaCustomAvatar(''); setQaAvatar(DEFAULT_AVATARS[0]);
     setShowQuickAdd(false);
     toast.success(`${player.name} cadastrado e inscrito!`);
-  };
+  }, [qaName, qaNick, qaCustomAvatar, qaAvatar, enrollModal]);
 
   // ─── Start Tournament ───
-  const handleStartTournament = async () => {
+  const handleStartTournament = useCallback(async () => {
     if (!startingTournament) return;
     if (startingTournament.playerIds.length < 2) { toast.error('Mínimo 2 jogadores inscritos!'); return; }
     const firstRound = generateFirstRound(startingTournament.playerIds, arenaCount);
@@ -141,10 +147,10 @@ export default function TournamentHub() {
     setStartingTournament(null);
     setView('active');
     toast.success('🌀 Torneio iniciado! Let it rip!');
-  };
+  }, [startingTournament, arenaCount, rounds, pointsToWin]);
 
   // ─── Match Scoring ───
-  const handleScorePoint = async (matchId: string, winnerId: string, finishType: FinishType) => {
+  const handleScorePoint = useCallback(async (matchId: string, winnerId: string, finishType: FinishType) => {
     if (!activeTournament) return;
     const currentRound = activeTournament.rounds[activeTournament.currentRound];
     const matchIdx = currentRound.matches.findIndex(m => m.id === matchId);
@@ -181,10 +187,10 @@ export default function TournamentHub() {
 
     await saveActiveTournament({ ...activeTournament });
     setActiveTournament({ ...activeTournament });
-  };
+  }, [activeTournament, getPlayer]);
 
   // ─── End Tournament ───
-  const handleEndTournament = async () => {
+  const handleEndTournament = useCallback(async () => {
     if (!activeTournament) return;
     const standings = calculateStandings(activeTournament);
     await awardXP(standings);
@@ -193,9 +199,40 @@ export default function TournamentHub() {
     setActiveTournament(null);
     setView('list');
     setTournaments(await getTournaments());
+    setConfirmEndTournament(false);
     toast.success('🏆 Torneio encerrado!');
     navigate(`/history/${completed.id}`);
-  };
+  }, [activeTournament, navigate]);
+
+  // ─── Cancel Tournament ───
+  const handleCancelTournament = useCallback(async () => {
+    if (!activeTournament) return;
+    await deleteTournament(activeTournament.id);
+    setActiveTournament(null);
+    setView('list');
+    setTournaments(await getTournaments());
+    setConfirmCancelTournament(false);
+    toast.success('Torneio cancelado.');
+  }, [activeTournament]);
+
+  // ─── Delete upcoming tournament ───
+  const handleDeleteTournament = useCallback(async () => {
+    if (!confirmDeleteTournament) return;
+    await deleteTournament(confirmDeleteTournament);
+    setTournaments(await getTournaments());
+    setConfirmDeleteTournament(null);
+    toast.success('Torneio excluído.');
+  }, [confirmDeleteTournament]);
+
+  // ─── Remove player from active tournament (desistência) ───
+  const handleRemovePlayer = useCallback(async () => {
+    if (!activeTournament || !confirmRemovePlayer) return;
+    activeTournament.playerIds = activeTournament.playerIds.filter(id => id !== confirmRemovePlayer);
+    await saveActiveTournament({ ...activeTournament });
+    setActiveTournament({ ...activeTournament });
+    setConfirmRemovePlayer(null);
+    toast.success('Jogador removido (desistência).');
+  }, [activeTournament, confirmRemovePlayer]);
 
   const filteredPlayers = players.filter(p =>
     p.name.toLowerCase().includes(enrollSearch.toLowerCase()) ||
@@ -220,25 +257,52 @@ export default function TournamentHub() {
         <TournamentHUD tournament={activeTournament} pendingCount={allPending.length} totalMatches={allNonBye.length} />
 
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="neon-line-cyan pl-3">
+          <div className="neon-line-blurple pl-3">
             <h1 className="font-heading text-2xl font-bold tracking-wider text-foreground italic">{activeTournament.name}</h1>
             <p className="text-xs text-muted-foreground font-body">Rodada {activeTournament.currentRound + 1} de {activeTournament.totalRounds}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground font-heading flex items-center gap-1">
               <Award className="h-3 w-3" /> PTS: {activeTournament.pointsToWin}
             </span>
-            <Button onClick={handleEndTournament} variant="destructive" className="font-heading tracking-wider gap-2">
-              <XOctagon className="h-4 w-4" /> Encerrar
+            <Button onClick={() => setConfirmEndTournament(true)} variant="outline" className="font-heading tracking-wider gap-2 border-primary/50 text-primary">
+              <Trophy className="h-4 w-4" /> Encerrar
+            </Button>
+            <Button onClick={() => setConfirmCancelTournament(true)} variant="destructive" className="font-heading tracking-wider gap-2">
+              <XOctagon className="h-4 w-4" /> Cancelar
             </Button>
           </div>
         </div>
+
+        {/* Enrolled players (with remove) */}
+        <details className="glass-panel">
+          <summary className="px-4 py-2.5 cursor-pointer font-heading text-xs tracking-[0.2em] text-muted-foreground uppercase flex items-center gap-2">
+            <Users className="h-3.5 w-3.5" /> INSCRITOS ({activeTournament.playerIds.length})
+          </summary>
+          <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
+            {activeTournament.playerIds.map(pid => {
+              const p = getPlayer(pid);
+              if (!p) return null;
+              return (
+                <div key={pid} className="dark-panel p-2 flex items-center gap-2 text-xs group">
+                  <Avatar className="h-6 w-6 border border-primary/30">
+                    {p.avatar.startsWith('http') || p.avatar.startsWith('data:') ? <AvatarImage src={p.avatar} /> : <AvatarFallback className="bg-muted text-[8px]">{p.avatar}</AvatarFallback>}
+                  </Avatar>
+                  <span className="font-heading truncate flex-1">{p.nickname || p.name.split(' ')[0]}</span>
+                  <button onClick={() => setConfirmRemovePlayer(pid)} className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive">
+                    <UserMinus className="h-3 w-3" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </details>
 
         {byePlayer && <ByeBanner player={byePlayer} />}
 
         {/* Current match */}
         {currentMatch && players.length > 0 ? (
-          <div className="glass-panel p-4 space-y-4 glow-cyan" key={`${currentMatch.id}-${vsKey}`}>
+          <div className="glass-panel p-4 space-y-4 glow-blurple" key={`${currentMatch.id}-${vsKey}`}>
             <VersusScreen
               player1={getPlayer(currentMatch.player1Id)!}
               player2={getPlayer(currentMatch.player2Id)!}
@@ -323,6 +387,17 @@ export default function TournamentHub() {
             </div>
           </div>
         )}
+
+        {/* Confirmation dialogs */}
+        <ConfirmDialog open={confirmEndTournament} onOpenChange={setConfirmEndTournament}
+          title="Encerrar Torneio" description="Tem certeza que deseja encerrar o torneio? Os standings finais serão calculados e o XP distribuído."
+          confirmLabel="Encerrar" variant="default" onConfirm={handleEndTournament} />
+        <ConfirmDialog open={confirmCancelTournament} onOpenChange={setConfirmCancelTournament}
+          title="Cancelar Torneio" description="Tem certeza? O torneio será APAGADO permanentemente. Nenhum XP será distribuído."
+          confirmLabel="Cancelar Torneio" onConfirm={handleCancelTournament} />
+        <ConfirmDialog open={!!confirmRemovePlayer} onOpenChange={(open) => { if (!open) setConfirmRemovePlayer(null); }}
+          title="Registrar Desistência" description={`Tem certeza que deseja remover "${confirmRemovePlayer ? (getPlayer(confirmRemovePlayer)?.name || '') : ''}" do torneio?`}
+          confirmLabel="Remover" onConfirm={handleRemovePlayer} />
       </div>
     );
   }
@@ -334,7 +409,7 @@ export default function TournamentHub() {
       {enrollModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => { setEnrollModal(null); setShowQuickAdd(false); }}>
           <div className="absolute inset-0 bg-background/80 backdrop-blur-md" />
-          <div className="relative z-10 glass-panel p-6 max-w-lg w-full max-h-[85vh] overflow-auto glow-cyan" onClick={e => e.stopPropagation()}>
+          <div className="relative z-10 glass-panel p-6 max-w-lg w-full max-h-[85vh] overflow-auto glow-blurple" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-heading text-xl font-bold text-primary tracking-wider">INSCREVER BLADERS</h2>
               <button onClick={() => { setEnrollModal(null); setShowQuickAdd(false); }} className="text-muted-foreground hover:text-foreground">
@@ -421,7 +496,7 @@ export default function TournamentHub() {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="font-heading text-3xl font-bold tracking-wider text-foreground italic neon-line-cyan pl-3 flex items-center gap-2">
+        <h1 className="font-heading text-3xl font-bold tracking-wider text-foreground italic neon-line-blurple pl-3 flex items-center gap-2">
           <Trophy className="h-7 w-7 text-primary" /> TORNEIO
         </h1>
         <Button onClick={() => setShowCreate(!showCreate)} className="font-heading tracking-wider gap-2 bg-primary text-primary-foreground hover:bg-primary/80">
@@ -455,7 +530,7 @@ export default function TournamentHub() {
 
       {/* Start config panel */}
       {startingTournament && (
-        <div className="glass-panel p-5 space-y-4 neon-line-cyan anim-fade-up glow-cyan">
+        <div className="glass-panel p-5 space-y-4 neon-line-blurple anim-fade-up glow-blurple">
           <h2 className="font-heading text-lg font-bold text-primary tracking-wider">INICIAR: {startingTournament.name}</h2>
           <p className="text-xs text-muted-foreground font-body">{startingTournament.playerIds.length} jogadores inscritos</p>
           <div className="grid grid-cols-3 gap-4">
@@ -528,12 +603,20 @@ export default function TournamentHub() {
                     className="font-heading tracking-wider gap-1 border-primary/50 text-primary hover:bg-primary/10" disabled={t.playerIds.length < 2}>
                     <Play className="h-3.5 w-3.5" /> Iniciar
                   </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteTournament(t.id)}
+                    className="font-heading tracking-wider gap-1 text-destructive hover:bg-destructive/10">
+                    <Trash2 className="h-3.5 w-3.5" /> Excluir
+                  </Button>
                 </div>
               </div>
             </div>
           ))
         )}
       </div>
+
+      <ConfirmDialog open={!!confirmDeleteTournament} onOpenChange={(open) => { if (!open) setConfirmDeleteTournament(null); }}
+        title="Excluir Torneio" description="Tem certeza que deseja excluir este torneio? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir" onConfirm={handleDeleteTournament} />
     </div>
   );
 }
