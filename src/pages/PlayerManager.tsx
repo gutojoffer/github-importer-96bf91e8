@@ -1,11 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getPlayers, addPlayer, deletePlayer } from '@/lib/storage';
+import { getPlayers, addPlayer, deletePlayer, savePlayers } from '@/lib/storage';
 import { Player, DEFAULT_AVATARS } from '@/types/tournament';
 import PlayerCard from '@/components/PlayerCard';
-import { Plus, Trash2, Camera, Users } from 'lucide-react';
+import ConfirmDialog from '@/components/ConfirmDialog';
+import { Plus, Trash2, Camera, Users, Pencil, X, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function PlayerManager() {
@@ -16,17 +17,28 @@ export default function PlayerManager() {
   const [customAvatar, setCustomAvatar] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Edit state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editNick, setEditNick] = useState('');
+  const [editAvatar, setEditAvatar] = useState('');
+  const [editCustomAvatar, setEditCustomAvatar] = useState('');
+  const editFileRef = useRef<HTMLInputElement>(null);
+
+  // Delete confirmation
+  const [deleteTarget, setDeleteTarget] = useState<Player | null>(null);
+
   useEffect(() => { getPlayers().then(setPlayers); }, []);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => { setCustomAvatar(reader.result as string); setSelectedAvatar(''); };
     reader.readAsDataURL(file);
-  };
+  }, []);
 
-  const handleAdd = async () => {
+  const handleAdd = useCallback(async () => {
     if (!name.trim()) { toast.error('Nome é obrigatório!'); return; }
     const player: Player = {
       id: crypto.randomUUID(), name: name.trim(),
@@ -38,17 +50,40 @@ export default function PlayerManager() {
     setPlayers(await getPlayers());
     setName(''); setNickname(''); setCustomAvatar(''); setSelectedAvatar(DEFAULT_AVATARS[0]);
     toast.success(`${player.nickname ? `@${player.nickname}` : player.name} cadastrado!`);
-  };
+  }, [name, nickname, customAvatar, selectedAvatar]);
 
-  const handleDelete = async (id: string) => {
-    await deletePlayer(id);
+  const handleDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+    await deletePlayer(deleteTarget.id);
     setPlayers(await getPlayers());
+    setDeleteTarget(null);
     toast.success('Jogador removido!');
-  };
+  }, [deleteTarget]);
+
+  const startEdit = useCallback((p: Player) => {
+    setEditingId(p.id);
+    setEditName(p.name);
+    setEditNick(p.nickname || '');
+    setEditAvatar(p.avatar);
+    setEditCustomAvatar(p.avatar.startsWith('data:') || p.avatar.startsWith('http') ? p.avatar : '');
+  }, []);
+
+  const saveEdit = useCallback(async () => {
+    if (!editingId || !editName.trim()) { toast.error('Nome obrigatório!'); return; }
+    const updated = players.map(p =>
+      p.id === editingId
+        ? { ...p, name: editName.trim(), nickname: editNick.trim().replace(/^@/, ''), avatar: editCustomAvatar || editAvatar }
+        : p
+    );
+    await savePlayers(updated);
+    setPlayers(await getPlayers());
+    setEditingId(null);
+    toast.success('Blader atualizado!');
+  }, [editingId, editName, editNick, editAvatar, editCustomAvatar, players]);
 
   return (
     <div className="p-5 max-w-4xl mx-auto space-y-6">
-      <h1 className="font-heading text-3xl font-bold tracking-wider text-foreground italic neon-line-cyan pl-3 flex items-center gap-2">
+      <h1 className="font-heading text-3xl font-bold tracking-wider text-foreground italic neon-line-blurple pl-3 flex items-center gap-2">
         <Users className="h-7 w-7 text-primary" /> BLADERS
       </h1>
 
@@ -100,16 +135,54 @@ export default function PlayerManager() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {players.map(p => (
               <div key={p.id} className="relative group">
-                <PlayerCard player={p} />
-                <button onClick={() => handleDelete(p.id)}
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-destructive/80 text-destructive-foreground rounded-lg">
-                  <Trash2 className="h-3 w-3" />
-                </button>
+                {editingId === p.id ? (
+                  <div className="glass-panel p-3 space-y-2 border-primary/50">
+                    <Input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Nome" className="bg-muted/30 border-border h-8 text-sm" />
+                    <Input value={editNick} onChange={e => setEditNick(e.target.value)} placeholder="@nick" className="bg-muted/30 border-border h-8 text-sm" />
+                    <div className="flex flex-wrap gap-1.5 items-center">
+                      <button onClick={() => editFileRef.current?.click()} className={`h-8 w-8 rounded-full border border-dashed flex items-center justify-center shrink-0 ${editCustomAvatar ? 'border-primary' : 'border-muted'}`}>
+                        {editCustomAvatar ? <img src={editCustomAvatar} className="h-full w-full rounded-full object-cover" /> : <Camera className="h-3 w-3 text-muted-foreground" />}
+                      </button>
+                      <input ref={editFileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => { setEditCustomAvatar(r.result as string); setEditAvatar(''); }; r.readAsDataURL(f); } }} />
+                      {DEFAULT_AVATARS.slice(0, 6).map(a => (
+                        <button key={a} onClick={() => { setEditAvatar(a); setEditCustomAvatar(''); }}
+                          className={`h-6 w-6 text-xs rounded border ${editAvatar === a && !editCustomAvatar ? 'border-primary bg-primary/10' : 'border-muted'}`}>{a}</button>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={saveEdit} className="flex-1 gap-1 font-heading h-7 bg-primary text-primary-foreground"><Check className="h-3 w-3" /> Salvar</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditingId(null)} className="font-heading h-7"><X className="h-3 w-3" /></Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <PlayerCard player={p} />
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                      <button onClick={() => startEdit(p)}
+                        className="p-1.5 bg-primary/80 text-primary-foreground rounded-lg">
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                      <button onClick={() => setDeleteTarget(p)}
+                        className="p-1.5 bg-destructive/80 text-destructive-foreground rounded-lg">
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title="Excluir Blader"
+        description={`Tem certeza que deseja excluir "${deleteTarget?.name}"? Esta ação não pode ser desfeita.`}
+        confirmLabel="Excluir"
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

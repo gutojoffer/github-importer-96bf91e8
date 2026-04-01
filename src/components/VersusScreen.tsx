@@ -43,7 +43,7 @@ export default function VersusScreen({
     const animClass = animate ? (side === 'left' ? 'anim-slide-left' : 'anim-slide-right') : '';
     const sideColor = side === 'left' ? 'text-primary' : 'text-secondary';
     const sideBorder = side === 'left' ? 'border-primary/50' : 'border-secondary/50';
-    const sideGlow = side === 'left' ? 'shadow-[0_0_20px_hsl(185_100%_50%/0.2)]' : 'shadow-[0_0_20px_hsl(310_80%_60%/0.2)]';
+    const sideGlow = side === 'left' ? 'shadow-[0_0_20px_hsl(235_86%_65%/0.2)]' : 'shadow-[0_0_20px_hsl(350_90%_60%/0.2)]';
 
     return (
       <div className={`flex flex-col items-center gap-2 flex-1 min-w-0 ${animClass} ${isImpact ? 'anim-score-shake' : ''}`}>

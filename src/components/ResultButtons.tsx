@@ -11,7 +11,7 @@ interface ResultButtonsProps {
 
 const finishTypes: { type: FinishType; label: string; icon: React.ReactNode; accent?: string }[] = [
   { type: 'spin', label: 'SPIN', icon: <RotateCcw className="h-4 w-4" /> },
-  { type: 'over', label: 'OVER', icon: <ArrowDown className="h-4 w-4" /> },
+  { type: 'over', label: 'OVER', icon: <ArrowDown className="h-4 w-4" />, accent: 'border-accent/50 text-accent hover:bg-accent/10' },
   { type: 'burst', label: 'BURST', icon: <Flame className="h-4 w-4" />, accent: 'border-secondary/50 text-secondary hover:bg-secondary/10' },
   { type: 'extreme', label: 'XTREME', icon: <Zap className="h-4 w-4" />, accent: 'border-accent/50 text-accent hover:bg-accent/10' },
 ];

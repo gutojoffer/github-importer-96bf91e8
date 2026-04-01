@@ -71,7 +71,7 @@ export interface TournamentStanding {
 
 export const FINISH_POINTS: Record<FinishType, number> = {
   spin: 1,
-  over: 1,
+  over: 2,
   burst: 2,
   extreme: 3,
 };
