@@ -1,16 +1,18 @@
-import { Home, Users, Trophy, Crown } from 'lucide-react';
+import { Home, Users, Trophy, Crown, Clock, Settings } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
 } from '@/components/ui/sidebar';
 
 const navItems = [
   { title: 'Home', url: '/', icon: Home },
   { title: 'Torneio', url: '/tournament', icon: Trophy },
+  { title: 'Histórico', url: '/history', icon: Clock },
   { title: 'Rankings', url: '/rankings', icon: Crown },
   { title: 'Bladers', url: '/players', icon: Users },
+  { title: 'Configurações', url: '/settings', icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -59,6 +61,14 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="bg-sidebar border-t border-border/30 px-3 py-3">
+        {!collapsed && (
+          <p className="text-[10px] text-muted-foreground/40 font-body text-center leading-tight">
+            Desenvolvido por<br />Augusto Joffer
+          </p>
+        )}
+      </SidebarFooter>
     </Sidebar>
   );
 }

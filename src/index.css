@@ -6,44 +6,44 @@
 
 @layer base {
   :root {
-    --background: 220 30% 5%;
+    --background: 222 47% 5%;
     --foreground: 210 20% 93%;
 
-    --card: 220 25% 8%;
+    --card: 222 40% 8%;
     --card-foreground: 210 20% 93%;
 
-    --popover: 220 25% 8%;
+    --popover: 222 40% 8%;
     --popover-foreground: 210 20% 93%;
 
-    --primary: 185 100% 50%;
-    --primary-foreground: 220 30% 5%;
+    --primary: 235 86% 65%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 310 80% 60%;
-    --secondary-foreground: 220 30% 5%;
+    --secondary: 350 90% 60%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 20% 14%;
-    --muted-foreground: 220 15% 50%;
+    --muted: 222 20% 14%;
+    --muted-foreground: 222 15% 50%;
 
-    --accent: 45 90% 55%;
-    --accent-foreground: 220 30% 5%;
+    --accent: 187 94% 43%;
+    --accent-foreground: 222 47% 5%;
 
-    --destructive: 0 65% 50%;
+    --destructive: 350 90% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 20% 15%;
-    --input: 220 20% 15%;
-    --ring: 185 100% 50%;
+    --border: 222 20% 15%;
+    --input: 222 20% 15%;
+    --ring: 235 86% 65%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 220 28% 6%;
+    --sidebar-background: 222 44% 6%;
     --sidebar-foreground: 210 20% 93%;
-    --sidebar-primary: 185 100% 50%;
-    --sidebar-primary-foreground: 220 30% 5%;
-    --sidebar-accent: 220 20% 14%;
+    --sidebar-primary: 235 86% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 20% 14%;
     --sidebar-accent-foreground: 210 20% 93%;
-    --sidebar-border: 220 20% 12%;
-    --sidebar-ring: 185 100% 50%;
+    --sidebar-border: 222 20% 12%;
+    --sidebar-ring: 235 86% 65%;
   }
 }
 
@@ -77,18 +77,24 @@
 
 /* Neon accent lines */
 .neon-line-cyan {
-  border-left: 3px solid hsl(var(--primary));
+  border-left: 3px solid hsl(var(--accent));
 }
 .neon-line-magenta {
   border-left: 3px solid hsl(var(--secondary));
 }
+.neon-line-blurple {
+  border-left: 3px solid hsl(var(--primary));
+}
 
 /* Neon glow utilities */
 .glow-cyan {
-  box-shadow: 0 0 20px hsl(var(--primary) / 0.2), 0 0 40px hsl(var(--primary) / 0.1);
+  box-shadow: 0 0 20px hsl(var(--accent) / 0.2), 0 0 40px hsl(var(--accent) / 0.1);
 }
 .glow-magenta {
   box-shadow: 0 0 20px hsl(var(--secondary) / 0.2), 0 0 40px hsl(var(--secondary) / 0.1);
+}
+.glow-blurple {
+  box-shadow: 0 0 20px hsl(var(--primary) / 0.2), 0 0 40px hsl(var(--primary) / 0.1);
 }
 
 /* Slide-in animations */
