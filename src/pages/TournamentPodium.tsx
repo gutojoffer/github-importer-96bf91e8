@@ -1,28 +1,26 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getCompletedTournaments, getPlayers } from '@/lib/storage';
-import { Tournament, Player } from '@/types/tournament';
+import { usePlayerStore } from '@/stores/usePlayerStore';
+import { useTournamentStore } from '@/stores/useTournamentStore';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import EloBadge from '@/components/EloBadge';
+import BracketTree from '@/components/BracketTree';
 import { Crown, ArrowLeft, Trophy, Medal } from 'lucide-react';
 
 export default function TournamentPodium() {
   const { id } = useParams<{ id: string }>();
-  const [tournament, setTournament] = useState<Tournament | null>(null);
-  const [players, setPlayers] = useState<Player[]>([]);
+  const players = usePlayerStore(s => s.players);
+  const loadPlayers = usePlayerStore(s => s.load);
+  const { tournaments, load: loadTournaments } = useTournamentStore();
 
-  useEffect(() => {
-    const load = async () => {
-      setPlayers(await getPlayers());
-      const all = await getCompletedTournaments();
-      const found = all.find(t => t.id === id);
-      if (found) setTournament(found);
-    };
-    load();
-  }, [id]);
+  useEffect(() => { loadPlayers(); loadTournaments(); }, []);
 
-  const getPlayer = (pid: string) => players.find(p => p.id === pid);
+  const tournament = useMemo(() =>
+    tournaments.find(t => t.id === id && t.status === 'completed')
+  , [tournaments, id]);
+
+  const getPlayer = useCallback((pid: string) => players.find(p => p.id === pid), [players]);
 
   if (!tournament || !tournament.finalStandings) {
     return (
@@ -91,6 +89,11 @@ export default function TournamentPodium() {
           <div className="w-24 sm:w-28 h-24 glass-panel rounded-t-xl border-t-2 border-accent/50 flex items-center justify-center anim-pulse"><Trophy className="h-6 w-6 text-accent" /></div>
           <div className="w-24 sm:w-28 h-12 glass-panel rounded-t-xl border-t-2 border-secondary/30 flex items-center justify-center"><Medal className="h-5 w-5 text-secondary" /></div>
         </div>
+      )}
+
+      {/* Bracket Tree */}
+      {tournament.rounds.length > 0 && (
+        <BracketTree tournament={tournament} getPlayer={getPlayer} />
       )}
 
       {rest.length > 0 && (

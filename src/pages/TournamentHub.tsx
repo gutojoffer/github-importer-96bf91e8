@@ -1,15 +1,13 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo, memo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  getTournaments, saveTournaments, getPlayers, saveActiveTournament, getActiveTournament,
-  createUpcomingTournament, addPlayer, registerPlayerToTournament, saveCompletedTournament,
-  calculateStandings, awardXP, deleteTournament,
-} from '@/lib/storage';
 import { Tournament, Player, FinishType, FINISH_POINTS, DEFAULT_AVATARS } from '@/types/tournament';
 import { suggestRounds, generateFirstRound, generateSwissRound } from '@/lib/matchmaking';
+import { saveActiveTournament, saveTournaments } from '@/lib/storage';
+import { usePlayerStore } from '@/stores/usePlayerStore';
+import { useTournamentStore } from '@/stores/useTournamentStore';
 import PlayerCard from '@/components/PlayerCard';
 import VersusScreen from '@/components/VersusScreen';
 import ResultButtons from '@/components/ResultButtons';
@@ -17,6 +15,7 @@ import ByeBanner from '@/components/ByeBanner';
 import TournamentHUD from '@/components/TournamentHUD';
 import VictorySplash from '@/components/VictorySplash';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import BracketTree from '@/components/BracketTree';
 import EloBadge from '@/components/EloBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -29,10 +28,18 @@ type View = 'list' | 'active';
 
 export default function TournamentHub() {
   const navigate = useNavigate();
+  const players = usePlayerStore(s => s.players);
+  const loadPlayers = usePlayerStore(s => s.load);
+  const addPlayerToStore = usePlayerStore(s => s.add);
+
+  const {
+    tournaments, activeTournament, load: loadTournaments,
+    createTournament, deleteTournament: deleteTournamentStore,
+    setActiveTournament, updateActive, endTournament, cancelTournament: cancelTournamentStore,
+    enrollPlayer, unenrollPlayer,
+  } = useTournamentStore();
+
   const [view, setView] = useState<View>('list');
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [activeTournament, setActiveTournament] = useState<Tournament | null>(null);
 
   // Create form
   const [showCreate, setShowCreate] = useState(false);
@@ -41,7 +48,7 @@ export default function TournamentHub() {
   const [tMaxPlayers, setTMaxPlayers] = useState(32);
 
   // Enrollment modal
-  const [enrollModal, setEnrollModal] = useState<Tournament | null>(null);
+  const [enrollModal, setEnrollModal] = useState<string | null>(null);
   const [enrollSearch, setEnrollSearch] = useState('');
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [qaName, setQaName] = useState('');
@@ -68,23 +75,22 @@ export default function TournamentHub() {
   const [confirmRemovePlayer, setConfirmRemovePlayer] = useState<string | null>(null);
 
   useEffect(() => {
-    const load = async () => {
-      setPlayers(await getPlayers());
-      setTournaments(await getTournaments());
-      const active = await getActiveTournament();
-      if (active) {
-        setActiveTournament(active);
-        setView('active');
-      }
-    };
-    load();
+    loadPlayers();
+    loadTournaments().then(() => {
+      const store = useTournamentStore.getState();
+      if (store.activeTournament) setView('active');
+    });
   }, []);
 
   const getPlayer = useCallback((id: string) => players.find(p => p.id === id), [players]);
   const suggested = startingTournament ? suggestRounds(startingTournament.playerIds.length) : 3;
 
+  const enrollModalTournament = useMemo(() =>
+    enrollModal ? tournaments.find(t => t.id === enrollModal) : null
+  , [enrollModal, tournaments]);
+
   // ─── Create Tournament ───
-  const handleCreate = useCallback(async () => {
+  const handleCreate = useCallback(() => {
     if (!tName.trim() || !tDate) { toast.error('Preencha nome e data!'); return; }
     const t: Tournament = {
       id: crypto.randomUUID(), name: tName.trim(), date: tDate,
@@ -92,27 +98,23 @@ export default function TournamentHub() {
       currentRound: 0, arenaCount: 2, totalRounds: 3, pointsToWin: 4,
       status: 'upcoming', createdAt: new Date().toISOString(), maxPlayers: tMaxPlayers,
     };
-    await createUpcomingTournament(t);
-    setTournaments(await getTournaments());
+    createTournament(t);
     setShowCreate(false);
     setTName(''); setTDate('');
     toast.success('Torneio criado!');
-  }, [tName, tDate, tMaxPlayers]);
+  }, [tName, tDate, tMaxPlayers, createTournament]);
 
   // ─── Enrollment ───
-  const handleEnroll = useCallback(async (playerId: string) => {
-    if (!enrollModal) return;
-    if (enrollModal.playerIds.includes(playerId)) {
-      enrollModal.playerIds = enrollModal.playerIds.filter(id => id !== playerId);
+  const handleEnroll = useCallback((playerId: string) => {
+    if (!enrollModalTournament) return;
+    if (enrollModalTournament.playerIds.includes(playerId)) {
+      unenrollPlayer(enrollModalTournament.id, playerId);
     } else {
-      enrollModal.playerIds.push(playerId);
+      enrollPlayer(enrollModalTournament.id, playerId);
     }
-    await saveTournaments([...(await getTournaments()).filter(t => t.id !== enrollModal.id), enrollModal]);
-    setTournaments(await getTournaments());
-    setEnrollModal({ ...enrollModal });
-  }, [enrollModal]);
+  }, [enrollModalTournament, enrollPlayer, unenrollPlayer]);
 
-  const handleQuickAdd = useCallback(async () => {
+  const handleQuickAdd = useCallback(() => {
     if (!qaName.trim() || !enrollModal) { toast.error('Nome obrigatório!'); return; }
     const player: Player = {
       id: crypto.randomUUID(), name: qaName.trim(),
@@ -120,39 +122,36 @@ export default function TournamentHub() {
       avatar: qaCustomAvatar || qaAvatar,
       createdAt: new Date().toISOString(), xp: 0,
     };
-    await addPlayer(player);
-    await registerPlayerToTournament(enrollModal.id, player.id);
-    setPlayers(await getPlayers());
-    setTournaments(await getTournaments());
-    const updated = (await getTournaments()).find(t => t.id === enrollModal.id);
-    if (updated) setEnrollModal(updated);
+    addPlayerToStore(player);
+    enrollPlayer(enrollModal, player.id);
     setQaName(''); setQaNick(''); setQaCustomAvatar(''); setQaAvatar(DEFAULT_AVATARS[0]);
     setShowQuickAdd(false);
     toast.success(`${player.name} cadastrado e inscrito!`);
-  }, [qaName, qaNick, qaCustomAvatar, qaAvatar, enrollModal]);
+  }, [qaName, qaNick, qaCustomAvatar, qaAvatar, enrollModal, addPlayerToStore, enrollPlayer]);
 
   // ─── Start Tournament ───
-  const handleStartTournament = useCallback(async () => {
+  const handleStartTournament = useCallback(() => {
     if (!startingTournament) return;
-    if (startingTournament.playerIds.length < 2) { toast.error('Mínimo 2 jogadores inscritos!'); return; }
-    const firstRound = generateFirstRound(startingTournament.playerIds, arenaCount);
+    const t = tournaments.find(tr => tr.id === startingTournament.id);
+    if (!t || t.playerIds.length < 2) { toast.error('Mínimo 2 jogadores inscritos!'); return; }
+    const firstRound = generateFirstRound(t.playerIds, arenaCount);
     const active: Tournament = {
-      ...startingTournament, status: 'active', arenaCount, totalRounds: rounds,
+      ...t, status: 'active', arenaCount, totalRounds: rounds,
       pointsToWin, rounds: [firstRound], currentRound: 0,
     };
-    const all = (await getTournaments()).filter(t => t.id !== startingTournament.id);
-    await saveTournaments(all);
-    await saveActiveTournament(active);
+    // Remove from upcoming list
+    deleteTournamentStore(t.id);
     setActiveTournament(active);
     setStartingTournament(null);
     setView('active');
     toast.success('🌀 Torneio iniciado! Let it rip!');
-  }, [startingTournament, arenaCount, rounds, pointsToWin]);
+  }, [startingTournament, arenaCount, rounds, pointsToWin, tournaments, deleteTournamentStore, setActiveTournament]);
 
-  // ─── Match Scoring ───
-  const handleScorePoint = useCallback(async (matchId: string, winnerId: string, finishType: FinishType) => {
+  // ─── Match Scoring (OPTIMISTIC - instant UI) ───
+  const handleScorePoint = useCallback((matchId: string, winnerId: string, finishType: FinishType) => {
     if (!activeTournament) return;
-    const currentRound = activeTournament.rounds[activeTournament.currentRound];
+    const t = { ...activeTournament, rounds: activeTournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m })) })) };
+    const currentRound = t.rounds[t.currentRound];
     const matchIdx = currentRound.matches.findIndex(m => m.id === matchId);
     if (matchIdx === -1) return;
     const match = currentRound.matches[matchIdx];
@@ -161,7 +160,7 @@ export default function TournamentHub() {
     if (winnerId === match.player1Id) match.player1Points += pts;
     else match.player2Points += pts;
 
-    const ptw = activeTournament.pointsToWin;
+    const ptw = t.pointsToWin;
     if (match.player1Points >= ptw || match.player2Points >= ptw) {
       const matchWinnerId = match.player1Points >= ptw ? match.player1Id : match.player2Id;
       match.result = { winnerId: matchWinnerId, finishType };
@@ -172,12 +171,12 @@ export default function TournamentHub() {
       const allDone = currentRound.matches.every(m => m.result);
       if (allDone) {
         currentRound.completed = true;
-        if (activeTournament.currentRound + 1 < activeTournament.totalRounds) {
-          const nextRound = generateSwissRound({ ...activeTournament, currentRound: activeTournament.currentRound + 1 });
+        if (t.currentRound + 1 < t.totalRounds) {
+          const nextRound = generateSwissRound({ ...t, currentRound: t.currentRound + 1 });
           if (nextRound) {
-            activeTournament.rounds.push(nextRound);
-            activeTournament.currentRound++;
-            toast.success(`Rodada ${activeTournament.currentRound + 1} gerada!`);
+            t.rounds.push(nextRound);
+            t.currentRound++;
+            toast.success(`Rodada ${t.currentRound + 1} gerada!`);
           }
         } else {
           toast.info('Todas as rodadas concluídas! Encerre o torneio.');
@@ -185,59 +184,54 @@ export default function TournamentHub() {
       }
     }
 
-    await saveActiveTournament({ ...activeTournament });
-    setActiveTournament({ ...activeTournament });
-  }, [activeTournament, getPlayer]);
+    updateActive(t);
+  }, [activeTournament, getPlayer, updateActive]);
 
   // ─── End Tournament ───
   const handleEndTournament = useCallback(async () => {
-    if (!activeTournament) return;
-    const standings = calculateStandings(activeTournament);
-    await awardXP(standings);
-    const completed: Tournament = { ...activeTournament, status: 'completed', finalStandings: standings };
-    await saveCompletedTournament(completed);
-    setActiveTournament(null);
+    const standings = await endTournament();
+    if (!standings) return;
     setView('list');
-    setTournaments(await getTournaments());
     setConfirmEndTournament(false);
+    // Refresh players to get updated XP
+    await usePlayerStore.getState().load();
+    usePlayerStore.setState({ loaded: false });
+    await usePlayerStore.getState().load();
     toast.success('🏆 Torneio encerrado!');
-    navigate(`/history/${completed.id}`);
-  }, [activeTournament, navigate]);
+    navigate(`/history/${activeTournament?.id}`);
+  }, [endTournament, navigate, activeTournament]);
 
   // ─── Cancel Tournament ───
-  const handleCancelTournament = useCallback(async () => {
-    if (!activeTournament) return;
-    await deleteTournament(activeTournament.id);
-    setActiveTournament(null);
+  const handleCancelTournament = useCallback(() => {
+    cancelTournamentStore();
     setView('list');
-    setTournaments(await getTournaments());
     setConfirmCancelTournament(false);
     toast.success('Torneio cancelado.');
-  }, [activeTournament]);
+  }, [cancelTournamentStore]);
 
   // ─── Delete upcoming tournament ───
-  const handleDeleteTournament = useCallback(async () => {
+  const handleDeleteTournament = useCallback(() => {
     if (!confirmDeleteTournament) return;
-    await deleteTournament(confirmDeleteTournament);
-    setTournaments(await getTournaments());
+    deleteTournamentStore(confirmDeleteTournament);
     setConfirmDeleteTournament(null);
     toast.success('Torneio excluído.');
-  }, [confirmDeleteTournament]);
+  }, [confirmDeleteTournament, deleteTournamentStore]);
 
-  // ─── Remove player from active tournament (desistência) ───
-  const handleRemovePlayer = useCallback(async () => {
+  // ─── Remove player from active tournament ───
+  const handleRemovePlayer = useCallback(() => {
     if (!activeTournament || !confirmRemovePlayer) return;
-    activeTournament.playerIds = activeTournament.playerIds.filter(id => id !== confirmRemovePlayer);
-    await saveActiveTournament({ ...activeTournament });
-    setActiveTournament({ ...activeTournament });
+    const t = { ...activeTournament, playerIds: activeTournament.playerIds.filter(id => id !== confirmRemovePlayer) };
+    updateActive(t);
     setConfirmRemovePlayer(null);
     toast.success('Jogador removido (desistência).');
-  }, [activeTournament, confirmRemovePlayer]);
+  }, [activeTournament, confirmRemovePlayer, updateActive]);
 
-  const filteredPlayers = players.filter(p =>
-    p.name.toLowerCase().includes(enrollSearch.toLowerCase()) ||
-    (p.nickname && p.nickname.toLowerCase().includes(enrollSearch.toLowerCase()))
-  );
+  const filteredPlayers = useMemo(() =>
+    players.filter(p =>
+      p.name.toLowerCase().includes(enrollSearch.toLowerCase()) ||
+      (p.nickname && p.nickname.toLowerCase().includes(enrollSearch.toLowerCase()))
+    )
+  , [players, enrollSearch]);
 
   // ─── ACTIVE TOURNAMENT VIEW ───
   if (view === 'active' && activeTournament) {
@@ -274,7 +268,10 @@ export default function TournamentHub() {
           </div>
         </div>
 
-        {/* Enrolled players (with remove) */}
+        {/* Bracket Tree */}
+        <BracketTree tournament={activeTournament} getPlayer={getPlayer} currentRoundHighlight={activeTournament.currentRound} />
+
+        {/* Enrolled players */}
         <details className="glass-panel">
           <summary className="px-4 py-2.5 cursor-pointer font-heading text-xs tracking-[0.2em] text-muted-foreground uppercase flex items-center gap-2">
             <Users className="h-3.5 w-3.5" /> INSCRITOS ({activeTournament.playerIds.length})
@@ -402,23 +399,22 @@ export default function TournamentHub() {
     );
   }
 
-  // ─── LIST VIEW (Tournament Management) ───
+  // ─── LIST VIEW ───
   return (
     <div className="p-5 max-w-4xl mx-auto space-y-6">
       {/* Enrollment Modal */}
-      {enrollModal && (
+      {enrollModalTournament && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => { setEnrollModal(null); setShowQuickAdd(false); }}>
           <div className="absolute inset-0 bg-background/80 backdrop-blur-md" />
           <div className="relative z-10 glass-panel p-6 max-w-lg w-full max-h-[85vh] overflow-auto glow-blurple" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-heading text-xl font-bold text-primary tracking-wider">INSCREVER BLADERS</h2>
-              <button onClick={() => { setEnrollModal(null); setShowQuickAdd(false); }} className="text-muted-foreground hover:text-foreground">
+              <button onClick={() => { setEnrollModal(null); setShowQuickAdd(false); }} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-lg hover:bg-muted/30">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="text-xs text-muted-foreground font-body mb-4">{enrollModal.name} — {enrollModal.playerIds.length} inscritos</p>
+            <p className="text-xs text-muted-foreground font-body mb-4">{enrollModalTournament.name} — {enrollModalTournament.playerIds.length} inscritos</p>
 
-            {/* Quick add section */}
             {!showQuickAdd ? (
               <Button variant="outline" size="sm" onClick={() => setShowQuickAdd(true)} className="w-full mb-4 font-heading tracking-wider gap-2 border-secondary/50 text-secondary hover:bg-secondary/10">
                 <UserPlus className="h-4 w-4" /> Novo Blader (Cadastro Rápido)
@@ -464,7 +460,7 @@ export default function TournamentHub() {
 
             <div className="space-y-1.5 max-h-[40vh] overflow-auto">
               {filteredPlayers.map(p => {
-                const enrolled = enrollModal.playerIds.includes(p.id);
+                const enrolled = enrollModalTournament.playerIds.includes(p.id);
                 return (
                   <button key={p.id} onClick={() => handleEnroll(p.id)}
                     className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-all text-left ${enrolled ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/30 border border-transparent'}`}>
@@ -532,7 +528,7 @@ export default function TournamentHub() {
       {startingTournament && (
         <div className="glass-panel p-5 space-y-4 neon-line-blurple anim-fade-up glow-blurple">
           <h2 className="font-heading text-lg font-bold text-primary tracking-wider">INICIAR: {startingTournament.name}</h2>
-          <p className="text-xs text-muted-foreground font-body">{startingTournament.playerIds.length} jogadores inscritos</p>
+          <p className="text-xs text-muted-foreground font-body">{(tournaments.find(t => t.id === startingTournament.id)?.playerIds.length) || startingTournament.playerIds.length} jogadores inscritos</p>
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label className="font-heading text-muted-foreground text-xs">Rodadas</Label>
@@ -595,7 +591,7 @@ export default function TournamentHub() {
                   )}
                 </div>
                 <div className="flex flex-col gap-2 shrink-0">
-                  <Button size="sm" onClick={() => setEnrollModal(t)}
+                  <Button size="sm" onClick={() => setEnrollModal(t.id)}
                     className="font-heading tracking-wider gap-1 bg-secondary/20 text-secondary hover:bg-secondary/30 border border-secondary/30">
                     <UserPlus className="h-3.5 w-3.5" /> Inscrever
                   </Button>

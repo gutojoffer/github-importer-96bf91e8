@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getPlayers, addPlayer, deletePlayer, savePlayers } from '@/lib/storage';
+import { usePlayerStore } from '@/stores/usePlayerStore';
 import { Player, DEFAULT_AVATARS } from '@/types/tournament';
 import PlayerCard from '@/components/PlayerCard';
 import ConfirmDialog from '@/components/ConfirmDialog';
@@ -10,14 +10,13 @@ import { Plus, Trash2, Camera, Users, Pencil, X, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function PlayerManager() {
-  const [players, setPlayers] = useState<Player[]>([]);
+  const { players, load, add, remove, update, bulkSet } = usePlayerStore();
   const [name, setName] = useState('');
   const [nickname, setNickname] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState(DEFAULT_AVATARS[0]);
   const [customAvatar, setCustomAvatar] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editNick, setEditNick] = useState('');
@@ -25,10 +24,9 @@ export default function PlayerManager() {
   const [editCustomAvatar, setEditCustomAvatar] = useState('');
   const editFileRef = useRef<HTMLInputElement>(null);
 
-  // Delete confirmation
   const [deleteTarget, setDeleteTarget] = useState<Player | null>(null);
 
-  useEffect(() => { getPlayers().then(setPlayers); }, []);
+  useEffect(() => { load(); }, []);
 
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -38,7 +36,7 @@ export default function PlayerManager() {
     reader.readAsDataURL(file);
   }, []);
 
-  const handleAdd = useCallback(async () => {
+  const handleAdd = useCallback(() => {
     if (!name.trim()) { toast.error('Nome é obrigatório!'); return; }
     const player: Player = {
       id: crypto.randomUUID(), name: name.trim(),
@@ -46,19 +44,17 @@ export default function PlayerManager() {
       avatar: customAvatar || selectedAvatar,
       createdAt: new Date().toISOString(), xp: 0,
     };
-    await addPlayer(player);
-    setPlayers(await getPlayers());
+    add(player);
     setName(''); setNickname(''); setCustomAvatar(''); setSelectedAvatar(DEFAULT_AVATARS[0]);
     toast.success(`${player.nickname ? `@${player.nickname}` : player.name} cadastrado!`);
-  }, [name, nickname, customAvatar, selectedAvatar]);
+  }, [name, nickname, customAvatar, selectedAvatar, add]);
 
-  const handleDelete = useCallback(async () => {
+  const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
-    await deletePlayer(deleteTarget.id);
-    setPlayers(await getPlayers());
+    remove(deleteTarget.id);
     setDeleteTarget(null);
     toast.success('Jogador removido!');
-  }, [deleteTarget]);
+  }, [deleteTarget, remove]);
 
   const startEdit = useCallback((p: Player) => {
     setEditingId(p.id);
@@ -68,18 +64,16 @@ export default function PlayerManager() {
     setEditCustomAvatar(p.avatar.startsWith('data:') || p.avatar.startsWith('http') ? p.avatar : '');
   }, []);
 
-  const saveEdit = useCallback(async () => {
+  const saveEdit = useCallback(() => {
     if (!editingId || !editName.trim()) { toast.error('Nome obrigatório!'); return; }
-    const updated = players.map(p =>
-      p.id === editingId
-        ? { ...p, name: editName.trim(), nickname: editNick.trim().replace(/^@/, ''), avatar: editCustomAvatar || editAvatar }
-        : p
-    );
-    await savePlayers(updated);
-    setPlayers(await getPlayers());
+    update(editingId, {
+      name: editName.trim(),
+      nickname: editNick.trim().replace(/^@/, ''),
+      avatar: editCustomAvatar || editAvatar,
+    });
     setEditingId(null);
     toast.success('Blader atualizado!');
-  }, [editingId, editName, editNick, editAvatar, editCustomAvatar, players]);
+  }, [editingId, editName, editNick, editAvatar, editCustomAvatar, update]);
 
   return (
     <div className="p-5 max-w-4xl mx-auto space-y-6">
@@ -158,12 +152,10 @@ export default function PlayerManager() {
                   <>
                     <PlayerCard player={p} />
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                      <button onClick={() => startEdit(p)}
-                        className="p-1.5 bg-primary/80 text-primary-foreground rounded-lg">
+                      <button onClick={() => startEdit(p)} className="p-1.5 bg-primary/80 text-primary-foreground rounded-lg">
                         <Pencil className="h-3 w-3" />
                       </button>
-                      <button onClick={() => setDeleteTarget(p)}
-                        className="p-1.5 bg-destructive/80 text-destructive-foreground rounded-lg">
+                      <button onClick={() => setDeleteTarget(p)} className="p-1.5 bg-destructive/80 text-destructive-foreground rounded-lg">
                         <Trash2 className="h-3 w-3" />
                       </button>
                     </div>
