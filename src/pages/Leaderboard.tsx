@@ -1,16 +1,19 @@
-import { useEffect, useState } from 'react';
-import { getPlayers } from '@/lib/storage';
-import { Player, getEloFromXP, ELO_TIERS } from '@/types/tournament';
+import { useEffect, useMemo } from 'react';
+import { usePlayerStore } from '@/stores/usePlayerStore';
+import { getEloFromXP, ELO_TIERS } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import EloBadge from '@/components/EloBadge';
 import { Crown, Shield } from 'lucide-react';
 
 export default function Rankings() {
-  const [players, setPlayers] = useState<Player[]>([]);
+  const players = usePlayerStore(s => s.players);
+  const load = usePlayerStore(s => s.load);
 
-  useEffect(() => {
-    getPlayers().then(all => setPlayers(all.sort((a, b) => (b.xp || 0) - (a.xp || 0))));
-  }, []);
+  useEffect(() => { load(); }, []);
+
+  const sorted = useMemo(() =>
+    [...players].sort((a, b) => (b.xp || 0) - (a.xp || 0))
+  , [players]);
 
   return (
     <div className="p-5 max-w-4xl mx-auto space-y-6">
@@ -34,14 +37,14 @@ export default function Rankings() {
         </p>
       </div>
 
-      {players.length === 0 ? (
+      {sorted.length === 0 ? (
         <div className="glass-panel p-12 text-center">
           <Shield className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
           <p className="text-muted-foreground font-body text-sm">Nenhum blader cadastrado. Encerre torneios para gerar XP!</p>
         </div>
       ) : (
         <div className="space-y-2">
-          {players.map((player, i) => {
+          {sorted.map((player, i) => {
             const elo = getEloFromXP(player.xp || 0);
             return (
               <div key={player.id}

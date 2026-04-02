@@ -1,27 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCompletedTournaments, getPlayers } from '@/lib/storage';
-import { Tournament, Player } from '@/types/tournament';
+import { usePlayerStore } from '@/stores/usePlayerStore';
+import { useTournamentStore } from '@/stores/useTournamentStore';
+import { Player } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Trophy, Eye, Crown } from 'lucide-react';
 
 export default function TournamentHistory() {
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [players, setPlayers] = useState<Player[]>([]);
+  const players = usePlayerStore(s => s.players);
+  const loadPlayers = usePlayerStore(s => s.load);
+  const { tournaments, load: loadTournaments } = useTournamentStore();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const load = async () => {
-      setPlayers(await getPlayers());
-      setTournaments(await getCompletedTournaments());
-    };
-    load();
-  }, []);
+  useEffect(() => { loadPlayers(); loadTournaments(); }, []);
 
-  const getPlayer = (id: string) => players.find(p => p.id === id);
+  const completed = useMemo(() =>
+    tournaments.filter(t => t.status === 'completed')
+  , [tournaments]);
 
-  if (tournaments.length === 0) {
+  const getPlayer = useCallback((id: string) => players.find(p => p.id === id), [players]);
+
+  if (completed.length === 0) {
     return (
       <div className="p-5 max-w-4xl mx-auto space-y-6">
         <h1 className="font-heading text-3xl font-bold tracking-wider text-foreground italic neon-line-cyan pl-3">HISTÓRICO</h1>
@@ -37,7 +37,7 @@ export default function TournamentHistory() {
     <div className="p-5 max-w-4xl mx-auto space-y-6">
       <h1 className="font-heading text-3xl font-bold tracking-wider text-foreground italic neon-line-cyan pl-3">HISTÓRICO</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {tournaments.map((t, i) => {
+        {completed.map((t, i) => {
           const top3 = (t.finalStandings || []).slice(0, 3);
           return (
             <div key={t.id} className="glass-panel p-5 space-y-4 anim-fade-up" style={{ animationDelay: `${i * 80}ms` }}>
