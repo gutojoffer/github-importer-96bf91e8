@@ -1,4 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import AtmosphericBg from '@/components/AtmosphericBg';
+import bgJaxon from '@/assets/bg-jaxon.png';
 import { Link } from 'react-router-dom';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import { useTournamentStore } from '@/stores/useTournamentStore';
@@ -77,7 +79,8 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      <AtmosphericBg image={bgJaxon} tint="hsl(187 94% 43% / 0.3)" />
       <section className="relative py-20 px-4 text-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-secondary/3 to-transparent" />
         <div className="absolute inset-0 opacity-30">
