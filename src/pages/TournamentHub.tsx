@@ -247,7 +247,8 @@ export default function TournamentHub() {
     const completedMatches = allNonBye.filter(m => m.result);
 
     return (
-      <div className="p-5 max-w-5xl mx-auto space-y-4">
+      <div className="p-5 max-w-5xl mx-auto space-y-4 relative">
+        <AtmosphericBg image={bgRobin} tint="hsl(142 70% 40% / 0.3)" />
         {victoryWinner && <VictorySplash winner={victoryWinner} finishType={victoryFinish} />}
 
         <TournamentHUD tournament={activeTournament} pendingCount={allPending.length} totalMatches={allNonBye.length} />
