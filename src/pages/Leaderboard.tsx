@@ -18,7 +18,8 @@ export default function Rankings() {
   , [players]);
 
   return (
-    <div className="p-5 max-w-4xl mx-auto space-y-6">
+    <div className="p-5 max-w-4xl mx-auto space-y-6 relative">
+      <AtmosphericBg image={bgMulti} tint="hsl(270 80% 60% / 0.3)" />
       <h1 className="font-heading text-3xl font-bold tracking-wider text-foreground italic neon-line-cyan pl-3 flex items-center gap-2">
         <Crown className="h-7 w-7 text-primary" /> RANKINGS
       </h1>
