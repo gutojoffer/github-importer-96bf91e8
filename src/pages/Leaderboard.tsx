@@ -1,4 +1,6 @@
 import { useEffect, useMemo } from 'react';
+import AtmosphericBg from '@/components/AtmosphericBg';
+import bgMulti from '@/assets/bg-multi.png';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import { getEloFromXP, ELO_TIERS } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

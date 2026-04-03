@@ -1,4 +1,6 @@
 import { useState, useRef, useCallback, useMemo, memo, useEffect } from 'react';
+import AtmosphericBg from '@/components/AtmosphericBg';
+import bgRobin from '@/assets/bg-robin.png';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
