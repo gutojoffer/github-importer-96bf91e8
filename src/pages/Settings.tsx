@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
+import AtmosphericBg from '@/components/AtmosphericBg';
+import bgSettings from '@/assets/bg-settings.png';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Settings as SettingsIcon, Upload, Trash2, ImageIcon } from 'lucide-react';
