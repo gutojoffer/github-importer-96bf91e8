@@ -404,7 +404,8 @@ export default function TournamentHub() {
 
   // ─── LIST VIEW ───
   return (
-    <div className="p-5 max-w-4xl mx-auto space-y-6">
+    <div className="p-5 max-w-4xl mx-auto space-y-6 relative">
+      <AtmosphericBg image={bgRobin} tint="hsl(142 70% 40% / 0.3)" />
       {/* Enrollment Modal */}
       {enrollModalTournament && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => { setEnrollModal(null); setShowQuickAdd(false); }}>
