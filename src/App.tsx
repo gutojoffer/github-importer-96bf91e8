@@ -27,13 +27,9 @@ const AppHeader = () => {
   return (
     <header className="h-12 flex items-center border-b border-border/30 bg-card/60 backdrop-blur-xl sticky top-0 z-50">
       <SidebarTrigger className="ml-3 text-muted-foreground hover:text-foreground transition-colors" />
-      <div className="flex-1 flex justify-center items-center gap-2">
-        {logo ? (
-          <img src={logo} alt="Logo" className="h-7 object-contain" />
-        ) : (
-          <img src={logoArenaX} alt="Arena X" className="h-7 object-contain" />
-        )}
-        <span className="font-heading text-xs font-bold tracking-[0.2em] uppercase text-foreground italic">
+      <div className="flex-1 flex justify-center items-center">
+        {logo && <img src={logo} alt="Logo" className="h-7 object-contain mr-2" />}
+        <span className="font-heading text-sm font-bold tracking-[0.2em] uppercase text-foreground italic">
           Arena X
         </span>
       </div>
