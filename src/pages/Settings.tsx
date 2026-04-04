@@ -79,7 +79,6 @@ export default function Settings() {
         <p className="text-sm text-muted-foreground font-body">
           Arena X — Organizador de Torneios de Beyblade X
         </p>
-        </p>
         <p className="text-xs text-muted-foreground/60 font-body">
           Desenvolvido por Augusto Joffer
         </p>
