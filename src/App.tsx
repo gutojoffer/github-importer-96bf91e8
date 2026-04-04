@@ -14,7 +14,7 @@ import Leaderboard from "@/pages/Leaderboard";
 import TournamentSignup from "@/pages/TournamentSignup";
 import Settings from "@/pages/Settings";
 import NotFound from "./pages/NotFound";
-import logoArenaX from '@/assets/logo-arena-x.png';
+
 import { useState, useEffect } from "react";
 import { getCustomLogo } from "@/pages/Settings";
 
