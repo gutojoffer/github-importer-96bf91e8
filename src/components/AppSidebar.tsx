@@ -1,5 +1,5 @@
 import { Home, Users, Crown, Clock, Settings, Swords } from 'lucide-react';
-import logoArenaX from '@/assets/logo-arena-x.png';
+
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
