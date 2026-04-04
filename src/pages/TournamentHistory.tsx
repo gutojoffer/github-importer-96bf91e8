@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useCallback } from 'react';
-import AtmosphericBg from '@/components/AtmosphericBg';
-import bgXone from '@/assets/bg-xone.png';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import { useTournamentStore } from '@/stores/useTournamentStore';
