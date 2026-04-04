@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import AtmosphericBg from '@/components/AtmosphericBg';
-import bgBird from '@/assets/bg-bird.png';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -79,7 +77,7 @@ export default function PlayerManager() {
 
   return (
     <div className="p-5 max-w-4xl mx-auto space-y-6 relative">
-      <AtmosphericBg image={bgBird} tint="hsl(35 90% 55% / 0.3)" />
+      
       <h1 className="font-heading text-3xl font-bold tracking-wider text-foreground italic neon-line-blurple pl-3 flex items-center gap-2">
         <Users className="h-7 w-7 text-primary" /> BLADERS
       </h1>

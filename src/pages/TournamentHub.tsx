@@ -1,6 +1,4 @@
 import { useState, useRef, useCallback, useMemo, memo, useEffect } from 'react';
-import AtmosphericBg from '@/components/AtmosphericBg';
-import bgRobin from '@/assets/bg-robin.png';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -248,7 +246,6 @@ export default function TournamentHub() {
 
     return (
       <div className="p-5 max-w-5xl mx-auto space-y-4 relative">
-        <AtmosphericBg image={bgRobin} tint="hsl(142 70% 40% / 0.3)" />
         {victoryWinner && <VictorySplash winner={victoryWinner} finishType={victoryFinish} />}
 
         <TournamentHUD tournament={activeTournament} pendingCount={allPending.length} totalMatches={allNonBye.length} />
@@ -405,7 +402,7 @@ export default function TournamentHub() {
   // ─── LIST VIEW ───
   return (
     <div className="p-5 max-w-4xl mx-auto space-y-6 relative">
-      <AtmosphericBg image={bgRobin} tint="hsl(142 70% 40% / 0.3)" />
+      
       {/* Enrollment Modal */}
       {enrollModalTournament && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => { setEnrollModal(null); setShowQuickAdd(false); }}>

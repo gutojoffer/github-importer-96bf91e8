@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useCallback } from 'react';
-import AtmosphericBg from '@/components/AtmosphericBg';
-import bgPersona from '@/assets/bg-persona.png';
 import { useParams, Link } from 'react-router-dom';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import { useTournamentStore } from '@/stores/useTournamentStore';
@@ -48,7 +46,7 @@ export default function TournamentPodium() {
 
   return (
     <div className="p-5 max-w-4xl mx-auto space-y-8 relative">
-      <AtmosphericBg image={bgPersona} tint="hsl(330 80% 55% / 0.3)" />
+      
       <Link to="/history">
         <Button variant="ghost" size="sm" className="font-heading gap-2 text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Histórico
