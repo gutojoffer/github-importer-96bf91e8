@@ -9,7 +9,7 @@ import {
 
 const navItems = [
   { title: 'Home', url: '/', icon: Home },
-  { title: 'Torneio', url: '/tournament', icon: Trophy },
+  { title: 'Torneio', url: '/tournament', icon: Swords },
   { title: 'Histórico', url: '/history', icon: Clock },
   { title: 'Rankings', url: '/rankings', icon: Crown },
   { title: 'Bladers', url: '/players', icon: Users },
