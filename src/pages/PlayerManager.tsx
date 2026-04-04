@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import AtmosphericBg from '@/components/AtmosphericBg';
-import bgBird from '@/assets/bg-bird.png';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
