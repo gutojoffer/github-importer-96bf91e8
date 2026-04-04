@@ -77,7 +77,8 @@ export default function Settings() {
       <div className="glass-panel p-5 space-y-3">
         <h2 className="font-heading text-lg font-bold tracking-wider text-primary">SOBRE</h2>
         <p className="text-sm text-muted-foreground font-body">
-          Blader Hub X — Sistema de Gerenciamento de Torneios de Beyblade X
+          Arena X — Organizador de Torneios de Beyblade X
+        </p>
         </p>
         <p className="text-xs text-muted-foreground/60 font-body">
           Desenvolvido por Augusto Joffer
