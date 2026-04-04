@@ -1,4 +1,5 @@
-import { Home, Users, Trophy, Crown, Clock, Settings } from 'lucide-react';
+import { Home, Users, Crown, Clock, Settings } from 'lucide-react';
+import logoArenaX from '@/assets/logo-arena-x.png';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
