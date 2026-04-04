@@ -1,5 +1,5 @@
 import { Home, Users, Crown, Clock, Settings, Swords } from 'lucide-react';
-import logoArenaX from '@/assets/logo-arena-x.png';
+
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
@@ -26,7 +26,14 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-border/50">
       <SidebarContent className="bg-sidebar pt-5">
         <div className={`flex items-center justify-center pb-4 mb-2 border-b border-border/30 ${collapsed ? 'px-1' : 'px-3'}`}>
-          <img src={logoArenaX} alt="Arena X" className={`object-contain ${collapsed ? 'h-8 w-8' : 'h-12'}`} />
+          {!collapsed && (
+            <span className="font-heading text-sm font-bold text-foreground tracking-[0.15em] italic">
+              ARENA X
+            </span>
+          )}
+          {collapsed && (
+            <span className="font-heading text-xs font-bold text-primary italic">AX</span>
+          )}
         </div>
 
         <SidebarGroup>

@@ -86,14 +86,8 @@ const Index = () => {
           <div className="absolute top-1/3 left-1/4 w-[300px] h-[300px] bg-secondary/5 rounded-full blur-[80px]" />
         </div>
         <div className="relative z-10 max-w-3xl mx-auto">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="relative">
-              <Trophy className="h-12 w-12 text-primary" />
-              <div className="absolute -inset-2 bg-primary/10 rounded-full blur-md anim-glow-pulse" />
-            </div>
-          </div>
-          <h1 className="font-heading text-5xl sm:text-6xl font-bold tracking-[0.15em] text-foreground italic">BLADER HUB X</h1>
-          <p className="font-heading text-sm text-muted-foreground tracking-[0.3em] mt-2 uppercase">Tournament Management System</p>
+          <h1 className="font-heading text-5xl sm:text-6xl font-bold tracking-[0.15em] text-foreground italic">ARENA X</h1>
+          <p className="font-heading text-sm text-muted-foreground tracking-[0.3em] mt-2 uppercase">Organizador de Torneios</p>
           <div className="w-24 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent mx-auto mt-6" />
         </div>
       </section>
