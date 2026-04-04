@@ -1,4 +1,5 @@
-import { Home, Users, Trophy, Crown, Clock, Settings } from 'lucide-react';
+import { Home, Users, Crown, Clock, Settings, Swords } from 'lucide-react';
+import logoArenaX from '@/assets/logo-arena-x.png';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
@@ -8,7 +9,7 @@ import {
 
 const navItems = [
   { title: 'Home', url: '/', icon: Home },
-  { title: 'Torneio', url: '/tournament', icon: Trophy },
+  { title: 'Torneio', url: '/tournament', icon: Swords },
   { title: 'Histórico', url: '/history', icon: Clock },
   { title: 'Rankings', url: '/rankings', icon: Crown },
   { title: 'Bladers', url: '/players', icon: Users },
@@ -24,16 +25,8 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r border-border/50">
       <SidebarContent className="bg-sidebar pt-5">
-        <div className={`flex items-center justify-center px-3 pb-4 mb-2 border-b border-border/30 ${collapsed ? 'px-1' : 'gap-2'}`}>
-          <div className="relative">
-            <Trophy className={`text-primary ${collapsed ? 'h-5 w-5' : 'h-6 w-6'}`} />
-            <div className="absolute -inset-1 bg-primary/10 rounded-full blur-sm" />
-          </div>
-          {!collapsed && (
-            <span className="font-heading text-sm font-bold text-foreground tracking-[0.15em] italic">
-              BHX
-            </span>
-          )}
+        <div className={`flex items-center justify-center pb-4 mb-2 border-b border-border/30 ${collapsed ? 'px-1' : 'px-3'}`}>
+          <img src={logoArenaX} alt="Arena X" className={`object-contain ${collapsed ? 'h-8 w-8' : 'h-12'}`} />
         </div>
 
         <SidebarGroup>
