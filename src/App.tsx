@@ -31,10 +31,10 @@ const AppHeader = () => {
         {logo ? (
           <img src={logo} alt="Logo" className="h-7 object-contain" />
         ) : (
-          <Trophy className="h-4 w-4 text-primary" />
+          <img src={logoArenaX} alt="Arena X" className="h-7 object-contain" />
         )}
         <span className="font-heading text-xs font-bold tracking-[0.2em] uppercase text-foreground italic">
-          Blader Hub X
+          Arena X
         </span>
       </div>
     </header>
