@@ -150,7 +150,7 @@ export default function TournamentHub() {
   // ─── Match Scoring (OPTIMISTIC - instant UI) ───
   const handleScorePoint = useCallback((matchId: string, winnerId: string, finishType: FinishType) => {
     if (!activeTournament) return;
-    const t = { ...activeTournament, rounds: activeTournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m, scoreLog: [...(m.scoreLog || [])] })) })) };
+    const t = { ...activeTournament, rounds: activeTournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m, scoreLog: m.scoreLog ? [...m.scoreLog] : undefined })) })) };
     const currentRound = t.rounds[t.currentRound];
     const matchIdx = currentRound.matches.findIndex(m => m.id === matchId);
     if (matchIdx === -1) return;
