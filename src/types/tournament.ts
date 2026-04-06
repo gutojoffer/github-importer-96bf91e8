@@ -25,6 +25,15 @@ export interface MatchResult {
   finishType: FinishType;
 }
 
+export interface ScoreAction {
+  id: string;
+  playerId: string;
+  finishType: FinishType;
+  points: number;
+  timestamp: string;
+  undone?: boolean;
+}
+
 export interface Match {
   id: string;
   player1Id: string;
@@ -35,6 +44,7 @@ export interface Match {
   isBye?: boolean;
   player1Points: number;
   player2Points: number;
+  scoreLog?: ScoreAction[];
 }
 
 export interface TournamentRound {
