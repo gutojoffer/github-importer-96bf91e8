@@ -54,8 +54,11 @@ export function generateSwissRound(tournament: Tournament): TournamentRound | nu
   const roundIndex = tournament.currentRound;
   if (roundIndex >= tournament.totalRounds) return null;
 
+  const activePlayerIds = tournament.playerIds.filter(id => !(tournament.droppedPlayerIds || []).includes(id));
+  if (activePlayerIds.length < 2) return null;
+
   const pointsMap = new Map<string, number>();
-  for (const pid of tournament.playerIds) pointsMap.set(pid, 0);
+  for (const pid of activePlayerIds) pointsMap.set(pid, 0);
 
   const playedPairs = new Set<string>();
   const byeHistory = new Set<string>();
