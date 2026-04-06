@@ -276,6 +276,68 @@ export default function TournamentHub() {
     toast.success('Jogador removido (desistência).');
   }, [activeTournament, confirmRemovePlayer, updateActive]);
 
+  // ─── Drop Player (W/O) ───
+  const handleDropPlayer = useCallback(() => {
+    if (!activeTournament || !confirmDropPlayer) return;
+    const droppedId = confirmDropPlayer;
+    const t: Tournament = {
+      ...activeTournament,
+      droppedPlayerIds: [...(activeTournament.droppedPlayerIds || []), droppedId],
+      rounds: activeTournament.rounds.map(r => ({
+        ...r,
+        matches: r.matches.map(m => ({ ...m })),
+      })),
+    };
+
+    // Handle current and future matches
+    for (let ri = t.currentRound; ri < t.rounds.length; ri++) {
+      const round = t.rounds[ri];
+      for (const match of round.matches) {
+        if (match.isBye || match.result) continue;
+        const involves = match.player1Id === droppedId || match.player2Id === droppedId;
+        if (!involves) continue;
+
+        // Award W/O to opponent
+        const opponentId = match.player1Id === droppedId ? match.player2Id : match.player1Id;
+        match.result = { winnerId: opponentId, finishType: 'spin' };
+        // Mark points as W/O win
+        if (opponentId === match.player1Id) {
+          match.player1Points = t.pointsToWin;
+        } else {
+          match.player2Points = t.pointsToWin;
+        }
+      }
+    }
+
+    // Check if current round is now complete
+    const currentRound = t.rounds[t.currentRound];
+    const allDone = currentRound.matches.every(m => m.result || m.isBye);
+    if (allDone) {
+      currentRound.completed = true;
+      if (t.currentRound + 1 < t.totalRounds) {
+        const nextRound = generateSwissRound({ ...t, currentRound: t.currentRound + 1 });
+        if (nextRound) {
+          t.rounds.push(nextRound);
+          t.currentRound++;
+          toast.success(`Rodada ${t.currentRound + 1} gerada!`);
+        }
+      }
+    }
+
+    // Adjust total rounds if needed
+    const activeCount = t.playerIds.filter(id => !(t.droppedPlayerIds || []).includes(id)).length;
+    if (activeCount >= 2) {
+      const maxRounds = Math.ceil(Math.log2(activeCount)) + 1;
+      t.totalRounds = Math.max(3, Math.min(t.totalRounds, maxRounds));
+    }
+
+    updateActive(t);
+    setConfirmDropPlayer(null);
+    setVsKey(k => k + 1);
+    const playerName = getPlayer(droppedId)?.name || '';
+    toast.success(`${playerName} foi dropado. Vitória(s) por W/O atribuída(s).`);
+  }, [activeTournament, confirmDropPlayer, updateActive, getPlayer]);
+
   const filteredPlayers = useMemo(() =>
     players.filter(p =>
       p.name.toLowerCase().includes(enrollSearch.toLowerCase()) ||
