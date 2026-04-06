@@ -357,6 +357,17 @@ export default function TournamentHub() {
               player2Points={currentMatch.player2Points}
               pointsToWin={activeTournament.pointsToWin}
             />
+            <div className="flex justify-center">
+              <Button
+                variant="ghost"
+                onClick={() => handleUndoPoint(currentMatch.id)}
+                disabled={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0}
+                className="font-heading tracking-wider text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+                title={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0 ? 'Nenhum ponto para desfazer' : 'Desfazer último ponto'}
+              >
+                <Undo2 className="h-4 w-4" /> Desfazer último ponto
+              </Button>
+            </div>
             <div className="grid grid-cols-2 gap-4 px-2">
               <ResultButtons
                 playerName={getPlayer(currentMatch.player1Id)?.nickname || getPlayer(currentMatch.player1Id)?.name || ''}
