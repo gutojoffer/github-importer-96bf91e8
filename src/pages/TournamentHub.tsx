@@ -73,6 +73,7 @@ export default function TournamentHub() {
   const [confirmCancelTournament, setConfirmCancelTournament] = useState(false);
   const [confirmDeleteTournament, setConfirmDeleteTournament] = useState<string | null>(null);
   const [confirmRemovePlayer, setConfirmRemovePlayer] = useState<string | null>(null);
+  const [confirmDropPlayer, setConfirmDropPlayer] = useState<string | null>(null);
 
   useEffect(() => {
     loadPlayers();
