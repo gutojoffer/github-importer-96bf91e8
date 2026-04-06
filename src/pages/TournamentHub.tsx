@@ -20,7 +20,7 @@ import EloBadge from '@/components/EloBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Plus, Play, Lightbulb, Calendar, Users, Trophy, XOctagon, Award,
-  CheckCircle, Camera, UserPlus, X, Search, Check, Trash2, UserMinus, Undo2,
+  CheckCircle, Camera, UserPlus, X, Search, Check, Trash2, UserMinus, Undo2, Ban,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -73,6 +73,7 @@ export default function TournamentHub() {
   const [confirmCancelTournament, setConfirmCancelTournament] = useState(false);
   const [confirmDeleteTournament, setConfirmDeleteTournament] = useState<string | null>(null);
   const [confirmRemovePlayer, setConfirmRemovePlayer] = useState<string | null>(null);
+  const [confirmDropPlayer, setConfirmDropPlayer] = useState<string | null>(null);
 
   useEffect(() => {
     loadPlayers();
@@ -275,6 +276,68 @@ export default function TournamentHub() {
     toast.success('Jogador removido (desistência).');
   }, [activeTournament, confirmRemovePlayer, updateActive]);
 
+  // ─── Drop Player (W/O) ───
+  const handleDropPlayer = useCallback(() => {
+    if (!activeTournament || !confirmDropPlayer) return;
+    const droppedId = confirmDropPlayer;
+    const t: Tournament = {
+      ...activeTournament,
+      droppedPlayerIds: [...(activeTournament.droppedPlayerIds || []), droppedId],
+      rounds: activeTournament.rounds.map(r => ({
+        ...r,
+        matches: r.matches.map(m => ({ ...m })),
+      })),
+    };
+
+    // Handle current and future matches
+    for (let ri = t.currentRound; ri < t.rounds.length; ri++) {
+      const round = t.rounds[ri];
+      for (const match of round.matches) {
+        if (match.isBye || match.result) continue;
+        const involves = match.player1Id === droppedId || match.player2Id === droppedId;
+        if (!involves) continue;
+
+        // Award W/O to opponent
+        const opponentId = match.player1Id === droppedId ? match.player2Id : match.player1Id;
+        match.result = { winnerId: opponentId, finishType: 'spin' };
+        // Mark points as W/O win
+        if (opponentId === match.player1Id) {
+          match.player1Points = t.pointsToWin;
+        } else {
+          match.player2Points = t.pointsToWin;
+        }
+      }
+    }
+
+    // Check if current round is now complete
+    const currentRound = t.rounds[t.currentRound];
+    const allDone = currentRound.matches.every(m => m.result || m.isBye);
+    if (allDone) {
+      currentRound.completed = true;
+      if (t.currentRound + 1 < t.totalRounds) {
+        const nextRound = generateSwissRound({ ...t, currentRound: t.currentRound + 1 });
+        if (nextRound) {
+          t.rounds.push(nextRound);
+          t.currentRound++;
+          toast.success(`Rodada ${t.currentRound + 1} gerada!`);
+        }
+      }
+    }
+
+    // Adjust total rounds if needed
+    const activeCount = t.playerIds.filter(id => !(t.droppedPlayerIds || []).includes(id)).length;
+    if (activeCount >= 2) {
+      const maxRounds = Math.ceil(Math.log2(activeCount)) + 1;
+      t.totalRounds = Math.max(3, Math.min(t.totalRounds, maxRounds));
+    }
+
+    updateActive(t);
+    setConfirmDropPlayer(null);
+    setVsKey(k => k + 1);
+    const playerName = getPlayer(droppedId)?.name || '';
+    toast.success(`${playerName} foi dropado. Vitória(s) por W/O atribuída(s).`);
+  }, [activeTournament, confirmDropPlayer, updateActive, getPlayer]);
+
   const filteredPlayers = useMemo(() =>
     players.filter(p =>
       p.name.toLowerCase().includes(enrollSearch.toLowerCase()) ||
@@ -324,20 +387,32 @@ export default function TournamentHub() {
         <details className="glass-panel">
           <summary className="px-4 py-2.5 cursor-pointer font-heading text-xs tracking-[0.2em] text-muted-foreground uppercase flex items-center gap-2">
             <Users className="h-3.5 w-3.5" /> INSCRITOS ({activeTournament.playerIds.length})
+            {(activeTournament.droppedPlayerIds || []).length > 0 && (
+              <span className="text-destructive ml-1">• {(activeTournament.droppedPlayerIds || []).length} dropped</span>
+            )}
           </summary>
           <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
             {activeTournament.playerIds.map(pid => {
               const p = getPlayer(pid);
               if (!p) return null;
+              const isDropped = (activeTournament.droppedPlayerIds || []).includes(pid);
               return (
-                <div key={pid} className="dark-panel p-2 flex items-center gap-2 text-xs group">
-                  <Avatar className="h-6 w-6 border border-primary/30">
+                <div key={pid} className={`dark-panel p-2 flex items-center gap-2 text-xs group ${isDropped ? 'opacity-50' : ''}`}>
+                  <Avatar className={`h-6 w-6 border ${isDropped ? 'border-destructive/50 grayscale' : 'border-primary/30'}`}>
                     {p.avatar.startsWith('http') || p.avatar.startsWith('data:') ? <AvatarImage src={p.avatar} /> : <AvatarFallback className="bg-muted text-[8px]">{p.avatar}</AvatarFallback>}
                   </Avatar>
-                  <span className="font-heading truncate flex-1">{p.nickname || p.name.split(' ')[0]}</span>
-                  <button onClick={() => setConfirmRemovePlayer(pid)} className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive">
-                    <UserMinus className="h-3 w-3" />
-                  </button>
+                  <span className={`font-heading truncate flex-1 ${isDropped ? 'line-through text-muted-foreground' : ''}`}>
+                    {p.nickname || p.name.split(' ')[0]}
+                  </span>
+                  {isDropped ? (
+                    <span className="text-[9px] font-heading tracking-wider text-destructive flex items-center gap-0.5">
+                      <Ban className="h-3 w-3" /> DROP
+                    </span>
+                  ) : (
+                    <button onClick={() => setConfirmDropPlayer(pid)} className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive" title="Dropar jogador">
+                      <Ban className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -455,6 +530,9 @@ export default function TournamentHub() {
         <ConfirmDialog open={!!confirmRemovePlayer} onOpenChange={(open) => { if (!open) setConfirmRemovePlayer(null); }}
           title="Registrar Desistência" description={`Tem certeza que deseja remover "${confirmRemovePlayer ? (getPlayer(confirmRemovePlayer)?.name || '') : ''}" do torneio?`}
           confirmLabel="Remover" onConfirm={handleRemovePlayer} />
+        <ConfirmDialog open={!!confirmDropPlayer} onOpenChange={(open) => { if (!open) setConfirmDropPlayer(null); }}
+          title="Dropar Jogador" description={`Tem certeza que deseja dropar "${confirmDropPlayer ? (getPlayer(confirmDropPlayer)?.name || '') : ''}"? Esta ação não pode ser desfeita. Partidas em andamento serão encerradas com W/O.`}
+          confirmLabel="Dropar" onConfirm={handleDropPlayer} />
       </div>
     );
   }
