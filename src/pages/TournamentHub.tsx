@@ -387,20 +387,32 @@ export default function TournamentHub() {
         <details className="glass-panel">
           <summary className="px-4 py-2.5 cursor-pointer font-heading text-xs tracking-[0.2em] text-muted-foreground uppercase flex items-center gap-2">
             <Users className="h-3.5 w-3.5" /> INSCRITOS ({activeTournament.playerIds.length})
+            {(activeTournament.droppedPlayerIds || []).length > 0 && (
+              <span className="text-destructive ml-1">• {(activeTournament.droppedPlayerIds || []).length} dropped</span>
+            )}
           </summary>
           <div className="px-4 pb-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
             {activeTournament.playerIds.map(pid => {
               const p = getPlayer(pid);
               if (!p) return null;
+              const isDropped = (activeTournament.droppedPlayerIds || []).includes(pid);
               return (
-                <div key={pid} className="dark-panel p-2 flex items-center gap-2 text-xs group">
-                  <Avatar className="h-6 w-6 border border-primary/30">
+                <div key={pid} className={`dark-panel p-2 flex items-center gap-2 text-xs group ${isDropped ? 'opacity-50' : ''}`}>
+                  <Avatar className={`h-6 w-6 border ${isDropped ? 'border-destructive/50 grayscale' : 'border-primary/30'}`}>
                     {p.avatar.startsWith('http') || p.avatar.startsWith('data:') ? <AvatarImage src={p.avatar} /> : <AvatarFallback className="bg-muted text-[8px]">{p.avatar}</AvatarFallback>}
                   </Avatar>
-                  <span className="font-heading truncate flex-1">{p.nickname || p.name.split(' ')[0]}</span>
-                  <button onClick={() => setConfirmRemovePlayer(pid)} className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive">
-                    <UserMinus className="h-3 w-3" />
-                  </button>
+                  <span className={`font-heading truncate flex-1 ${isDropped ? 'line-through text-muted-foreground' : ''}`}>
+                    {p.nickname || p.name.split(' ')[0]}
+                  </span>
+                  {isDropped ? (
+                    <span className="text-[9px] font-heading tracking-wider text-destructive flex items-center gap-0.5">
+                      <Ban className="h-3 w-3" /> DROP
+                    </span>
+                  ) : (
+                    <button onClick={() => setConfirmDropPlayer(pid)} className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive" title="Dropar jogador">
+                      <Ban className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
               );
             })}
