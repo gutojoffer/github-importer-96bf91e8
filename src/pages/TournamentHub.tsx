@@ -197,7 +197,7 @@ export default function TournamentHub() {
   // ─── Undo Last Point ───
   const handleUndoPoint = useCallback((matchId: string) => {
     if (!activeTournament) return;
-    const t = { ...activeTournament, rounds: activeTournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m, scoreLog: [...(m.scoreLog || [])] })) })) };
+    const t: Tournament = { ...activeTournament, rounds: activeTournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m, scoreLog: m.scoreLog ? [...m.scoreLog] : [] })) })) };
     const currentRound = t.rounds[t.currentRound];
     const match = currentRound.matches.find(m => m.id === matchId);
     if (!match || !match.scoreLog || match.scoreLog.length === 0) return;
