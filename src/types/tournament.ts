@@ -60,6 +60,7 @@ export interface Tournament {
   date: string;
   registrationDeadline: string;
   playerIds: string[];
+  droppedPlayerIds?: string[];
   rounds: TournamentRound[];
   currentRound: number;
   arenaCount: number;
