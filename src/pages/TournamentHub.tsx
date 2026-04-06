@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tournament, Player, FinishType, FINISH_POINTS, DEFAULT_AVATARS } from '@/types/tournament';
+import { Tournament, Player, FinishType, FINISH_POINTS, DEFAULT_AVATARS, ScoreAction } from '@/types/tournament';
 import { suggestRounds, generateFirstRound, generateSwissRound } from '@/lib/matchmaking';
 import { saveActiveTournament, saveTournaments } from '@/lib/storage';
 import { usePlayerStore } from '@/stores/usePlayerStore';
@@ -20,7 +20,7 @@ import EloBadge from '@/components/EloBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Plus, Play, Lightbulb, Calendar, Users, Trophy, XOctagon, Award,
-  CheckCircle, Camera, UserPlus, X, Search, Check, Trash2, UserMinus,
+  CheckCircle, Camera, UserPlus, X, Search, Check, Trash2, UserMinus, Undo2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -150,12 +150,19 @@ export default function TournamentHub() {
   // ─── Match Scoring (OPTIMISTIC - instant UI) ───
   const handleScorePoint = useCallback((matchId: string, winnerId: string, finishType: FinishType) => {
     if (!activeTournament) return;
-    const t = { ...activeTournament, rounds: activeTournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m })) })) };
+    const t: Tournament = { ...activeTournament, rounds: activeTournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m })) })) };
     const currentRound = t.rounds[t.currentRound];
     const matchIdx = currentRound.matches.findIndex(m => m.id === matchId);
     if (matchIdx === -1) return;
     const match = currentRound.matches[matchIdx];
     const pts = FINISH_POINTS[finishType];
+
+    // Log the action
+    const action: ScoreAction = {
+      id: crypto.randomUUID(), playerId: winnerId, finishType, points: pts,
+      timestamp: new Date().toISOString(),
+    };
+    match.scoreLog = [...(match.scoreLog || []), action];
 
     if (winnerId === match.player1Id) match.player1Points += pts;
     else match.player2Points += pts;
@@ -186,6 +193,48 @@ export default function TournamentHub() {
 
     updateActive(t);
   }, [activeTournament, getPlayer, updateActive]);
+
+  // ─── Undo Last Point ───
+  const handleUndoPoint = useCallback((matchId: string) => {
+    if (!activeTournament) return;
+    const t: Tournament = { ...activeTournament, rounds: activeTournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m, scoreLog: m.scoreLog ? [...m.scoreLog] : [] })) })) };
+    const currentRound = t.rounds[t.currentRound];
+    const match = currentRound.matches.find(m => m.id === matchId);
+    if (!match || !match.scoreLog || match.scoreLog.length === 0) return;
+
+    // Find last non-undone action
+    const activeLog = match.scoreLog.filter(a => !a.undone);
+    if (activeLog.length === 0) return;
+
+    const lastAction = activeLog[activeLog.length - 1];
+    // Mark as undone in log (immutable audit trail)
+    const undoEntry: ScoreAction = {
+      id: crypto.randomUUID(), playerId: lastAction.playerId,
+      finishType: lastAction.finishType, points: -lastAction.points,
+      timestamp: new Date().toISOString(), undone: true,
+    };
+    match.scoreLog.push(undoEntry);
+
+    // Mark original as undone
+    const origIdx = match.scoreLog.findIndex(a => a.id === lastAction.id);
+    if (origIdx !== -1) match.scoreLog[origIdx] = { ...match.scoreLog[origIdx], undone: true };
+
+    // Subtract points
+    if (lastAction.playerId === match.player1Id) match.player1Points -= lastAction.points;
+    else match.player2Points -= lastAction.points;
+
+    // Clamp to 0
+    match.player1Points = Math.max(0, match.player1Points);
+    match.player2Points = Math.max(0, match.player2Points);
+
+    // Clear result if match was already won (undo winning point)
+    if (match.result) {
+      match.result = undefined;
+    }
+
+    updateActive(t);
+    toast.success('↩ Último ponto removido');
+  }, [activeTournament, updateActive]);
 
   // ─── End Tournament ───
   const handleEndTournament = useCallback(async () => {
@@ -308,6 +357,17 @@ export default function TournamentHub() {
               player2Points={currentMatch.player2Points}
               pointsToWin={activeTournament.pointsToWin}
             />
+            <div className="flex justify-center">
+              <Button
+                variant="ghost"
+                onClick={() => handleUndoPoint(currentMatch.id)}
+                disabled={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0}
+                className="font-heading tracking-wider text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+                title={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0 ? 'Nenhum ponto para desfazer' : 'Desfazer último ponto'}
+              >
+                <Undo2 className="h-4 w-4" /> Desfazer último ponto
+              </Button>
+            </div>
             <div className="grid grid-cols-2 gap-4 px-2">
               <ResultButtons
                 playerName={getPlayer(currentMatch.player1Id)?.nickname || getPlayer(currentMatch.player1Id)?.name || ''}
