@@ -77,7 +77,7 @@ export function generateSwissRound(tournament: Tournament): TournamentRound | nu
     }
   }
 
-  const sorted = [...tournament.playerIds].sort((a, b) => {
+  const sorted = [...activePlayerIds].sort((a, b) => {
     const diff = (pointsMap.get(b) || 0) - (pointsMap.get(a) || 0);
     return diff !== 0 ? diff : Math.random() - 0.5;
   });
