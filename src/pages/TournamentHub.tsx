@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tournament, Player, FinishType, FINISH_POINTS, DEFAULT_AVATARS, ScoreAction } from '@/types/tournament';
-import { suggestRounds, generateFirstRound, generateSwissRound } from '@/lib/matchmaking';
+import { Tournament, Player, FinishType, FINISH_POINTS, DEFAULT_AVATARS, ScoreAction, EliminationSize } from '@/types/tournament';
+import { suggestRounds, generateFirstRound, generateSwissRound, getSwissStandings, generateEliminationBracket, generateNextEliminationRound } from '@/lib/matchmaking';
 import { saveActiveTournament, saveTournaments } from '@/lib/storage';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import { useTournamentStore } from '@/stores/useTournamentStore';
@@ -16,11 +16,13 @@ import TournamentHUD from '@/components/TournamentHUD';
 import VictorySplash from '@/components/VictorySplash';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import BracketTree from '@/components/BracketTree';
+import EliminationBracket from '@/components/EliminationBracket';
+import EliminationTransition from '@/components/EliminationTransition';
 import EloBadge from '@/components/EloBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Plus, Play, Lightbulb, Calendar, Users, Trophy, XOctagon, Award,
-  CheckCircle, Camera, UserPlus, X, Search, Check, Trash2, UserMinus, Undo2, Ban,
+  CheckCircle, Camera, UserPlus, X, Search, Check, Trash2, UserMinus, Undo2, Ban, Swords,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -46,6 +48,7 @@ export default function TournamentHub() {
   const [tName, setTName] = useState('');
   const [tDate, setTDate] = useState('');
   const [tMaxPlayers, setTMaxPlayers] = useState(32);
+  const [tEliminationSize, setTEliminationSize] = useState<EliminationSize>(null);
 
   // Enrollment modal
   const [enrollModal, setEnrollModal] = useState<string | null>(null);
@@ -62,11 +65,15 @@ export default function TournamentHub() {
   const [arenaCount, setArenaCount] = useState(2);
   const [rounds, setRounds] = useState(3);
   const [pointsToWin, setPointsToWin] = useState(4);
+  const [startEliminationSize, setStartEliminationSize] = useState<EliminationSize>(null);
 
   // Match state
   const [victoryWinner, setVictoryWinner] = useState<Player | null>(null);
   const [victoryFinish, setVictoryFinish] = useState<string | undefined>();
   const [vsKey, setVsKey] = useState(0);
+
+  // Elimination transition
+  const [showEliminationTransition, setShowEliminationTransition] = useState(false);
 
   // Confirmations
   const [confirmEndTournament, setConfirmEndTournament] = useState(false);
@@ -98,12 +105,13 @@ export default function TournamentHub() {
       registrationDeadline: tDate, playerIds: [], rounds: [],
       currentRound: 0, arenaCount: 2, totalRounds: 3, pointsToWin: 4,
       status: 'upcoming', createdAt: new Date().toISOString(), maxPlayers: tMaxPlayers,
+      eliminationSize: tEliminationSize,
     };
     createTournament(t);
     setShowCreate(false);
-    setTName(''); setTDate('');
+    setTName(''); setTDate(''); setTEliminationSize(null);
     toast.success('Torneio criado!');
-  }, [tName, tDate, tMaxPlayers, createTournament]);
+  }, [tName, tDate, tMaxPlayers, tEliminationSize, createTournament]);
 
   // ─── Enrollment ───
   const handleEnroll = useCallback((playerId: string) => {
@@ -139,26 +147,35 @@ export default function TournamentHub() {
     const active: Tournament = {
       ...t, status: 'active', arenaCount, totalRounds: rounds,
       pointsToWin, rounds: [firstRound], currentRound: 0,
+      eliminationSize: startEliminationSize || t.eliminationSize,
+      phase: 'swiss',
     };
-    // Remove from upcoming list
     deleteTournamentStore(t.id);
     setActiveTournament(active);
     setStartingTournament(null);
     setView('active');
     toast.success('🌀 Torneio iniciado! Let it rip!');
-  }, [startingTournament, arenaCount, rounds, pointsToWin, tournaments, deleteTournamentStore, setActiveTournament]);
+  }, [startingTournament, arenaCount, rounds, pointsToWin, startEliminationSize, tournaments, deleteTournamentStore, setActiveTournament]);
 
-  // ─── Match Scoring (OPTIMISTIC - instant UI) ───
-  const handleScorePoint = useCallback((matchId: string, winnerId: string, finishType: FinishType) => {
+  // ─── Match Scoring (OPTIMISTIC) ───
+  const handleScorePoint = useCallback((matchId: string, winnerId: string, finishType: FinishType, isElimination = false) => {
     if (!activeTournament) return;
-    const t: Tournament = { ...activeTournament, rounds: activeTournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m })) })) };
-    const currentRound = t.rounds[t.currentRound];
+    const t: Tournament = {
+      ...activeTournament,
+      rounds: activeTournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m })) })),
+      eliminationRounds: (activeTournament.eliminationRounds || []).map(r => ({ ...r, matches: r.matches.map(m => ({ ...m })) })),
+    };
+
+    const roundsArray = isElimination ? t.eliminationRounds! : t.rounds;
+    const currentRoundIdx = isElimination ? (t.currentEliminationRound || 0) : t.currentRound;
+    const currentRound = roundsArray[currentRoundIdx];
+    if (!currentRound) return;
+
     const matchIdx = currentRound.matches.findIndex(m => m.id === matchId);
     if (matchIdx === -1) return;
     const match = currentRound.matches[matchIdx];
     const pts = FINISH_POINTS[finishType];
 
-    // Log the action
     const action: ScoreAction = {
       id: crypto.randomUUID(), playerId: winnerId, finishType, points: pts,
       timestamp: new Date().toISOString(),
@@ -179,15 +196,36 @@ export default function TournamentHub() {
       const allDone = currentRound.matches.every(m => m.result);
       if (allDone) {
         currentRound.completed = true;
-        if (t.currentRound + 1 < t.totalRounds) {
-          const nextRound = generateSwissRound({ ...t, currentRound: t.currentRound + 1 });
-          if (nextRound) {
-            t.rounds.push(nextRound);
-            t.currentRound++;
-            toast.success(`Rodada ${t.currentRound + 1} gerada!`);
+
+        if (isElimination) {
+          // Generate next elimination round
+          const totalElimRounds = Math.ceil(Math.log2(t.eliminationPlayerIds?.length || 2));
+          const nextElimRound = generateNextEliminationRound(currentRound, currentRoundIdx + 1, t.arenaCount, totalElimRounds);
+          if (nextElimRound && nextElimRound.matches.filter(m => !m.isBye).length > 0) {
+            t.eliminationRounds!.push(nextElimRound);
+            t.currentEliminationRound = currentRoundIdx + 1;
+            toast.success(`${nextElimRound.label || 'Próxima fase'} gerada!`);
+          } else {
+            // Final match done - champion!
+            toast.info('🏆 CAMPEÃO DEFINIDO! Encerre o torneio.');
           }
         } else {
-          toast.info('Todas as rodadas concluídas! Encerre o torneio.');
+          // Swiss round complete
+          if (t.currentRound + 1 < t.totalRounds) {
+            const nextRound = generateSwissRound({ ...t, currentRound: t.currentRound + 1 });
+            if (nextRound) {
+              t.rounds.push(nextRound);
+              t.currentRound++;
+              toast.success(`Rodada ${t.currentRound + 1} gerada!`);
+            }
+          } else {
+            // All swiss rounds complete
+            if (t.eliminationSize) {
+              toast.info(`Rodadas Swiss concluídas! Preparando TOP ${t.eliminationSize}...`);
+            } else {
+              toast.info('Todas as rodadas concluídas! Encerre o torneio.');
+            }
+          }
         }
       }
     }
@@ -196,45 +234,73 @@ export default function TournamentHub() {
   }, [activeTournament, getPlayer, updateActive]);
 
   // ─── Undo Last Point ───
-  const handleUndoPoint = useCallback((matchId: string) => {
+  const handleUndoPoint = useCallback((matchId: string, isElimination = false) => {
     if (!activeTournament) return;
-    const t: Tournament = { ...activeTournament, rounds: activeTournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m, scoreLog: m.scoreLog ? [...m.scoreLog] : [] })) })) };
-    const currentRound = t.rounds[t.currentRound];
-    const match = currentRound.matches.find(m => m.id === matchId);
+    const t: Tournament = {
+      ...activeTournament,
+      rounds: activeTournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m, scoreLog: m.scoreLog ? [...m.scoreLog] : [] })) })),
+      eliminationRounds: (activeTournament.eliminationRounds || []).map(r => ({ ...r, matches: r.matches.map(m => ({ ...m, scoreLog: m.scoreLog ? [...m.scoreLog] : [] })) })),
+    };
+    const roundsArray = isElimination ? t.eliminationRounds! : t.rounds;
+    const currentRoundIdx = isElimination ? (t.currentEliminationRound || 0) : t.currentRound;
+    const match = roundsArray[currentRoundIdx]?.matches.find(m => m.id === matchId);
     if (!match || !match.scoreLog || match.scoreLog.length === 0) return;
 
-    // Find last non-undone action
     const activeLog = match.scoreLog.filter(a => !a.undone);
     if (activeLog.length === 0) return;
 
     const lastAction = activeLog[activeLog.length - 1];
-    // Mark as undone in log (immutable audit trail)
     const undoEntry: ScoreAction = {
       id: crypto.randomUUID(), playerId: lastAction.playerId,
       finishType: lastAction.finishType, points: -lastAction.points,
       timestamp: new Date().toISOString(), undone: true,
     };
     match.scoreLog.push(undoEntry);
-
-    // Mark original as undone
     const origIdx = match.scoreLog.findIndex(a => a.id === lastAction.id);
     if (origIdx !== -1) match.scoreLog[origIdx] = { ...match.scoreLog[origIdx], undone: true };
 
-    // Subtract points
     if (lastAction.playerId === match.player1Id) match.player1Points -= lastAction.points;
     else match.player2Points -= lastAction.points;
-
-    // Clamp to 0
     match.player1Points = Math.max(0, match.player1Points);
     match.player2Points = Math.max(0, match.player2Points);
 
-    // Clear result if match was already won (undo winning point)
-    if (match.result) {
-      match.result = undefined;
-    }
+    if (match.result) match.result = undefined;
 
     updateActive(t);
     toast.success('↩ Último ponto removido');
+  }, [activeTournament, updateActive]);
+
+  // ─── Start Elimination Phase ───
+  const handleStartElimination = useCallback(() => {
+    if (!activeTournament || !activeTournament.eliminationSize) return;
+    const standings = getSwissStandings(activeTournament);
+    const topN = Math.min(activeTournament.eliminationSize, standings.length);
+    const qualifiedIds = standings.slice(0, topN).map(s => s.playerId);
+
+    setShowEliminationTransition(true);
+
+    // Store qualified IDs temporarily for the transition component
+    const t: Tournament = {
+      ...activeTournament,
+      eliminationPlayerIds: qualifiedIds,
+    };
+    updateActive(t);
+  }, [activeTournament, updateActive]);
+
+  const handleEliminationTransitionComplete = useCallback(() => {
+    if (!activeTournament) return;
+    const qualifiedIds = activeTournament.eliminationPlayerIds || [];
+    const bracket = generateEliminationBracket(qualifiedIds, activeTournament.arenaCount, activeTournament.pointsToWin);
+
+    const t: Tournament = {
+      ...activeTournament,
+      phase: 'elimination',
+      eliminationRounds: bracket,
+      currentEliminationRound: 0,
+    };
+    updateActive(t);
+    setShowEliminationTransition(false);
+    toast.success('⚔️ Fase eliminatória iniciada!');
   }, [activeTournament, updateActive]);
 
   // ─── End Tournament ───
@@ -243,7 +309,6 @@ export default function TournamentHub() {
     if (!standings) return;
     setView('list');
     setConfirmEndTournament(false);
-    // Refresh players to get updated XP
     await usePlayerStore.getState().load();
     usePlayerStore.setState({ loaded: false });
     await usePlayerStore.getState().load();
@@ -287,46 +352,64 @@ export default function TournamentHub() {
         ...r,
         matches: r.matches.map(m => ({ ...m })),
       })),
+      eliminationRounds: (activeTournament.eliminationRounds || []).map(r => ({
+        ...r,
+        matches: r.matches.map(m => ({ ...m })),
+      })),
     };
 
-    // Handle current and future matches
-    for (let ri = t.currentRound; ri < t.rounds.length; ri++) {
-      const round = t.rounds[ri];
-      for (const match of round.matches) {
-        if (match.isBye || match.result) continue;
-        const involves = match.player1Id === droppedId || match.player2Id === droppedId;
-        if (!involves) continue;
-
-        // Award W/O to opponent
-        const opponentId = match.player1Id === droppedId ? match.player2Id : match.player1Id;
-        match.result = { winnerId: opponentId, finishType: 'spin' };
-        // Mark points as W/O win
-        if (opponentId === match.player1Id) {
-          match.player1Points = t.pointsToWin;
-        } else {
-          match.player2Points = t.pointsToWin;
+    // Handle current and future matches in both swiss and elimination
+    const allRoundArrays = [t.rounds, ...(t.eliminationRounds ? [t.eliminationRounds] : [])];
+    for (const roundsArr of allRoundArrays) {
+      for (const round of roundsArr) {
+        for (const match of round.matches) {
+          if (match.isBye || match.result) continue;
+          const involves = match.player1Id === droppedId || match.player2Id === droppedId;
+          if (!involves) continue;
+          const opponentId = match.player1Id === droppedId ? match.player2Id : match.player1Id;
+          match.result = { winnerId: opponentId, finishType: 'spin' };
+          match.isWalkover = true;
+          if (opponentId === match.player1Id) {
+            match.player1Points = t.pointsToWin;
+          } else {
+            match.player2Points = t.pointsToWin;
+          }
         }
       }
     }
 
-    // Check if current round is now complete
-    const currentRound = t.rounds[t.currentRound];
-    const allDone = currentRound.matches.every(m => m.result || m.isBye);
-    if (allDone) {
-      currentRound.completed = true;
-      if (t.currentRound + 1 < t.totalRounds) {
-        const nextRound = generateSwissRound({ ...t, currentRound: t.currentRound + 1 });
-        if (nextRound) {
-          t.rounds.push(nextRound);
-          t.currentRound++;
-          toast.success(`Rodada ${t.currentRound + 1} gerada!`);
+    // Check if current round (swiss or elimination) is now complete
+    const isElim = t.phase === 'elimination';
+    const currentRoundsArr = isElim ? t.eliminationRounds! : t.rounds;
+    const currentRoundIdx = isElim ? (t.currentEliminationRound || 0) : t.currentRound;
+    const currentRound = currentRoundsArr[currentRoundIdx];
+
+    if (currentRound) {
+      const allDone = currentRound.matches.every(m => m.result || m.isBye);
+      if (allDone) {
+        currentRound.completed = true;
+        if (isElim) {
+          const totalElimRounds = Math.ceil(Math.log2(t.eliminationPlayerIds?.length || 2));
+          const nextElimRound = generateNextEliminationRound(currentRound, currentRoundIdx + 1, t.arenaCount, totalElimRounds);
+          if (nextElimRound && nextElimRound.matches.filter(m => !m.isBye).length > 0) {
+            t.eliminationRounds!.push(nextElimRound);
+            t.currentEliminationRound = currentRoundIdx + 1;
+          }
+        } else {
+          if (t.currentRound + 1 < t.totalRounds) {
+            const nextRound = generateSwissRound({ ...t, currentRound: t.currentRound + 1 });
+            if (nextRound) {
+              t.rounds.push(nextRound);
+              t.currentRound++;
+            }
+          }
         }
       }
     }
 
     // Adjust total rounds if needed
     const activeCount = t.playerIds.filter(id => !(t.droppedPlayerIds || []).includes(id)).length;
-    if (activeCount >= 2) {
+    if (activeCount >= 2 && !isElim) {
       const maxRounds = Math.ceil(Math.log2(activeCount)) + 1;
       t.totalRounds = Math.max(3, Math.min(t.totalRounds, maxRounds));
     }
@@ -345,32 +428,81 @@ export default function TournamentHub() {
     )
   , [players, enrollSearch]);
 
+  // ─── Helpers for elimination phase ───
+  const isInEliminationPhase = activeTournament?.phase === 'elimination';
+  const swissRoundsComplete = activeTournament ? activeTournament.currentRound + 1 >= activeTournament.totalRounds && activeTournament.rounds[activeTournament.currentRound]?.completed : false;
+  const shouldShowStartElimination = swissRoundsComplete && activeTournament?.eliminationSize && !isInEliminationPhase && !activeTournament?.eliminationRounds?.length;
+
+  // Get qualified players for transition
+  const qualifiedPlayersForTransition = useMemo(() => {
+    if (!activeTournament?.eliminationPlayerIds) return [];
+    return activeTournament.eliminationPlayerIds.map(id => getPlayer(id)).filter(Boolean) as Player[];
+  }, [activeTournament?.eliminationPlayerIds, getPlayer]);
+
+  // Find champion in elimination
+  const eliminationChampion = useMemo(() => {
+    if (!activeTournament?.eliminationRounds) return undefined;
+    const lastRound = activeTournament.eliminationRounds[activeTournament.eliminationRounds.length - 1];
+    if (!lastRound?.completed) return undefined;
+    const finalMatch = lastRound.matches.find(m => !m.isBye && m.result);
+    return finalMatch?.result?.winnerId;
+  }, [activeTournament?.eliminationRounds]);
+
   // ─── ACTIVE TOURNAMENT VIEW ───
   if (view === 'active' && activeTournament) {
-    const currentRound = activeTournament.rounds[activeTournament.currentRound];
-    if (!currentRound) return null;
+    const isElim = isInEliminationPhase;
+    const currentRoundsArr = isElim ? (activeTournament.eliminationRounds || []) : activeTournament.rounds;
+    const currentRoundIdx = isElim ? (activeTournament.currentEliminationRound || 0) : activeTournament.currentRound;
+    const currentRound = currentRoundsArr[currentRoundIdx];
+    if (!currentRound && !shouldShowStartElimination) return null;
 
-    const allNonBye = currentRound.matches.filter(m => !m.isBye);
+    const allNonBye = currentRound ? currentRound.matches.filter(m => !m.isBye) : [];
     const allPending = allNonBye.filter(m => !m.result);
-    const byePlayer = currentRound.byePlayerId ? getPlayer(currentRound.byePlayerId) : null;
+    const byePlayer = currentRound?.byePlayerId ? getPlayer(currentRound.byePlayerId) : null;
     const currentMatch = allPending[0];
     const completedMatches = allNonBye.filter(m => m.result);
 
     return (
       <div className="p-5 max-w-5xl mx-auto space-y-4 relative">
         {victoryWinner && <VictorySplash winner={victoryWinner} finishType={victoryFinish} />}
+        {showEliminationTransition && (
+          <EliminationTransition
+            topN={activeTournament.eliminationSize || 4}
+            qualifiedPlayers={qualifiedPlayersForTransition}
+            onComplete={handleEliminationTransitionComplete}
+          />
+        )}
 
         <TournamentHUD tournament={activeTournament} pendingCount={allPending.length} totalMatches={allNonBye.length} />
+
+        {/* Phase indicator */}
+        {isElim && (
+          <div className="flex items-center justify-center gap-2 py-2">
+            <Swords className="h-5 w-5 text-accent" />
+            <span className="font-heading text-sm font-bold tracking-[0.2em] text-accent italic uppercase">
+              FASE ELIMINATÓRIA — {currentRound?.label || 'ELIMINATÓRIA'}
+            </span>
+          </div>
+        )}
 
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="neon-line-blurple pl-3">
             <h1 className="font-heading text-2xl font-bold tracking-wider text-foreground italic">{activeTournament.name}</h1>
-            <p className="text-xs text-muted-foreground font-body">Rodada {activeTournament.currentRound + 1} de {activeTournament.totalRounds}</p>
+            <p className="text-xs text-muted-foreground font-body">
+              {isElim
+                ? `Eliminatória — ${currentRound?.label || ''}`
+                : `Rodada ${activeTournament.currentRound + 1} de ${activeTournament.totalRounds}`}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground font-heading flex items-center gap-1">
               <Award className="h-3 w-3" /> PTS: {activeTournament.pointsToWin}
             </span>
+            {activeTournament.eliminationSize && !isElim && (
+              <span className="text-xs text-accent font-heading flex items-center gap-1">
+                <Swords className="h-3 w-3" /> TOP {activeTournament.eliminationSize}
+              </span>
+            )}
             <Button onClick={() => setConfirmEndTournament(true)} variant="outline" className="font-heading tracking-wider gap-2 border-primary/50 text-primary">
               <Trophy className="h-4 w-4" /> Encerrar
             </Button>
@@ -380,8 +512,36 @@ export default function TournamentHub() {
           </div>
         </div>
 
-        {/* Bracket Tree */}
-        <BracketTree tournament={activeTournament} getPlayer={getPlayer} currentRoundHighlight={activeTournament.currentRound} />
+        {/* Swiss Bracket Tree */}
+        {!isElim && (
+          <BracketTree tournament={activeTournament} getPlayer={getPlayer} currentRoundHighlight={activeTournament.currentRound} />
+        )}
+
+        {/* Elimination Bracket */}
+        {activeTournament.eliminationRounds && activeTournament.eliminationRounds.length > 0 && (
+          <EliminationBracket
+            rounds={activeTournament.eliminationRounds}
+            getPlayer={getPlayer}
+            currentRound={activeTournament.currentEliminationRound}
+            champion={eliminationChampion}
+          />
+        )}
+
+        {/* Start Elimination Button */}
+        {shouldShowStartElimination && (
+          <div className="glass-panel text-center py-8 space-y-4 glow-blurple">
+            <Swords className="h-12 w-12 mx-auto text-accent" />
+            <h2 className="font-heading text-2xl font-bold text-accent tracking-[0.15em] italic">
+              RODADAS SWISS CONCLUÍDAS!
+            </h2>
+            <p className="text-sm text-muted-foreground font-body">
+              Classificação definida. Iniciar fase eliminatória TOP {activeTournament.eliminationSize}?
+            </p>
+            <Button onClick={handleStartElimination} className="font-heading tracking-wider gap-2 bg-accent text-accent-foreground hover:bg-accent/80 text-lg px-8 py-3 h-auto">
+              <Swords className="h-5 w-5" /> INICIAR TOP {activeTournament.eliminationSize}
+            </Button>
+          </div>
+        )}
 
         {/* Enrolled players */}
         <details className="glass-panel">
@@ -427,7 +587,7 @@ export default function TournamentHub() {
             <VersusScreen
               player1={getPlayer(currentMatch.player1Id)!}
               player2={getPlayer(currentMatch.player2Id)!}
-              arenaName="ARENA PRINCIPAL"
+              arenaName={isElim ? (currentRound?.label || 'ELIMINATÓRIA') : 'ARENA PRINCIPAL'}
               player1Points={currentMatch.player1Points}
               player2Points={currentMatch.player2Points}
               pointsToWin={activeTournament.pointsToWin}
@@ -435,7 +595,7 @@ export default function TournamentHub() {
             <div className="flex justify-center">
               <Button
                 variant="ghost"
-                onClick={() => handleUndoPoint(currentMatch.id)}
+                onClick={() => handleUndoPoint(currentMatch.id, isElim)}
                 disabled={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0}
                 className="font-heading tracking-wider text-xs gap-1.5 text-muted-foreground hover:text-foreground"
                 title={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0 ? 'Nenhum ponto para desfazer' : 'Desfazer último ponto'}
@@ -447,28 +607,36 @@ export default function TournamentHub() {
               <ResultButtons
                 playerName={getPlayer(currentMatch.player1Id)?.nickname || getPlayer(currentMatch.player1Id)?.name || ''}
                 side="left"
-                onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player1Id, ft)}
+                onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player1Id, ft, isElim)}
                 disabled={!!currentMatch.result}
               />
               <ResultButtons
                 playerName={getPlayer(currentMatch.player2Id)?.nickname || getPlayer(currentMatch.player2Id)?.name || ''}
                 side="right"
-                onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player2Id, ft)}
+                onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player2Id, ft, isElim)}
                 disabled={!!currentMatch.result}
               />
             </div>
           </div>
-        ) : (
+        ) : !shouldShowStartElimination ? (
           <div className="glass-panel text-center py-12">
             <CheckCircle className="h-10 w-10 mx-auto text-primary mb-3" />
-            <p className="font-heading text-lg text-foreground">Rodada Completa!</p>
+            <p className="font-heading text-lg text-foreground">
+              {isElim && eliminationChampion ? '🏆 Campeão definido!' : 'Rodada Completa!'}
+            </p>
             <p className="text-sm text-muted-foreground mt-1">
-              {activeTournament.currentRound + 1 >= activeTournament.totalRounds
-                ? 'Todas as rodadas concluídas. Encerre o torneio.'
-                : 'Próxima rodada gerada automaticamente.'}
+              {isElim && eliminationChampion
+                ? `${getPlayer(eliminationChampion)?.name || 'Vencedor'} é o campeão! Encerre o torneio para distribuir XP.`
+                : isElim
+                  ? 'Próxima fase gerada automaticamente.'
+                  : activeTournament.currentRound + 1 >= activeTournament.totalRounds
+                    ? activeTournament.eliminationSize
+                      ? 'Rodadas Swiss concluídas. Inicie a fase eliminatória.'
+                      : 'Todas as rodadas concluídas. Encerre o torneio.'
+                    : 'Próxima rodada gerada automaticamente.'}
             </p>
           </div>
-        )}
+        ) : null}
 
         {/* Pending queue */}
         {allPending.length > 1 && (
@@ -510,9 +678,11 @@ export default function TournamentHub() {
                 return (
                   <div key={m.id} className="dark-panel flex items-center gap-2 p-2.5 text-xs">
                     <span className="font-heading font-bold text-primary truncate">{winner?.nickname || winner?.name}</span>
-                    <span className="text-muted-foreground">def.</span>
+                    <span className="text-muted-foreground">{m.isWalkover ? 'W/O' : 'def.'}</span>
                     <span className="text-muted-foreground truncate">{loser?.nickname || loser?.name}</span>
-                    <span className="ml-auto text-[10px] text-muted-foreground uppercase font-heading">{m.result!.finishType}</span>
+                    <span className="ml-auto text-[10px] text-muted-foreground uppercase font-heading">
+                      {m.isWalkover ? 'W/O' : m.result!.finishType}
+                    </span>
                   </div>
                 );
               })}
@@ -643,7 +813,7 @@ export default function TournamentHub() {
       {showCreate && (
         <div className="glass-panel p-5 space-y-4 neon-line-magenta anim-fade-up">
           <h2 className="font-heading text-lg font-bold text-secondary tracking-wider">NOVO TORNEIO</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label className="font-heading text-muted-foreground text-xs">Nome</Label>
               <Input value={tName} onChange={e => setTName(e.target.value)} placeholder="Ex: Copa Beyblade X" className="bg-muted/30 border-border" />
@@ -655,6 +825,24 @@ export default function TournamentHub() {
             <div className="space-y-2">
               <Label className="font-heading text-muted-foreground text-xs">Vagas</Label>
               <Input type="number" min={2} max={128} value={tMaxPlayers} onChange={e => setTMaxPlayers(parseInt(e.target.value) || 32)} className="bg-muted/30 border-border" />
+            </div>
+            <div className="space-y-2">
+              <Label className="font-heading text-muted-foreground text-xs">Fase Final</Label>
+              <div className="flex gap-1">
+                {([null, 4, 8, 16] as EliminationSize[]).map(size => (
+                  <button
+                    key={String(size)}
+                    onClick={() => setTEliminationSize(size)}
+                    className={`flex-1 font-heading text-[10px] tracking-wider py-2 rounded-md border transition-all ${
+                      tEliminationSize === size
+                        ? 'border-accent bg-accent/10 text-accent'
+                        : 'border-border text-muted-foreground hover:border-accent/30'
+                    }`}
+                  >
+                    {size ? `TOP ${size}` : 'SEM'}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
           <Button onClick={handleCreate} className="font-heading tracking-wider gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80">
@@ -668,9 +856,9 @@ export default function TournamentHub() {
         <div className="glass-panel p-5 space-y-4 neon-line-blurple anim-fade-up glow-blurple">
           <h2 className="font-heading text-lg font-bold text-primary tracking-wider">INICIAR: {startingTournament.name}</h2>
           <p className="text-xs text-muted-foreground font-body">{(tournaments.find(t => t.id === startingTournament.id)?.playerIds.length) || startingTournament.playerIds.length} jogadores inscritos</p>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label className="font-heading text-muted-foreground text-xs">Rodadas</Label>
+              <Label className="font-heading text-muted-foreground text-xs">Rodadas Swiss</Label>
               <div className="flex gap-2">
                 <Input type="number" min={1} max={20} value={rounds} onChange={e => setRounds(parseInt(e.target.value) || 1)} className="bg-muted/30 border-border" />
                 <Button variant="outline" size="sm" onClick={() => setRounds(suggested)} className="gap-1 text-xs font-heading shrink-0 border-primary text-primary">
@@ -685,6 +873,24 @@ export default function TournamentHub() {
             <div className="space-y-2">
               <Label className="font-heading text-muted-foreground text-xs">Pts p/ Vencer</Label>
               <Input type="number" min={1} max={10} value={pointsToWin} onChange={e => setPointsToWin(parseInt(e.target.value) || 4)} className="bg-muted/30 border-border" />
+            </div>
+            <div className="space-y-2">
+              <Label className="font-heading text-muted-foreground text-xs">Fase Final</Label>
+              <div className="flex gap-1">
+                {([null, 4, 8, 16] as EliminationSize[]).map(size => (
+                  <button
+                    key={String(size)}
+                    onClick={() => setStartEliminationSize(size)}
+                    className={`flex-1 font-heading text-[10px] tracking-wider py-2 rounded-md border transition-all ${
+                      (startEliminationSize ?? startingTournament.eliminationSize) === size
+                        ? 'border-accent bg-accent/10 text-accent'
+                        : 'border-border text-muted-foreground hover:border-accent/30'
+                    }`}
+                  >
+                    {size ? `T${size}` : 'SEM'}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
           <div className="flex gap-3">
@@ -709,7 +915,14 @@ export default function TournamentHub() {
             <div key={t.id} className="glass-panel p-4 anim-fade-up" style={{ animationDelay: `${i * 80}ms` }}>
               <div className="flex items-center justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-heading text-lg font-bold text-foreground italic">{t.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-heading text-lg font-bold text-foreground italic">{t.name}</h3>
+                    {t.eliminationSize && (
+                      <span className="text-[9px] font-heading tracking-wider text-accent bg-accent/10 px-2 py-0.5 rounded border border-accent/20">
+                        TOP {t.eliminationSize}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1 font-body">
                     <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{new Date(t.date).toLocaleDateString('pt-BR')}</span>
                     <span className="flex items-center gap-1"><Users className="h-3 w-3" />{t.playerIds.length} inscritos</span>
@@ -734,7 +947,7 @@ export default function TournamentHub() {
                     className="font-heading tracking-wider gap-1 bg-secondary/20 text-secondary hover:bg-secondary/30 border border-secondary/30">
                     <UserPlus className="h-3.5 w-3.5" /> Inscrever
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setStartingTournament(t)}
+                  <Button variant="outline" size="sm" onClick={() => { setStartingTournament(t); setStartEliminationSize(t.eliminationSize || null); }}
                     className="font-heading tracking-wider gap-1 border-primary/50 text-primary hover:bg-primary/10" disabled={t.playerIds.length < 2}>
                     <Play className="h-3.5 w-3.5" /> Iniciar
                   </Button>
