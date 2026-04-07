@@ -105,15 +105,18 @@ export default function TournamentPodium() {
               const player = getPlayer(s.playerId);
               if (!player) return null;
               return (
-                <div key={s.playerId} className="glass-panel flex items-center gap-3 p-3">
+                <div key={s.playerId} className={`glass-panel flex items-center gap-3 p-3 ${s.dropped ? 'opacity-50' : ''}`}>
                   <span className="font-heading text-lg font-bold w-8 text-center text-muted-foreground italic">#{s.placement}</span>
                   <Avatar className="h-8 w-8 border border-border">
                     {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? <AvatarImage src={player.avatar} alt={player.name} /> : <AvatarFallback className="bg-muted text-sm">{player.avatar}</AvatarFallback>}
                   </Avatar>
-                  <div className="flex-1 min-w-0"><p className="font-heading font-bold text-sm truncate">{player.name}</p></div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-heading font-bold text-sm truncate ${s.dropped ? 'line-through text-muted-foreground' : ''}`}>{player.name}</p>
+                    {s.dropped && <span className="text-[9px] font-heading text-destructive tracking-wider">DESISTENTE</span>}
+                  </div>
                   <EloBadge xp={player.xp || 0} size="sm" />
                   <span className="text-xs text-muted-foreground font-body">{s.wins}W/{s.losses}L</span>
-                  <span className="text-primary font-heading font-bold text-sm">+{s.xpAwarded} XP</span>
+                  <span className="text-primary font-heading font-bold text-sm">{s.dropped ? '-' : `+${s.xpAwarded} XP`}</span>
                 </div>
               );
             })}
