@@ -222,7 +222,10 @@ export async function saveCompletedTournament(t: Tournament) {
 export function calculateStandings(tournament: Tournament): TournamentStanding[] {
   const winsMap = new Map<string, number>();
   const lossesMap = new Map<string, number>();
+  const droppedSet = new Set(tournament.droppedPlayerIds || []);
   for (const pid of tournament.playerIds) { winsMap.set(pid, 0); lossesMap.set(pid, 0); }
+
+  // Count wins/losses from swiss rounds
   for (const round of tournament.rounds) {
     for (const match of round.matches) {
       if (match.isBye) { winsMap.set(match.player1Id, (winsMap.get(match.player1Id) || 0) + 1); continue; }
@@ -234,13 +237,40 @@ export function calculateStandings(tournament: Tournament): TournamentStanding[]
       }
     }
   }
+
+  // Count wins/losses from elimination rounds
+  for (const round of (tournament.eliminationRounds || [])) {
+    for (const match of round.matches) {
+      if (match.isBye) { winsMap.set(match.player1Id, (winsMap.get(match.player1Id) || 0) + 1); continue; }
+      if (match.result) {
+        const winnerId = match.result.winnerId;
+        const loserId = match.player1Id === winnerId ? match.player2Id : match.player1Id;
+        winsMap.set(winnerId, (winsMap.get(winnerId) || 0) + 1);
+        lossesMap.set(loserId, (lossesMap.get(loserId) || 0) + 1);
+      }
+    }
+  }
+
+  // Sort: active players first (by wins), then dropped players at bottom
   const sorted = tournament.playerIds
-    .map(pid => ({ playerId: pid, wins: winsMap.get(pid) || 0, losses: lossesMap.get(pid) || 0 }))
-    .sort((a, b) => b.wins - a.wins || a.losses - b.losses);
+    .map(pid => ({
+      playerId: pid,
+      wins: winsMap.get(pid) || 0,
+      losses: lossesMap.get(pid) || 0,
+      dropped: droppedSet.has(pid),
+    }))
+    .sort((a, b) => {
+      if (a.dropped !== b.dropped) return a.dropped ? 1 : -1;
+      return b.wins - a.wins || a.losses - b.losses;
+    });
+
   return sorted.map((entry, i) => ({
-    ...entry,
+    playerId: entry.playerId,
+    wins: entry.wins,
+    losses: entry.losses,
     placement: i + 1,
-    xpAwarded: PLACEMENT_XP[i + 1] ?? PLACEMENT_XP_DEFAULT,
+    xpAwarded: entry.dropped ? 0 : (PLACEMENT_XP[i + 1] ?? PLACEMENT_XP_DEFAULT),
+    dropped: entry.dropped,
   }));
 }
 
