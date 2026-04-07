@@ -42,6 +42,7 @@ export interface Match {
   arenaIndex: number;
   roundIndex: number;
   isBye?: boolean;
+  isWalkover?: boolean;
   player1Points: number;
   player2Points: number;
   scoreLog?: ScoreAction[];
@@ -52,7 +53,12 @@ export interface TournamentRound {
   matches: Match[];
   completed: boolean;
   byePlayerId?: string;
+  /** Label for elimination rounds */
+  label?: string;
 }
+
+export type EliminationSize = 4 | 8 | 16 | null;
+export type TournamentPhase = 'swiss' | 'elimination' | 'completed';
 
 export interface Tournament {
   id: string;
@@ -70,6 +76,16 @@ export interface Tournament {
   createdAt: string;
   finalStandings?: TournamentStanding[];
   maxPlayers?: number;
+  /** Elimination phase config */
+  eliminationSize?: EliminationSize;
+  /** Current phase of the tournament */
+  phase?: TournamentPhase;
+  /** Elimination bracket rounds (separate from swiss rounds) */
+  eliminationRounds?: TournamentRound[];
+  /** Current elimination round index */
+  currentEliminationRound?: number;
+  /** IDs of players who qualified for elimination */
+  eliminationPlayerIds?: string[];
 }
 
 export interface TournamentStanding {
@@ -78,6 +94,7 @@ export interface TournamentStanding {
   wins: number;
   losses: number;
   xpAwarded: number;
+  dropped?: boolean;
 }
 
 export const FINISH_POINTS: Record<FinishType, number> = {
@@ -104,8 +121,8 @@ export const DEFAULT_AVATARS = [
 /** Elo tier system */
 export interface EloTier {
   name: string;
-  divisions: number; // 0 = no divisions (single tier)
-  color: string; // HSL or hex for badge
+  divisions: number;
+  color: string;
   minXP: number;
 }
 
@@ -133,12 +150,11 @@ export function getEloFromXP(xp: number): { tier: EloTier; division: number | nu
     return { tier: currentTier, division: null, label: currentTier.name };
   }
 
-  // Calculate division within tier (3, 2, 1 — where 1 is highest)
   const xpInTier = xp - currentTier.minXP;
   const tierIdx = ELO_TIERS.indexOf(currentTier);
   const nextTier = ELO_TIERS[tierIdx + 1];
   const tierRange = nextTier ? nextTier.minXP - currentTier.minXP : 300;
-  const divisionSize = tierRange / currentTier.divisions; // 100 XP per division
+  const divisionSize = tierRange / currentTier.divisions;
 
   const divisionProgress = Math.floor(xpInTier / divisionSize);
   const division = Math.max(1, currentTier.divisions - Math.min(divisionProgress, currentTier.divisions - 1));
