@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Player } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import EloBadge from '@/components/EloBadge';
@@ -19,6 +19,7 @@ export default function VersusScreen({
   player1Points = 0, player2Points = 0, pointsToWin = 4,
   animate = true,
 }: VersusScreenProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [p1Anim, setP1Anim] = useState(false);
   const [p2Anim, setP2Anim] = useState(false);
   const [prevP1, setPrevP1] = useState(player1Points);
@@ -40,57 +41,143 @@ export default function VersusScreen({
     }
   }, [player2Points, prevP2]);
 
+  // Canvas particle system
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let animId: number;
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const particles = Array.from({ length: 28 }, (_, i) => {
+      const isBlue = i < 14;
+      return {
+        x: isBlue
+          ? Math.random() * (canvas.width * 0.45)
+          : canvas.width * 0.55 + Math.random() * (canvas.width * 0.45),
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.6 + 0.4,
+        speed: Math.random() * 0.35 + 0.1,
+        dx: (Math.random() - 0.5) * 0.4,
+        opacity: Math.random() * 0.25 + 0.05,
+        isBlue,
+      };
+    });
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const p of particles) {
+        p.y -= p.speed;
+        p.x += p.dx;
+        if (p.y < -4) {
+          p.y = canvas.height + 4;
+          p.x = p.isBlue
+            ? Math.random() * (canvas.width * 0.45)
+            : canvas.width * 0.55 + Math.random() * (canvas.width * 0.45);
+        }
+        if (p.isBlue && p.x > canvas.width * 0.48) p.dx = -Math.abs(p.dx);
+        if (!p.isBlue && p.x < canvas.width * 0.52) p.dx = Math.abs(p.dx);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.isBlue
+          ? `rgba(96,165,250,${p.opacity})`
+          : `rgba(248,113,113,${p.opacity})`;
+        ctx.fill();
+      }
+      animId = requestAnimationFrame(draw);
+    };
+
+    draw();
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
+
   const renderPlayer = (player: Player, side: 'left' | 'right', points: number, isImpact: boolean) => {
     const isLeft = side === 'left';
-    const themeColor = isLeft ? '#4F8EF7' : '#EF4444';
-    const clipPath = isLeft
-      ? 'polygon(0 0, 92% 0, 100% 100%, 0 100%)'
-      : 'polygon(8% 0, 100% 0, 100% 100%, 0 100%)';
 
     return (
       <div
-        className={`relative flex-1 min-w-0 py-6 px-4 sm:px-6 ${animate ? (isLeft ? 'anim-slide-left' : 'anim-slide-right') : ''}`}
-        style={{ clipPath }}
+        className={`relative flex flex-col items-center gap-3 py-6 px-4 sm:px-6 ${animate ? (isLeft ? 'anim-slide-left' : 'anim-slide-right') : ''}`}
+        style={{
+          background: isLeft
+            ? 'linear-gradient(135deg, rgba(59,130,246,0.07) 0%, transparent 60%)'
+            : 'linear-gradient(225deg, rgba(239,68,68,0.07) 0%, transparent 60%)',
+        }}
       >
-        {/* Side tinted bg */}
-        <div className="absolute inset-0 opacity-[0.06]" style={{ background: themeColor }} />
-
-        <div className={`flex flex-col items-center gap-2 relative z-10 ${isImpact ? 'anim-score-shake' : ''}`}>
-          {/* Avatar with pulse */}
-          <div className="arena-avatar-pulse" style={{ '--pulse-color': themeColor } as React.CSSProperties}>
-            <Avatar className="h-[80px] w-[80px] sm:h-[100px] sm:w-[100px] border-[3px]" style={{ borderColor: themeColor }}>
-              {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? (
-                <AvatarImage src={player.avatar} alt={player.name} />
-              ) : (
-                <AvatarFallback className="bg-muted text-3xl sm:text-4xl">{player.avatar}</AvatarFallback>
-              )}
-            </Avatar>
-          </div>
-
-          <EloBadge xp={player.xp || 0} size="md" />
-
-          <div className="text-center min-w-0 w-full">
-            <p className="font-heading text-lg sm:text-2xl font-bold tracking-wide truncate italic" style={{ color: themeColor }}>
-              {player.name}
-            </p>
-            {player.nickname && (
-              <p className="text-xs text-muted-foreground font-body truncate">@{player.nickname.replace(/^@/, '')}</p>
+        {/* Avatar */}
+        <div
+          className="rounded-full"
+          style={{
+            boxShadow: isLeft
+              ? '0 0 20px rgba(59,130,246,0.15)'
+              : '0 0 20px rgba(239,68,68,0.15)',
+          }}
+        >
+          <Avatar
+            className="h-[88px] w-[88px]"
+            style={{
+              border: isLeft ? '2.5px solid #3b82f6' : '2.5px solid #ef4444',
+            }}
+          >
+            {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? (
+              <AvatarImage src={player.avatar} alt={player.name} />
+            ) : (
+              <AvatarFallback className="bg-muted text-3xl">{player.avatar}</AvatarFallback>
             )}
-          </div>
+          </Avatar>
+        </div>
 
-          {/* Score */}
-          <div className="text-center">
-            <p
-              className={`font-heading text-6xl sm:text-7xl font-bold transition-all duration-200 ${isImpact ? 'arena-score-pop' : ''}`}
-              style={{ color: themeColor }}
-              key={points}
-            >
-              {points}
-            </p>
-            <p className="text-[10px] text-muted-foreground font-heading tracking-wider">
-              {points} / {pointsToWin}
-            </p>
-          </div>
+        {/* Rank badge */}
+        <div
+          className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-[20px] text-xs font-heading"
+          style={{
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ background: isLeft ? '#3b82f6' : '#ef4444' }}
+          />
+          <EloBadge xp={player.xp || 0} size="sm" />
+        </div>
+
+        {/* Name */}
+        <div className="text-center min-w-0 w-full">
+          <p className="font-heading text-lg sm:text-xl font-bold tracking-wide truncate text-foreground">
+            {player.name}
+          </p>
+          {player.nickname && (
+            <p className="text-xs text-muted-foreground font-body truncate">@{player.nickname.replace(/^@/, '')}</p>
+          )}
+        </div>
+
+        {/* Score */}
+        <div className="text-center">
+          <p
+            className={`font-heading text-6xl sm:text-7xl font-bold transition-all duration-200 ${isImpact ? 'arena-score-pop' : ''}`}
+            style={{
+              color: isLeft ? '#3b82f6' : '#ef4444',
+              textShadow: isLeft
+                ? '0 0 24px rgba(59,130,246,0.4)'
+                : '0 0 24px rgba(239,68,68,0.4)',
+            }}
+            key={points}
+          >
+            {points}
+          </p>
+          <p className="text-[10px] text-muted-foreground font-heading tracking-wider">
+            {points} / {pointsToWin}
+          </p>
         </div>
       </div>
     );
@@ -98,29 +185,70 @@ export default function VersusScreen({
 
   return (
     <div className="relative">
-      <p className="text-center text-xs font-heading tracking-[0.3em] uppercase mb-3 text-muted-foreground relative z-10">{arenaName}</p>
-      
-      <div className="flex items-stretch justify-center relative">
-        {renderPlayer(player1, 'left', player1Points, p1Anim)}
+      <p className="text-center text-xs font-heading tracking-[0.3em] uppercase mb-3 text-muted-foreground relative z-10">
+        {arenaName}
+      </p>
 
-        {/* VS Central */}
-        <div className={`absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none ${animate ? 'anim-vs-clash' : ''}`}>
-          {/* Lightning bolts SVG */}
-          <div className="relative">
-            <svg className="absolute -left-10 top-1/2 -translate-y-1/2 arena-bolt-left" width="32" height="48" viewBox="0 0 32 48" fill="none">
-              <path d="M20 0L0 28h12L8 48l24-28H20L24 0z" fill="#4F8EF7" fillOpacity="0.7" />
-            </svg>
-            <svg className="absolute -right-10 top-1/2 -translate-y-1/2 arena-bolt-right" width="32" height="48" viewBox="0 0 32 48" fill="none">
-              <path d="M12 0L32 28H20l4 20L0 20h12L8 0z" fill="#EF4444" fillOpacity="0.7" />
-            </svg>
-            <span className="font-heading text-7xl sm:text-[96px] font-bold tracking-tighter italic arena-vs-color arena-vs-pulse">
-              VS
-            </span>
-          </div>
-          <LigaLogo size={40} className="opacity-40 mt-1" />
+      <div
+        className="relative overflow-hidden rounded-xl"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr auto 1fr',
+          background: 'radial-gradient(ellipse at center, #0d1a2e 0%, #090b12 70%)',
+        }}
+      >
+        {/* Canvas particles */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{ zIndex: 1 }}
+        />
+
+        {/* Left player */}
+        <div className="relative" style={{ zIndex: 2 }}>
+          {renderPlayer(player1, 'left', player1Points, p1Anim)}
         </div>
 
-        {renderPlayer(player2, 'right', player2Points, p2Anim)}
+        {/* VS Central */}
+        <div className="relative flex flex-col items-center justify-center px-3" style={{ zIndex: 2 }}>
+          {/* Top line */}
+          <div
+            className="w-px flex-1 min-h-[20px]"
+            style={{ background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent)' }}
+          />
+
+          {/* VS text */}
+          <span
+            className="font-heading text-[42px] font-bold tracking-tighter italic text-white my-2"
+            style={{ textShadow: '0 0 30px rgba(255,255,255,0.15)' }}
+          >
+            VS
+          </span>
+
+          {/* Liga logo */}
+          <div
+            className="rounded-full flex items-center justify-center"
+            style={{
+              width: 44,
+              height: 44,
+              background: '#131626',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <LigaLogo size={32} className="opacity-40" />
+          </div>
+
+          {/* Bottom line */}
+          <div
+            className="w-px flex-1 min-h-[20px]"
+            style={{ background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent)' }}
+          />
+        </div>
+
+        {/* Right player */}
+        <div className="relative" style={{ zIndex: 2 }}>
+          {renderPlayer(player2, 'right', player2Points, p2Anim)}
+        </div>
       </div>
 
       <p className="text-center text-[10px] text-muted-foreground font-heading mt-3 tracking-widest relative z-10">

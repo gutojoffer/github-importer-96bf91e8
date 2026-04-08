@@ -18,29 +18,41 @@ const finishTypes: { type: FinishType; label: string; icon: React.ReactNode }[] 
 
 export default function ResultButtons({ playerName, side, onResult, disabled }: ResultButtonsProps) {
   const isLeft = side === 'left';
-  const borderColor = isLeft ? 'border-[#4F8EF7]/40' : 'border-[#EF4444]/40';
-  const hoverBg = isLeft ? 'hover:bg-[#4F8EF7]/10' : 'hover:bg-[#EF4444]/10';
-  const textColor = isLeft ? 'text-[#4F8EF7]' : 'text-[#EF4444]';
-  const labelColor = isLeft ? 'text-[#4F8EF7]' : 'text-[#EF4444]';
 
   return (
     <div className={`flex flex-col gap-2 ${side === 'right' ? 'items-end' : 'items-start'}`}>
-      <p className={`font-heading text-[10px] font-bold tracking-[0.15em] mb-0.5 uppercase ${labelColor}`}>
+      <p className="font-heading text-[10px] font-bold tracking-[0.15em] mb-0.5 uppercase text-muted-foreground">
         {playerName}
       </p>
       {finishTypes.map(({ type, label, icon }) => (
-        <Button
+        <button
           key={type}
-          variant="outline"
           disabled={disabled}
           onClick={() => onResult(type)}
-          className={`w-full justify-between gap-2 font-heading tracking-wider text-xs h-10 rounded-xl px-4
-            ${borderColor} ${hoverBg} ${textColor} transition-all duration-200
-            hover:scale-[1.02] active:scale-95`}
+          className={`
+            w-full flex items-center justify-between gap-2 font-heading tracking-wider text-xs h-10 rounded-lg px-4
+            transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed
+            ${isLeft
+              ? 'arena-btn-left'
+              : 'arena-btn-right'
+            }
+          `}
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.07)',
+          }}
         >
-          <span className="flex items-center gap-2">{icon} {label}</span>
-          <span className="font-bold text-xs opacity-70 bg-white/5 px-2 py-0.5 rounded-md">+{FINISH_POINTS[type]}</span>
-        </Button>
+          <span className="flex items-center gap-2 arena-btn-label">{icon} {label}</span>
+          <span
+            className="font-bold text-xs px-2 py-0.5 rounded-md"
+            style={{
+              background: isLeft ? 'rgba(59,130,246,0.12)' : 'rgba(239,68,68,0.12)',
+              color: isLeft ? '#60a5fa' : '#f87171',
+            }}
+          >
+            +{FINISH_POINTS[type]}
+          </span>
+        </button>
       ))}
     </div>
   );
