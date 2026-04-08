@@ -18,6 +18,7 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import BracketTree from '@/components/BracketTree';
 import EliminationBracket from '@/components/EliminationBracket';
 import EliminationTransition from '@/components/EliminationTransition';
+import LigaLogo from '@/components/LigaLogo';
 import EloBadge from '@/components/EloBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
