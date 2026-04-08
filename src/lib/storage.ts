@@ -1,6 +1,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Player, PlayerStats, Tournament, TournamentStanding, PLACEMENT_XP, PLACEMENT_XP_DEFAULT } from '@/types/tournament';
 
+async function getLigaId(): Promise<string> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+  return user.id;
+}
+
 // ──────────── Players ────────────
 
 export async function getPlayers(): Promise<Player[]> {
@@ -17,7 +23,7 @@ export async function getPlayers(): Promise<Player[]> {
 }
 
 export async function savePlayers(players: Player[]) {
-  // Upsert all players
+  const ligaId = await getLigaId();
   const rows = players.map(p => ({
     id: p.id,
     name: p.name,
@@ -25,12 +31,14 @@ export async function savePlayers(players: Player[]) {
     avatar: p.avatar,
     xp: p.xp ?? 0,
     created_at: p.createdAt,
+    liga_id: ligaId,
   }));
   const { error } = await supabase.from('players').upsert(rows, { onConflict: 'id' });
   if (error) console.error('savePlayers error:', error);
 }
 
 export async function addPlayer(p: Player) {
+  const ligaId = await getLigaId();
   const { error } = await supabase.from('players').insert({
     id: p.id,
     name: p.name,
@@ -38,6 +46,7 @@ export async function addPlayer(p: Player) {
     avatar: p.avatar,
     xp: p.xp ?? 0,
     created_at: p.createdAt,
+    liga_id: ligaId,
   });
   if (error) console.error('addPlayer error:', error);
 }
@@ -71,7 +80,7 @@ export async function getAllStats(): Promise<PlayerStats[]> {
 }
 
 export async function saveAllStats(stats: PlayerStats[]) {
-  // Delete existing and re-insert (simplest approach for bulk)
+  const ligaId = await getLigaId();
   for (const s of stats) {
     const { error } = await supabase.from('player_stats').upsert({
       player_id: s.playerId,
@@ -82,6 +91,7 @@ export async function saveAllStats(stats: PlayerStats[]) {
       points: s.points,
       week_key: s.weekKey,
       month_key: s.monthKey,
+      liga_id: ligaId,
     });
     if (error) console.error('saveAllStats error:', error);
   }
@@ -99,8 +109,8 @@ function getTimeKeys(d: Date) {
   };
 }
 
-/** Award XP to players based on final standings */
 export async function awardXP(standings: TournamentStanding[]) {
+  const ligaId = await getLigaId();
   const players = await getPlayers();
   for (const s of standings) {
     const p = players.find(pl => pl.id === s.playerId);
@@ -110,11 +120,9 @@ export async function awardXP(standings: TournamentStanding[]) {
     }
   }
 
-  // Also update stats for leaderboard
   const now = new Date();
   const { weekKey, monthKey } = getTimeKeys(now);
   for (const s of standings) {
-    // Try to find existing stat row for this player+week
     const { data: existing } = await supabase
       .from('player_stats')
       .select('*')
@@ -138,6 +146,7 @@ export async function awardXP(standings: TournamentStanding[]) {
         points: s.xpAwarded,
         week_key: weekKey,
         month_key: monthKey,
+        liga_id: ligaId,
       });
     }
   }
@@ -164,7 +173,7 @@ function tournamentFromRow(row: any): Tournament {
   };
 }
 
-function tournamentToRow(t: Tournament) {
+function tournamentToRow(t: Tournament, ligaId: string) {
   return {
     id: t.id,
     name: t.name,
@@ -180,6 +189,7 @@ function tournamentToRow(t: Tournament) {
     created_at: t.createdAt,
     final_standings: t.finalStandings as any,
     max_players: t.maxPlayers ?? null,
+    liga_id: ligaId,
   };
 }
 
@@ -190,8 +200,8 @@ export async function getTournaments(): Promise<Tournament[]> {
 }
 
 export async function saveTournaments(tournaments: Tournament[]) {
-  // Upsert all
-  const rows = tournaments.map(tournamentToRow);
+  const ligaId = await getLigaId();
+  const rows = tournaments.map(t => tournamentToRow(t, ligaId));
   const { error } = await supabase.from('tournaments').upsert(rows, { onConflict: 'id' });
   if (error) console.error('saveTournaments error:', error);
 }
@@ -203,7 +213,8 @@ export async function getActiveTournament(): Promise<Tournament | null> {
 
 export async function saveActiveTournament(t: Tournament | null) {
   if (!t) return;
-  const { error } = await supabase.from('tournaments').upsert(tournamentToRow(t), { onConflict: 'id' });
+  const ligaId = await getLigaId();
+  const { error } = await supabase.from('tournaments').upsert(tournamentToRow(t, ligaId), { onConflict: 'id' });
   if (error) console.error('saveActiveTournament error:', error);
 }
 
@@ -214,18 +225,17 @@ export async function getCompletedTournaments(): Promise<Tournament[]> {
 }
 
 export async function saveCompletedTournament(t: Tournament) {
-  const { error } = await supabase.from('tournaments').upsert(tournamentToRow(t), { onConflict: 'id' });
+  const ligaId = await getLigaId();
+  const { error } = await supabase.from('tournaments').upsert(tournamentToRow(t, ligaId), { onConflict: 'id' });
   if (error) console.error('saveCompletedTournament error:', error);
 }
 
-/** Calculate final standings from a tournament's match history */
 export function calculateStandings(tournament: Tournament): TournamentStanding[] {
   const winsMap = new Map<string, number>();
   const lossesMap = new Map<string, number>();
   const droppedSet = new Set(tournament.droppedPlayerIds || []);
   for (const pid of tournament.playerIds) { winsMap.set(pid, 0); lossesMap.set(pid, 0); }
 
-  // Count wins/losses from swiss rounds
   for (const round of tournament.rounds) {
     for (const match of round.matches) {
       if (match.isBye) { winsMap.set(match.player1Id, (winsMap.get(match.player1Id) || 0) + 1); continue; }
@@ -238,7 +248,6 @@ export function calculateStandings(tournament: Tournament): TournamentStanding[]
     }
   }
 
-  // Count wins/losses from elimination rounds
   for (const round of (tournament.eliminationRounds || [])) {
     for (const match of round.matches) {
       if (match.isBye) { winsMap.set(match.player1Id, (winsMap.get(match.player1Id) || 0) + 1); continue; }
@@ -251,7 +260,6 @@ export function calculateStandings(tournament: Tournament): TournamentStanding[]
     }
   }
 
-  // Sort: active players first (by wins), then dropped players at bottom
   const sorted = tournament.playerIds
     .map(pid => ({
       playerId: pid,
@@ -299,13 +307,12 @@ async function aggregateStats(filter: (s: PlayerStats) => boolean) {
   return Array.from(map.entries()).map(([playerId, data]) => ({ playerId, ...data })).sort((a, b) => b.points - a.points);
 }
 
-/** Create an upcoming tournament */
 export async function createUpcomingTournament(t: Tournament) {
-  const { error } = await supabase.from('tournaments').insert(tournamentToRow(t));
+  const ligaId = await getLigaId();
+  const { error } = await supabase.from('tournaments').insert(tournamentToRow(t, ligaId));
   if (error) console.error('createUpcomingTournament error:', error);
 }
 
-/** Register player to upcoming tournament */
 export async function registerPlayerToTournament(tournamentId: string, playerId: string) {
   const { data } = await supabase.from('tournaments').select('player_ids').eq('id', tournamentId).single();
   if (!data) return;
@@ -316,7 +323,6 @@ export async function registerPlayerToTournament(tournamentId: string, playerId:
   }
 }
 
-/** Delete a tournament */
 export async function deleteTournament(id: string) {
   const { error } = await supabase.from('tournaments').delete().eq('id', id);
   if (error) console.error('deleteTournament error:', error);
