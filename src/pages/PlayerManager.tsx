@@ -10,7 +10,7 @@ import { Plus, Trash2, Camera, Users, Pencil, X, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function PlayerManager() {
-  const { players, load, add, remove, update, bulkSet } = usePlayerStore();
+  const { players, load, add, remove, update, reload, bulkSet } = usePlayerStore();
   const [name, setName] = useState('');
   const [nickname, setNickname] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState(DEFAULT_AVATARS[0]);
@@ -64,7 +64,7 @@ export default function PlayerManager() {
     setEditCustomAvatar(p.avatar.startsWith('data:') || p.avatar.startsWith('http') ? p.avatar : '');
   }, []);
 
-  const saveEdit = useCallback(() => {
+  const saveEdit = useCallback(async () => {
     if (!editingId || !editName.trim()) { toast.error('Nome obrigatório!'); return; }
     update(editingId, {
       name: editName.trim(),
@@ -73,7 +73,9 @@ export default function PlayerManager() {
     });
     setEditingId(null);
     toast.success('Blader atualizado!');
-  }, [editingId, editName, editNick, editAvatar, editCustomAvatar, update]);
+    // Force reload so all components using the store get fresh data
+    setTimeout(() => reload(), 500);
+  }, [editingId, editName, editNick, editAvatar, editCustomAvatar, update, reload]);
 
   return (
     <div className="p-5 max-w-4xl mx-auto space-y-6 relative">

@@ -6,6 +6,7 @@ interface PlayerStore {
   players: Player[];
   loaded: boolean;
   load: () => Promise<void>;
+  reload: () => Promise<void>;
   add: (p: Player) => void;
   remove: (id: string) => void;
   update: (id: string, patch: Partial<Player>) => void;
@@ -18,6 +19,11 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
   load: async () => {
     if (get().loaded) return;
+    const players = await getPlayers();
+    set({ players, loaded: true });
+  },
+
+  reload: async () => {
     const players = await getPlayers();
     set({ players, loaded: true });
   },
