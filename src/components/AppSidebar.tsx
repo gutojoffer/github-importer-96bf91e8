@@ -20,7 +20,7 @@ const SYSTEM_ITEMS = [
 export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { nomeLiga } = useLiga();
+  const { nomeLiga, logoUrl } = useLiga();
   const { signOut } = useAuth();
 
   const { data: activeTournaments } = useQuery({
