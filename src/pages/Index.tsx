@@ -52,6 +52,9 @@ const Index = () => {
       {/* Hero Section */}
       <DashboardHero stats={stats} />
 
+      {/* Quick Actions */}
+      <QuickActions />
+
       {/* Upcoming Tournaments */}
       <section>
         <div className="flex items-center gap-3 mb-4">
