@@ -65,9 +65,8 @@ export async function deletePlayer(id: string) {
   const { error } = await supabase.from('players').delete().eq('id', id);
   if (error) console.error('deletePlayer error:', error);
 }
-  const { error } = await supabase.from('players').delete().eq('id', id);
-  if (error) console.error('deletePlayer error:', error);
-}
+
+
 
 export async function getPlayerById(id: string): Promise<Player | undefined> {
   const { data } = await supabase.from('players').select('id, name, nickname, avatar, xp, created_at').eq('id', id).single();
