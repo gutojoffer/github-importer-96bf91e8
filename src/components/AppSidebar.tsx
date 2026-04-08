@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Home, Trophy, Clock, Star, Users, Settings, LogOut, ChevronRight } from 'lucide-react';
-import { useLiga } from '@/contexts/LigaContext';
 
 const NAV_ITEMS = [
   { title: 'Home', url: '/home', icon: Home },
