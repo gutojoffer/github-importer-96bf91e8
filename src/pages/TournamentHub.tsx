@@ -25,7 +25,7 @@ import EloBadge from '@/components/EloBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Plus, Play, Lightbulb, Calendar, Users, Trophy, XOctagon, Award,
-  CheckCircle, Camera, UserPlus, X, Search, Check, Trash2, UserMinus, Undo2, Ban, Swords,
+  CheckCircle, Camera, UserPlus, X, Search, Check, Trash2, UserMinus, Undo2, Ban, Swords, Pencil,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -41,7 +41,7 @@ export default function TournamentHub() {
     tournaments, activeTournament, load: loadTournaments,
     createTournament, deleteTournament: deleteTournamentStore,
     setActiveTournament, updateActive, endTournament, cancelTournament: cancelTournamentStore,
-    enrollPlayer, unenrollPlayer,
+    enrollPlayer, unenrollPlayer, updateTournament,
   } = useTournamentStore();
 
   const [view, setView] = useState<View>('list');
@@ -52,6 +52,13 @@ export default function TournamentHub() {
   const [tDate, setTDate] = useState('');
   const [tMaxPlayers, setTMaxPlayers] = useState(32);
   const [tEliminationSize, setTEliminationSize] = useState<EliminationSize>(null);
+
+  // Edit tournament
+  const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [editMaxPlayers, setEditMaxPlayers] = useState(32);
+  const [editEliminationSize, setEditEliminationSize] = useState<EliminationSize>(null);
 
   // Enrollment modal
   const [enrollModal, setEnrollModal] = useState<string | null>(null);
@@ -117,6 +124,28 @@ export default function TournamentHub() {
     setTName(''); setTDate(''); setTEliminationSize(null);
     toast.success('Torneio criado!');
   }, [tName, tDate, tMaxPlayers, tEliminationSize, createTournament]);
+
+  // ─── Edit Tournament ───
+  const openEditModal = useCallback((t: Tournament) => {
+    setEditingTournament(t);
+    setEditName(t.name);
+    setEditDate(t.date);
+    setEditMaxPlayers(t.maxPlayers || 32);
+    setEditEliminationSize(t.eliminationSize || null);
+  }, []);
+
+  const handleSaveEdit = useCallback(() => {
+    if (!editingTournament) return;
+    if (!editName.trim() || !editDate) { toast.error('Preencha nome e data!'); return; }
+    updateTournament(editingTournament.id, {
+      name: editName.trim(),
+      date: editDate,
+      maxPlayers: editMaxPlayers,
+      eliminationSize: editEliminationSize,
+    });
+    setEditingTournament(null);
+    toast.success('Torneio atualizado!');
+  }, [editingTournament, editName, editDate, editMaxPlayers, editEliminationSize, updateTournament]);
 
   // ─── Enrollment ───
   const handleEnroll = useCallback((playerId: string) => {
@@ -1037,6 +1066,10 @@ export default function TournamentHub() {
                     className="font-heading tracking-wider gap-1 bg-secondary/20 text-secondary hover:bg-secondary/30 border border-secondary/30">
                     <UserPlus className="h-3.5 w-3.5" /> Inscrever
                   </Button>
+                   <Button variant="outline" size="sm" onClick={() => openEditModal(t)}
+                    className="font-heading tracking-wider gap-1 border-muted text-muted-foreground hover:bg-muted/20 hover:text-foreground">
+                    <Pencil className="h-3.5 w-3.5" /> Editar
+                  </Button>
                   <Button variant="outline" size="sm" onClick={() => { setStartingTournament(t); setStartEliminationSize(t.eliminationSize || null); }}
                     className="font-heading tracking-wider gap-1 border-primary/50 text-primary hover:bg-primary/10" disabled={t.playerIds.length < 2}>
                     <Play className="h-3.5 w-3.5" /> Iniciar
@@ -1051,6 +1084,63 @@ export default function TournamentHub() {
           ))
         )}
       </div>
+
+      {/* Edit Tournament Modal */}
+      {editingTournament && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setEditingTournament(null)}>
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-md" />
+          <div className="relative z-10 glass-panel p-6 max-w-md w-full glow-blurple anim-fade-up" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="font-heading text-xl font-bold text-primary tracking-wider">EDITAR TORNEIO</h2>
+              <button onClick={() => setEditingTournament(null)} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-lg hover:bg-muted/30">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="font-heading text-muted-foreground text-xs tracking-wider">Nome do Torneio</Label>
+                <Input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Ex: Copa Beyblade X" className="bg-muted/30 border-border h-11 font-body" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="font-heading text-muted-foreground text-xs tracking-wider">Data</Label>
+                  <Input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} className="bg-muted/30 border-border h-11 font-body arena-input-clean" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-heading text-muted-foreground text-xs tracking-wider">Máx. Jogadores</Label>
+                  <Input type="number" min={2} max={128} value={editMaxPlayers} onChange={e => setEditMaxPlayers(parseInt(e.target.value) || 32)} className="bg-muted/30 border-border h-11 font-body arena-input-clean" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-heading text-muted-foreground text-xs tracking-wider">Fase Final</Label>
+                <div className="flex gap-1.5 h-11 items-stretch">
+                  {([null, 4, 8, 16] as EliminationSize[]).map(size => (
+                    <button
+                      key={String(size)}
+                      onClick={() => setEditEliminationSize(size)}
+                      className={`flex-1 font-heading text-[11px] font-bold tracking-wider rounded-lg border-2 transition-all ${
+                        editEliminationSize === size
+                          ? 'border-primary bg-primary/15 text-primary'
+                          : 'border-border/50 text-muted-foreground hover:border-primary/30 hover:text-foreground'
+                      }`}
+                    >
+                      {size ? `TOP ${size}` : 'SEM'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 pt-5">
+              <Button onClick={handleSaveEdit} className="font-heading tracking-wider gap-2 bg-primary text-primary-foreground hover:bg-primary/80 h-11 px-6 flex-1">
+                <Check className="h-4 w-4" /> Salvar
+              </Button>
+              <Button variant="ghost" onClick={() => setEditingTournament(null)} className="font-heading tracking-wider h-11 text-muted-foreground">
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ConfirmDialog open={!!confirmDeleteTournament} onOpenChange={(open) => { if (!open) setConfirmDeleteTournament(null); }}
         title="Excluir Torneio" description="Tem certeza que deseja excluir este torneio? Esta ação não pode ser desfeita."
