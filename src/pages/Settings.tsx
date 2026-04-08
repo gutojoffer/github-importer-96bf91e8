@@ -127,16 +127,16 @@ export default function Settings() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>
             <div className="space-y-1.5">
               <Label className="text-xs font-body font-medium text-muted-foreground flex items-center gap-1">
                 <MapPin className="h-3 w-3" /> Cidade
               </Label>
-              <input type="text" value={formCidade} onChange={e => setFormCidade(e.target.value)} className={inputClass} placeholder="São Paulo" />
+              <input type="text" value={formCidade} onChange={e => setFormCidade(e.target.value)} className={inputClass} style={{ height: 44 }} placeholder="São Paulo" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-body font-medium text-muted-foreground">Endereço</Label>
-              <input type="text" value={formEndereco} onChange={e => setFormEndereco(e.target.value)} className={inputClass} placeholder="Rua, número" />
+              <input type="text" value={formEndereco} onChange={e => setFormEndereco(e.target.value)} className={inputClass} style={{ height: 44 }} placeholder="Rua, número" />
             </div>
           </div>
         </div>
