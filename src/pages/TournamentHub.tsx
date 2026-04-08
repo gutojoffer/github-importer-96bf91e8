@@ -892,43 +892,50 @@ export default function TournamentHub() {
 
       {/* Create form */}
       {showCreate && (
-        <div className="glass-panel p-5 space-y-4 neon-line-magenta anim-fade-up">
+        <div className="glass-panel p-5 space-y-5 neon-line-magenta anim-fade-up">
           <h2 className="font-heading text-lg font-bold text-secondary tracking-wider">NOVO TORNEIO</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label className="font-heading text-muted-foreground text-xs">Nome</Label>
-              <Input value={tName} onChange={e => setTName(e.target.value)} placeholder="Ex: Copa Beyblade X" className="bg-muted/30 border-border" />
+              <Label className="font-heading text-muted-foreground text-xs tracking-wider">Nome do Torneio</Label>
+              <Input value={tName} onChange={e => setTName(e.target.value)} placeholder="Ex: Copa Beyblade X" className="bg-muted/30 border-border h-11 font-body" />
             </div>
-            <div className="space-y-2">
-              <Label className="font-heading text-muted-foreground text-xs">Data</Label>
-              <Input type="date" value={tDate} onChange={e => setTDate(e.target.value)} className="bg-muted/30 border-border" />
-            </div>
-            <div className="space-y-2">
-              <Label className="font-heading text-muted-foreground text-xs">Vagas</Label>
-              <Input type="number" min={2} max={128} value={tMaxPlayers} onChange={e => setTMaxPlayers(parseInt(e.target.value) || 32)} className="bg-muted/30 border-border" />
-            </div>
-            <div className="space-y-2">
-              <Label className="font-heading text-muted-foreground text-xs">Fase Final</Label>
-              <div className="flex gap-1">
-                {([null, 4, 8, 16] as EliminationSize[]).map(size => (
-                  <button
-                    key={String(size)}
-                    onClick={() => setTEliminationSize(size)}
-                    className={`flex-1 font-heading text-[10px] tracking-wider py-2 rounded-md border transition-all ${
-                      tEliminationSize === size
-                        ? 'border-accent bg-accent/10 text-accent'
-                        : 'border-border text-muted-foreground hover:border-accent/30'
-                    }`}
-                  >
-                    {size ? `TOP ${size}` : 'SEM'}
-                  </button>
-                ))}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label className="font-heading text-muted-foreground text-xs tracking-wider">Data</Label>
+                <Input type="date" value={tDate} onChange={e => setTDate(e.target.value)} className="bg-muted/30 border-border h-11 font-body arena-input-clean" />
+              </div>
+              <div className="space-y-2">
+                <Label className="font-heading text-muted-foreground text-xs tracking-wider">Máx. Jogadores</Label>
+                <Input type="number" min={2} max={128} value={tMaxPlayers} onChange={e => setTMaxPlayers(parseInt(e.target.value) || 32)} className="bg-muted/30 border-border h-11 font-body arena-input-clean" />
+              </div>
+              <div className="space-y-2 col-span-2 sm:col-span-1">
+                <Label className="font-heading text-muted-foreground text-xs tracking-wider">Fase Final</Label>
+                <div className="flex gap-1.5 h-11 items-stretch">
+                  {([null, 4, 8, 16] as EliminationSize[]).map(size => (
+                    <button
+                      key={String(size)}
+                      onClick={() => setTEliminationSize(size)}
+                      className={`flex-1 font-heading text-[11px] font-bold tracking-wider rounded-lg border-2 transition-all ${
+                        tEliminationSize === size
+                          ? 'border-primary bg-primary/15 text-primary'
+                          : 'border-border/50 text-muted-foreground hover:border-primary/30 hover:text-foreground'
+                      }`}
+                    >
+                      {size ? `TOP ${size}` : 'SEM'}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-          <Button onClick={handleCreate} className="font-heading tracking-wider gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80">
-            <Plus className="h-4 w-4" /> Criar e Publicar
-          </Button>
+          <div className="flex gap-3 pt-1">
+            <Button onClick={handleCreate} className="font-heading tracking-wider gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-11 px-6">
+              <Plus className="h-4 w-4" /> Criar e Publicar
+            </Button>
+            <Button variant="ghost" onClick={() => setShowCreate(false)} className="font-heading tracking-wider h-11 text-muted-foreground">
+              Cancelar
+            </Button>
+          </div>
         </div>
       )}
 
