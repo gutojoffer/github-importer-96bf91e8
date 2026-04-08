@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { Search, Plus } from "lucide-react";
 import Index from "./pages/Index";
 import PlayerManager from "@/pages/PlayerManager";
@@ -14,6 +16,8 @@ import TournamentPodium from "@/pages/TournamentPodium";
 import Leaderboard from "@/pages/Leaderboard";
 import TournamentSignup from "@/pages/TournamentSignup";
 import Settings from "@/pages/Settings";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,37 +56,45 @@ const AppHeader = () => {
   );
 };
 
+const ProtectedLayout = () => (
+  <ProtectedRoute>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          <AppHeader />
+          <main className="flex-1 overflow-auto">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/tournament" element={<TournamentHub />} />
+              <Route path="/players" element={<PlayerManager />} />
+              <Route path="/history" element={<TournamentHistory />} />
+              <Route path="/history/:id" element={<TournamentPodium />} />
+              <Route path="/rankings" element={<Leaderboard />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  </ProtectedRoute>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/signup/:tournamentId" element={<TournamentSignup />} />
-          <Route path="*" element={
-            <SidebarProvider>
-              <div className="min-h-screen flex w-full">
-                <AppSidebar />
-                <div className="flex-1 flex flex-col min-w-0">
-                  <AppHeader />
-                  <main className="flex-1 overflow-auto">
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/tournament" element={<TournamentHub />} />
-                      <Route path="/players" element={<PlayerManager />} />
-                      <Route path="/history" element={<TournamentHistory />} />
-                      <Route path="/history/:id" element={<TournamentPodium />} />
-                      <Route path="/rankings" element={<Leaderboard />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </main>
-                </div>
-              </div>
-            </SidebarProvider>
-          } />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/cadastro" element={<Register />} />
+            <Route path="/signup/:tournamentId" element={<TournamentSignup />} />
+            <Route path="*" element={<ProtectedLayout />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
