@@ -132,7 +132,7 @@ export async function awardXP(standings: TournamentStanding[]) {
 
     if (existing) {
       await supabase.from('player_stats').update({
-        points: existing.points + s.xpAwarded,
+        points: existing.points + s.rankingPoints,
         wins: existing.wins + s.wins,
         losses: existing.losses + s.losses,
       }).eq('id', existing.id);
@@ -143,7 +143,7 @@ export async function awardXP(standings: TournamentStanding[]) {
         losses: s.losses,
         finish_wins: 0,
         extreme_finish_wins: 0,
-        points: s.xpAwarded,
+        points: s.rankingPoints,
         week_key: weekKey,
         month_key: monthKey,
         liga_id: ligaId,
