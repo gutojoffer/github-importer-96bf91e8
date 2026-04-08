@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { Player, PlayerStats, Tournament, TournamentStanding, PLACEMENT_XP, PLACEMENT_XP_DEFAULT } from '@/types/tournament';
+import { Player, PlayerStats, Tournament, TournamentStanding, PLACEMENT_XP, PLACEMENT_XP_DEFAULT, getRankingPoints } from '@/types/tournament';
 
 async function getLigaId(): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
@@ -132,7 +132,7 @@ export async function awardXP(standings: TournamentStanding[]) {
 
     if (existing) {
       await supabase.from('player_stats').update({
-        points: existing.points + s.xpAwarded,
+        points: existing.points + s.rankingPoints,
         wins: existing.wins + s.wins,
         losses: existing.losses + s.losses,
       }).eq('id', existing.id);
@@ -143,7 +143,7 @@ export async function awardXP(standings: TournamentStanding[]) {
         losses: s.losses,
         finish_wins: 0,
         extreme_finish_wins: 0,
-        points: s.xpAwarded,
+        points: s.rankingPoints,
         week_key: weekKey,
         month_key: monthKey,
         liga_id: ligaId,
@@ -278,6 +278,7 @@ export function calculateStandings(tournament: Tournament): TournamentStanding[]
     losses: entry.losses,
     placement: i + 1,
     xpAwarded: entry.dropped ? 0 : (PLACEMENT_XP[i + 1] ?? PLACEMENT_XP_DEFAULT),
+    rankingPoints: getRankingPoints(i + 1, entry.dropped),
     dropped: entry.dropped,
   }));
 }

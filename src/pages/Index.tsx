@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import { useTournamentStore } from '@/stores/useTournamentStore';
@@ -8,11 +8,13 @@ import DashboardHero from '@/components/dashboard/DashboardHero';
 import TournamentCard from '@/components/dashboard/TournamentCard';
 import TopBladers from '@/components/dashboard/TopBladers';
 import ActivityFeed from '@/components/dashboard/ActivityFeed';
+import BatchEnrollModal from '@/components/BatchEnrollModal';
 
 const Index = () => {
   const players = usePlayerStore(s => s.players);
   const loadPlayers = usePlayerStore(s => s.load);
   const { tournaments, load: loadTournaments } = useTournamentStore();
+  const [batchEnrollTournamentId, setBatchEnrollTournamentId] = useState<string | null>(null);
 
   useEffect(() => {
     loadPlayers();
@@ -29,8 +31,23 @@ const Index = () => {
     activeTournaments: active.length,
   }), [tournaments.length, players.length, active.length]);
 
+  const batchEnrollTournament = useMemo(() =>
+    batchEnrollTournamentId ? tournaments.find(t => t.id === batchEnrollTournamentId) : null
+  , [batchEnrollTournamentId, tournaments]);
+
   return (
     <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
+      {/* Batch Enrollment Modal */}
+      {batchEnrollTournament && (
+        <BatchEnrollModal
+          tournamentId={batchEnrollTournament.id}
+          tournamentName={batchEnrollTournament.name}
+          enrolledPlayerIds={batchEnrollTournament.playerIds}
+          allPlayers={players}
+          onClose={() => setBatchEnrollTournamentId(null)}
+        />
+      )}
+
       {/* Hero Section */}
       <DashboardHero stats={stats} />
 
@@ -62,7 +79,7 @@ const Index = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {[...active, ...upcoming].map((t, i) => (
-              <TournamentCard key={t.id} tournament={t} players={players} index={i} />
+              <TournamentCard key={t.id} tournament={t} players={players} index={i} onBatchEnroll={(id) => setBatchEnrollTournamentId(id)} />
             ))}
           </div>
         )}
