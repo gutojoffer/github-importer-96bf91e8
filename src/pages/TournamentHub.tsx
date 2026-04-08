@@ -56,6 +56,7 @@ export default function TournamentHub() {
   // Enrollment modal
   const [enrollModal, setEnrollModal] = useState<string | null>(null);
   const [enrollSearch, setEnrollSearch] = useState('');
+  const [batchSelected, setBatchSelected] = useState<Set<string>>(new Set());
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [qaName, setQaName] = useState('');
   const [qaNick, setQaNick] = useState('');
