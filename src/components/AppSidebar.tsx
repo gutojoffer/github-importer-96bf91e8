@@ -1,4 +1,4 @@
-import { Home, Users, Crown, Clock, Settings, Swords, LogOut, Trophy, History, Star, Circle } from 'lucide-react';
+import { Home, Users, Crown, Clock, Settings, Swords, LogOut, Trophy } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTournamentStore } from '@/stores/useTournamentStore';
@@ -9,13 +9,12 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
 } from '@/components/ui/sidebar';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const mainNav = [
   { title: 'Home', url: '/home', icon: Home },
-  { title: 'Torneios', url: '/tournament', icon: Trophy, hasBadge: true },
+  { title: 'Torneios', url: '/tournament', icon: Swords, hasBadge: true },
   { title: 'Histórico', url: '/history', icon: Clock },
-  { title: 'Rankings', url: '/rankings', icon: Star },
+  { title: 'Rankings', url: '/rankings', icon: Crown },
   { title: 'Bladers', url: '/players', icon: Users },
 ];
 
@@ -30,8 +29,8 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const tournaments = useTournamentStore(s => s.tournaments);
   const upcomingCount = tournaments.filter(t => t.status === 'upcoming' || t.status === 'active').length;
-  const { signOut, user } = useAuth();
-  const { nomeLiga, logoUrl } = useLiga();
+  const { signOut } = useAuth();
+  const { nomeLiga } = useLiga();
 
   const isActive = (path: string) =>
     location.pathname === path || (path !== '/home' && location.pathname.startsWith(path));
@@ -49,25 +48,23 @@ export function AppSidebar() {
           <NavLink
             to={item.url}
             end={item.url === '/home'}
-            className={`group/nav relative flex items-center gap-3 rounded-[10px] transition-all duration-150
-              ${collapsed ? 'justify-center px-2 py-2.5 mx-1' : 'px-4 py-[10px] mx-3'}
+            className={`group/nav flex items-center gap-3.5 px-3.5 py-2.5 text-[13px] font-body font-medium rounded-xl transition-all duration-200
               ${active
-                ? 'bg-[rgba(37,99,235,0.12)] text-[#60A5FA]'
-                : 'text-muted-foreground hover:bg-[rgba(255,255,255,0.04)] hover:text-foreground'
+                ? 'bg-gradient-to-r from-primary/15 to-primary/5 text-foreground border border-primary/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
+                : 'text-muted-foreground hover:text-foreground hover:bg-[rgba(255,255,255,0.04)] border border-transparent'
               }`}
             activeClassName=""
-            style={active && !collapsed ? { borderLeft: '3px solid #2563EB', paddingLeft: '13px' } : undefined}
           >
-            <item.icon className={`shrink-0 transition-opacity duration-150 ${
-              active ? 'text-[#60A5FA] opacity-100' : 'opacity-50 group-hover/nav:opacity-80'
-            }`} style={{ width: 18, height: 18 }} />
+            <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all ${
+              active
+                ? 'bg-primary/20 text-primary shadow-[0_0_12px_rgba(79,142,247,0.15)]'
+                : 'text-muted-foreground group-hover/nav:text-foreground'
+            }`}>
+              <item.icon className="h-[18px] w-[18px]" />
+            </div>
             {!collapsed && (
               <>
-                <span className={`flex-1 font-body tracking-wide ${
-                  active ? 'font-semibold text-[#60A5FA]' : 'font-medium'
-                }`} style={{ fontSize: 13 }}>
-                  {item.title}
-                </span>
+                <span className="flex-1 tracking-wide">{item.title}</span>
                 {item.hasBadge && upcomingCount > 0 && (
                   <span className="h-5 min-w-[22px] flex items-center justify-center rounded-full bg-primary/20 text-primary text-[10px] font-bold px-1.5 border border-primary/25">
                     {upcomingCount}
@@ -82,110 +79,90 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-[rgba(255,255,255,0.06)]" style={{ '--sidebar-width': '260px' } as React.CSSProperties}>
-      <SidebarContent className="bg-[#0B1020] flex flex-col">
-        {/* Top accent line */}
-        <div className="h-[2px] w-full shrink-0" style={{ background: 'linear-gradient(90deg, #2563EB, #7C3AED)' }} />
+    <Sidebar collapsible="icon" className="border-r border-[rgba(255,255,255,0.06)]">
+      <SidebarContent className="bg-[hsl(var(--sidebar-background))]">
+        {/* Top accent */}
+        <div className="h-[2px] w-full bg-gradient-to-r from-primary via-secondary to-transparent" />
 
-        {/* Liga branding */}
-        <div className={`shrink-0 ${collapsed ? 'flex justify-center py-5 px-2' : 'px-5 py-5'}`}>
+        {/* Branding */}
+        <div className={`flex items-center gap-3 py-6 ${collapsed ? 'justify-center px-2' : 'px-5'}`}>
           {!collapsed ? (
-            <div className="flex items-center gap-3">
-              {logoUrl ? (
-                <img src={logoUrl} alt={nomeLiga} className="w-10 h-10 rounded-full object-cover border-2 border-[#2563EB]/40" />
-              ) : (
-                <div className="w-10 h-10 rounded-full border-2 border-[#2563EB]/40 bg-gradient-to-br from-[#2563EB]/20 to-[#7C3AED]/20 flex items-center justify-center">
-                  <Swords className="h-5 w-5 text-[#2563EB]" />
-                </div>
-              )}
-              <div className="min-w-0">
-                <p className="font-heading text-base font-bold text-white truncate leading-tight">{nomeLiga || 'Arena X'}</p>
-                <p className="text-[11px] text-muted-foreground font-body">Organizador</p>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-[0_0_20px_rgba(79,142,247,0.2)]">
+                <Trophy className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <span className="font-heading text-lg font-bold tracking-[0.14em] leading-none">
+                  ARENA <span className="text-primary">X</span>
+                </span>
+                <p className="text-[9px] text-muted-foreground font-body tracking-[0.2em] uppercase mt-0.5">Tournament Hub</p>
               </div>
             </div>
           ) : (
-            <>
-              {logoUrl ? (
-                <img src={logoUrl} alt={nomeLiga} className="w-9 h-9 rounded-full object-cover border-2 border-[#2563EB]/40" />
-              ) : (
-                <div className="w-9 h-9 rounded-full border-2 border-[#2563EB]/40 bg-gradient-to-br from-[#2563EB]/20 to-[#7C3AED]/20 flex items-center justify-center">
-                  <Swords className="h-4 w-4 text-[#2563EB]" />
-                </div>
-              )}
-            </>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+              <Trophy className="h-4 w-4 text-white" />
+            </div>
           )}
         </div>
 
-        {/* Separator */}
-        <div className="mx-4 h-px bg-[rgba(255,255,255,0.06)] shrink-0" />
-
         {/* Main Navigation */}
-        <SidebarGroup className="flex-1 pt-2">
+        <SidebarGroup>
           {!collapsed && (
-            <SidebarGroupLabel className="font-heading text-[10px] tracking-[2px] text-muted-foreground/50 uppercase px-5 mt-4 mb-2">
+            <SidebarGroupLabel className="text-[10px] font-heading tracking-[0.25em] text-muted-foreground/60 uppercase px-5 mb-1">
               NAVEGAÇÃO
             </SidebarGroupLabel>
           )}
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-[2px]">
+            <SidebarMenu className="space-y-0.5 px-3">
               {mainNav.map(renderNavItem)}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         {/* Divider */}
-        <div className="mx-4 h-px bg-[rgba(255,255,255,0.06)] shrink-0" />
+        <div className={`my-2 mx-4 h-px bg-gradient-to-r from-transparent via-[rgba(255,255,255,0.06)] to-transparent`} />
 
-        {/* System */}
-        <SidebarGroup className="shrink-0">
+        {/* Secondary Navigation */}
+        <SidebarGroup>
           {!collapsed && (
-            <SidebarGroupLabel className="font-heading text-[10px] tracking-[2px] text-muted-foreground/50 uppercase px-5 mt-3 mb-2">
+            <SidebarGroupLabel className="text-[10px] font-heading tracking-[0.25em] text-muted-foreground/60 uppercase px-5 mb-1">
               SISTEMA
             </SidebarGroupLabel>
           )}
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-[2px] pb-2">
+            <SidebarMenu className="space-y-0.5 px-3">
               {secondaryNav.map(renderNavItem)}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="bg-[#0B1020] border-t border-[rgba(255,255,255,0.06)] p-4">
+      <SidebarFooter className="bg-[hsl(var(--sidebar-background))] border-t border-[rgba(255,255,255,0.06)] p-3">
         {!collapsed ? (
-          <div className="rounded-[10px] bg-[rgba(255,255,255,0.04)] p-3 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full shrink-0 bg-gradient-to-br from-[#2563EB] to-[#7C3AED] flex items-center justify-center text-white font-heading text-sm font-bold">
-              {(nomeLiga || 'A')[0].toUpperCase()}
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-[rgba(255,255,255,0.03)] to-transparent border border-[rgba(255,255,255,0.06)]">
+              <LigaLogo size={40} />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-heading font-bold text-foreground truncate tracking-wide">{nomeLiga}</p>
+                <p className="text-[10px] text-muted-foreground font-body flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-success inline-block" />
+                  Organizador
+                </p>
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-heading text-sm font-semibold text-white truncate leading-tight">{nomeLiga || 'Organizador'}</p>
-              <p className="text-[11px] text-muted-foreground truncate">{user?.email || ''}</p>
-            </div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={handleLogout}
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-[#F87171] hover:bg-[rgba(248,113,113,0.1)] transition-all shrink-0"
-                >
-                  <LogOut style={{ width: 16, height: 16 }} />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="top">Sair</TooltipContent>
-            </Tooltip>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/8 transition-all font-body border border-transparent hover:border-destructive/15"
+            >
+              <LogOut className="h-3.5 w-3.5" /> Sair da conta
+            </button>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2563EB] to-[#7C3AED] flex items-center justify-center text-white font-heading text-xs font-bold">
-              {(nomeLiga || 'A')[0].toUpperCase()}
-            </div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button onClick={handleLogout} className="text-muted-foreground hover:text-[#F87171] transition-colors p-1.5 rounded-lg hover:bg-[rgba(248,113,113,0.1)]">
-                  <LogOut style={{ width: 14, height: 14 }} />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Sair</TooltipContent>
-            </Tooltip>
+            <LigaLogo size={28} />
+            <button onClick={handleLogout} className="text-muted-foreground hover:text-destructive transition-colors p-1.5 rounded-lg hover:bg-destructive/10">
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
           </div>
         )}
       </SidebarFooter>

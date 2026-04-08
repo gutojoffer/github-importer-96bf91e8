@@ -345,20 +345,3 @@
 .arena-input-clean[type="number"] { -moz-appearance: textfield; }
 .arena-input-clean::-webkit-calendar-picker-indicator { filter: invert(0.7); cursor: pointer; opacity: 0.6; }
 .arena-input-clean::-webkit-calendar-picker-indicator:hover { opacity: 1; }
-
-/* ═══════ Hero Animations ═══════ */
-.hero-slide-in-left {
-  animation: heroSlideInLeft 0.7s ease-out both;
-}
-@keyframes heroSlideInLeft {
-  from { transform: translateX(-40px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-.hero-slide-in-right {
-  animation: heroSlideInRight 0.9s ease-out 0.2s both;
-}
-@keyframes heroSlideInRight {
-  from { transform: translateX(60px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
