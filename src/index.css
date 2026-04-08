@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,44 +6,52 @@
 
 @layer base {
   :root {
-    --background: 222 47% 5%;
-    --foreground: 210 20% 93%;
+    --background: 228 33% 5%;
+    --foreground: 228 20% 93%;
 
-    --card: 222 40% 8%;
-    --card-foreground: 210 20% 93%;
+    --card: 226 30% 8%;
+    --card-foreground: 228 20% 93%;
 
-    --popover: 222 40% 8%;
-    --popover-foreground: 210 20% 93%;
+    --popover: 226 30% 8%;
+    --popover-foreground: 228 20% 93%;
 
-    --primary: 235 86% 65%;
+    --primary: 217 91% 64%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 350 90% 60%;
+    --secondary: 259 91% 65%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 222 20% 14%;
-    --muted-foreground: 222 15% 50%;
+    --muted: 220 13% 15%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 187 94% 43%;
-    --accent-foreground: 222 47% 5%;
+    --accent: 217 91% 64%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 350 90% 50%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 222 20% 15%;
-    --input: 222 20% 15%;
-    --ring: 235 86% 65%;
+    --success: 160 64% 40%;
+    --gold: 37 90% 55%;
+
+    --border: 220 15% 13%;
+    --input: 220 15% 13%;
+    --ring: 217 91% 64%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 222 44% 6%;
-    --sidebar-foreground: 210 20% 93%;
-    --sidebar-primary: 235 86% 65%;
+    --sidebar-background: 228 37% 7%;
+    --sidebar-foreground: 228 20% 93%;
+    --sidebar-primary: 217 91% 64%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 20% 14%;
-    --sidebar-accent-foreground: 210 20% 93%;
-    --sidebar-border: 222 20% 12%;
-    --sidebar-ring: 235 86% 65%;
+    --sidebar-accent: 220 13% 15%;
+    --sidebar-accent-foreground: 228 20% 93%;
+    --sidebar-border: 220 15% 10%;
+    --sidebar-ring: 217 91% 64%;
+
+    --surface: 226 28% 9%;
+    --surface2: 226 24% 11%;
+    --bg2: 228 37% 7%;
+    --bg3: 222 33% 11%;
   }
 }
 
@@ -73,6 +81,13 @@
   background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius);
+}
+
+/* Surface panel for new design */
+.surface-panel {
+  background: hsl(var(--surface));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
 }
 
 /* Neon accent lines */

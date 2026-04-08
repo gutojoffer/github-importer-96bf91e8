@@ -1,11 +1,10 @@
 # Project Memory
 
 ## Core
-Beyblade X Tournament Hub "Blader Hub X". Dark grafite #0B0E14, Blurple #5865F2, Crimson #F43F5E, Cyan #06B6D4.
-Rajdhani headings, Montserrat body. Flat 2D only.
-Supabase persistence. Swiss system matchmaking.
-Over Finish = +2 pts. Spin +1, Burst +2, Extreme +3. Win at 4+ pts.
-Footer: "Desenvolvido por Augusto Joffer". Confirmation dialogs on ALL destructive actions.
+Beyblade X Tournament Hub "Arena X". Dark theme: bg #090B12, surface #141928, accent blue #4F8EF7, purple #7B5CF6, gold #F5A623.
+Rajdhani 700 headings, Inter 400/500/600 body. Flat 2D only.
+Zustand stores + LocalStorage persistence. Swiss system matchmaking + elimination phase.
+Pages: Dashboard(/), Tournament(/tournament), History(/history), Rankings(/rankings), Bladers(/players), Settings(/settings).
 
 ## Memories
-- [Scoring rules](mem://features/scoring) — Official Beyblade X finish points and win threshold
+- [Scoring rules](mem://features/scoring) — Official finish point values and win conditions

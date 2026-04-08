@@ -9,7 +9,7 @@ export default {
     extend: {
       fontFamily: {
         heading: ['Rajdhani', 'sans-serif'],
-        body: ['Montserrat', 'sans-serif'],
+        body: ['Inter', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -34,6 +34,10 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        gold: "hsl(var(--gold))",
+        success: "hsl(var(--success))",
+        surface: "hsl(var(--surface))",
+        surface2: "hsl(var(--surface2))",
       },
       borderRadius: {
         lg: "var(--radius)",

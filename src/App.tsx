@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation, Link } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { Search, Plus } from "lucide-react";
 import Index from "./pages/Index";
 import PlayerManager from "@/pages/PlayerManager";
 import TournamentHub from "@/pages/TournamentHub";
@@ -15,24 +16,38 @@ import TournamentSignup from "@/pages/TournamentSignup";
 import Settings from "@/pages/Settings";
 import NotFound from "./pages/NotFound";
 
-import { useState, useEffect } from "react";
-import { getCustomLogo } from "@/pages/Settings";
-
 const queryClient = new QueryClient();
 
+const PAGE_TITLES: Record<string, string> = {
+  '/': 'Dashboard',
+  '/tournament': 'Torneio',
+  '/history': 'Histórico',
+  '/rankings': 'Rankings',
+  '/players': 'Bladers',
+  '/settings': 'Configurações',
+};
+
 const AppHeader = () => {
-  const [logo, setLogo] = useState<string | null>(null);
-  useEffect(() => { setLogo(getCustomLogo()); const h = () => setLogo(getCustomLogo()); window.addEventListener('storage', h); return () => window.removeEventListener('storage', h); }, []);
+  const location = useLocation();
+  const title = PAGE_TITLES[location.pathname] || 'Arena X';
 
   return (
-    <header className="h-12 flex items-center border-b border-border/30 bg-card/60 backdrop-blur-xl sticky top-0 z-50">
-      <SidebarTrigger className="ml-3 text-muted-foreground hover:text-foreground transition-colors" />
-      <div className="flex-1 flex justify-center items-center">
-        {logo && <img src={logo} alt="Logo" className="h-7 object-contain mr-2" />}
-        <span className="font-heading text-sm font-bold tracking-[0.2em] uppercase text-foreground italic">
-          Arena X
-        </span>
-      </div>
+    <header className="h-14 flex items-center gap-3 border-b border-[rgba(255,255,255,0.07)] bg-[hsl(var(--bg2))] px-4 sticky top-0 z-50">
+      <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
+      <h1 className="font-heading text-lg font-bold tracking-wider text-foreground flex-1">
+        {title}
+      </h1>
+      <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[rgba(255,255,255,0.12)] text-sm text-muted-foreground hover:bg-[hsl(var(--surface))] hover:text-foreground transition-all font-body">
+        <Search className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">Buscar</span>
+      </button>
+      <Link
+        to="/tournament"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors font-body"
+      >
+        <Plus className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">Novo Torneio</span>
+      </Link>
     </header>
   );
 };
