@@ -231,24 +231,6 @@
   color: #fca5a5;
 }
 
-/* Avatar pulse */
-.arena-avatar-pulse {
-  position: relative;
-}
-.arena-avatar-pulse::before {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  animation: arena-avatar-breath 2s ease-in-out infinite;
-  border: 2px solid var(--pulse-color);
-  opacity: 0.3;
-}
-@keyframes arena-avatar-breath {
-  0%, 100% { transform: scale(1); opacity: 0.2; }
-  50% { transform: scale(1.04); opacity: 0.5; }
-}
-
 /* Score pop on change */
 .arena-score-pop {
   animation: arena-score-pop-kf 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -257,35 +239,6 @@
   0% { transform: scale(0.8); }
   50% { transform: scale(1.12); }
   100% { transform: scale(1); }
-}
-
-/* VS color alternation and pulse */
-.arena-vs-color {
-  animation: arena-vs-color-kf 1.5s ease-in-out infinite;
-}
-@keyframes arena-vs-color-kf {
-  0%, 100% { color: #4F8EF7; text-shadow: 0 0 30px rgba(79,142,247,0.4); }
-  50% { color: #EF4444; text-shadow: 0 0 30px rgba(239,68,68,0.4); }
-}
-.arena-vs-pulse {
-  animation: arena-vs-pulse-kf 2s ease-in-out infinite;
-}
-@keyframes arena-vs-pulse-kf {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-}
-
-/* Lightning bolts */
-.arena-bolt-left {
-  animation: arena-bolt-flash 1s ease-in-out infinite;
-}
-.arena-bolt-right {
-  animation: arena-bolt-flash 1s ease-in-out infinite;
-  animation-delay: -0.5s;
-}
-@keyframes arena-bolt-flash {
-  0%, 100% { opacity: 0; }
-  50% { opacity: 1; }
 }
 
 /* Finish overlay */
