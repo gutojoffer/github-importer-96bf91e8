@@ -66,16 +66,14 @@ export default function PlayerManager() {
 
   const saveEdit = useCallback(async () => {
     if (!editingId || !editName.trim()) { toast.error('Nome obrigatório!'); return; }
-    update(editingId, {
+    await update(editingId, {
       name: editName.trim(),
       nickname: editNick.trim().replace(/^@/, ''),
       avatar: editCustomAvatar || editAvatar,
     });
     setEditingId(null);
     toast.success('Blader atualizado!');
-    // Force reload so all components using the store get fresh data
-    setTimeout(() => reload(), 500);
-  }, [editingId, editName, editNick, editAvatar, editCustomAvatar, update, reload]);
+  }, [editingId, editName, editNick, editAvatar, editCustomAvatar, update]);
 
   return (
     <div className="p-5 max-w-4xl mx-auto space-y-6 relative">
