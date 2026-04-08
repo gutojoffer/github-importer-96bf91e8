@@ -17,7 +17,7 @@ export default function TournamentSignup() {
   const players = usePlayerStore(s => s.players);
   const loadPlayers = usePlayerStore(s => s.load);
   const addPlayerToStore = usePlayerStore(s => s.add);
-  const { tournaments, load: loadTournaments, enrollPlayer } = useTournamentStore();
+  const { tournaments, load: loadTournaments, enrollPlayer, unenrollPlayer } = useTournamentStore();
 
   const [tab, setTab] = useState<'existing' | 'new'>('existing');
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,11 +44,15 @@ export default function TournamentSignup() {
 
   const handleSelectPlayer = useCallback((player: Player) => {
     if (!tournament) return;
-    if (tournament.playerIds.includes(player.id)) return;
+    if (tournament.playerIds.includes(player.id)) {
+      // Unenroll
+      unenrollPlayer(tournament.id, player.id);
+      toast.success(`${player.nickname ? `@${player.nickname}` : player.name} removido da inscrição.`);
+      return;
+    }
     enrollPlayer(tournament.id, player.id);
-    setRegisteredName(player.nickname ? `@${player.nickname}` : player.name);
-    setRegistered(true);
-  }, [tournament, enrollPlayer]);
+    toast.success(`${player.nickname ? `@${player.nickname}` : player.name} inscrito!`);
+  }, [tournament, enrollPlayer, unenrollPlayer]);
 
   const handleNewRegister = useCallback(() => {
     if (!name.trim() || !tournament) return;
