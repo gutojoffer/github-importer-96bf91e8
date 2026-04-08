@@ -1,4 +1,4 @@
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -92,6 +92,7 @@ const TAG_COLORS: Record<string, string> = {
 
 export default function LandingPage() {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
 
   // ─── Data queries ───
   const { data: ligas } = useQuery({
@@ -159,6 +160,54 @@ export default function LandingPage() {
         @keyframes heroSlideRight { 0% { transform: translateX(60px); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
         @keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
       `}</style>
+
+      {/* ════════ NAVBAR ════════ */}
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+        height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 24px',
+        background: 'rgba(6,9,18,0.8)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{
+            width: 30, height: 30, borderRadius: 8,
+            background: 'linear-gradient(135deg, #1e3a8a, #2563EB)',
+            border: '1px solid rgba(37,99,235,.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 12, color: '#fff',
+          }}>BX</div>
+          <span style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 15, color: '#fff', letterSpacing: 0.5 }}>
+            BLADE<span style={{ color: '#60A5FA' }}>X</span>
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={() => navigate('/login')}
+            style={{
+              background: 'transparent', border: '1.5px solid rgba(255,255,255,.2)',
+              color: '#E2E8F0', borderRadius: 8, padding: '8px 18px',
+              fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 14,
+              cursor: 'pointer', transition: 'all 0.15s', letterSpacing: 0.5,
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.08)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.35)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.2)'; }}
+          >Entrar</button>
+          <button
+            onClick={() => navigate('/cadastro')}
+            className="hidden sm:block"
+            style={{
+              background: '#2563EB', border: 'none', color: '#fff',
+              borderRadius: 8, padding: '8px 18px',
+              fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 14,
+              cursor: 'pointer', transition: 'background 0.15s', letterSpacing: 0.5,
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = '#1D4ED8'}
+            onMouseLeave={e => e.currentTarget.style.background = '#2563EB'}
+          >Criar liga</button>
+        </div>
+      </nav>
 
       {/* ════════ HERO ════════ */}
       <section className="relative min-h-[90vh] flex items-center" style={{ overflow: 'hidden', position: 'relative' }}>
