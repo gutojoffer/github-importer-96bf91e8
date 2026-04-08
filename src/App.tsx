@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation, Link, useNavigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -12,6 +12,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import LigaLogo from "@/components/LigaLogo";
 import SkeletonBox from "@/components/SkeletonBox";
 import { supabase } from "@/integrations/supabase/client";
+import { usePlayerStore } from "@/stores/usePlayerStore";
+import { useTournamentStore } from "@/stores/useTournamentStore";
 import { ChevronRight } from "lucide-react";
 import Index from "./pages/Index";
 import PlayerManager from "@/pages/PlayerManager";
@@ -109,34 +111,45 @@ const AppHeader = () => {
   );
 };
 
-const ProtectedLayout = () => (
-  <ProtectedRoute>
-    <LigaProvider>
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full">
-          <AppSidebar />
-          <div className="flex-1 flex flex-col min-w-0">
-            <AppHeader />
-            <main className="flex-1 overflow-auto">
-              <Suspense fallback={<LazyFallback />}>
-                <Routes>
-                  <Route path="/home" element={<Index />} />
-                  <Route path="/tournament" element={<TournamentHub />} />
-                  <Route path="/players" element={<PlayerManager />} />
-                  <Route path="/history" element={<TournamentHistory />} />
-                  <Route path="/history/:id" element={<TournamentPodium />} />
-                  <Route path="/rankings" element={<Leaderboard />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </main>
+const ProtectedLayout = () => {
+  useEffect(() => {
+    const unsubPlayers = usePlayerStore.getState().subscribeRealtime();
+    const unsubTournaments = useTournamentStore.getState().subscribeRealtime();
+    return () => { unsubPlayers(); unsubTournaments(); };
+  }, []);
+
+
+
+
+  return (
+    <ProtectedRoute>
+      <LigaProvider>
+        <SidebarProvider>
+          <div className="min-h-screen flex w-full">
+            <AppSidebar />
+            <div className="flex-1 flex flex-col min-w-0">
+              <AppHeader />
+              <main className="flex-1 overflow-auto">
+                <Suspense fallback={<LazyFallback />}>
+                  <Routes>
+                    <Route path="/home" element={<Index />} />
+                    <Route path="/tournament" element={<TournamentHub />} />
+                    <Route path="/players" element={<PlayerManager />} />
+                    <Route path="/history" element={<TournamentHistory />} />
+                    <Route path="/history/:id" element={<TournamentPodium />} />
+                    <Route path="/rankings" element={<Leaderboard />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </main>
+            </div>
           </div>
-        </div>
-      </SidebarProvider>
-    </LigaProvider>
-  </ProtectedRoute>
-);
+        </SidebarProvider>
+      </LigaProvider>
+    </ProtectedRoute>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

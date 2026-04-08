@@ -53,7 +53,10 @@ export default function TournamentPodium() {
   const loadPlayers = usePlayerStore(s => s.load);
   const { tournaments, load: loadTournaments } = useTournamentStore();
 
-  useEffect(() => { loadPlayers(); loadTournaments(); }, []);
+  useEffect(() => {
+    loadPlayers();
+    if (!tournaments.length) loadTournaments();
+  }, []);
 
   const tournament = useMemo(() =>
     tournaments.find(t => t.id === id && t.status === 'completed')

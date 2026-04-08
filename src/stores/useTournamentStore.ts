@@ -5,6 +5,7 @@ import {
   saveCompletedTournament, deleteTournament as apiDeleteTournament,
   calculateStandings, awardXP, saveTournaments,
 } from '@/lib/storage';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TournamentStore {
   tournaments: Tournament[];
@@ -21,6 +22,7 @@ interface TournamentStore {
   enrollPlayer: (tournamentId: string, playerId: string) => void;
   unenrollPlayer: (tournamentId: string, playerId: string) => void;
   refreshList: () => Promise<void>;
+  subscribeRealtime: () => () => void;
 }
 
 export const useTournamentStore = create<TournamentStore>((set, get) => ({
@@ -99,7 +101,6 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
           : t
       ),
     }));
-    // Persist
     const t = get().tournaments.find(t => t.id === tournamentId);
     if (t) saveTournaments([t]).catch(console.error);
   },
@@ -119,5 +120,24 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   refreshList: async () => {
     const all = await getTournaments();
     set({ tournaments: all });
+  },
+
+  subscribeRealtime: () => {
+    const channel = supabase
+      .channel('tournaments-realtime')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'tournaments',
+      }, () => {
+        // Re-fetch full list on any change to keep complex JSON fields in sync
+        getTournaments().then(all => {
+          const active = all.find(t => t.status === 'active') || null;
+          set({ tournaments: all, activeTournament: active });
+        });
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   },
 }));
