@@ -104,8 +104,8 @@ export default function AdminBeyblades() {
   });
 
   const toggleField = useMutation({
-    mutationFn: async ({ id, field, value }: { id: string; field: string; value: boolean }) => {
-      const { error } = await supabase.from('beyblades_meta').update({ [field]: value }).eq('id', id);
+    mutationFn: async ({ id, field, value }: { id: string; field: 'destaque' | 'ativo'; value: boolean }) => {
+      const { error } = await supabase.from('beyblades_meta').update({ [field]: value } as any).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-beyblades'] }),

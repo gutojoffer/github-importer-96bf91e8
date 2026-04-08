@@ -9,6 +9,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LigaProvider, useLiga } from "@/contexts/LigaContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AdminRoute from "@/components/AdminRoute";
 import LigaLogo from "@/components/LigaLogo";
 import SkeletonBox from "@/components/SkeletonBox";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +32,13 @@ const TournamentPodium = lazy(() => import("@/pages/TournamentPodium"));
 const Leaderboard = lazy(() => import("@/pages/Leaderboard"));
 const TournamentSignup = lazy(() => import("@/pages/TournamentSignup"));
 const Settings = lazy(() => import("@/pages/Settings"));
+
+// Admin lazy-loaded
+const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
+const AdminBeyblades = lazy(() => import("@/pages/admin/AdminBeyblades"));
+const AdminReleaseNotes = lazy(() => import("@/pages/admin/AdminReleaseNotes"));
+const AdminLigas = lazy(() => import("@/pages/admin/AdminLigas"));
+const AdminConfig = lazy(() => import("@/pages/admin/AdminConfig"));
 
 const queryClient = new QueryClient();
 
