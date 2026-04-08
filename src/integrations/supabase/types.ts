@@ -19,6 +19,7 @@ export type Database = {
           extreme_finish_wins: number
           finish_wins: number
           id: string
+          liga_id: string | null
           losses: number
           month_key: string
           player_id: string
@@ -30,6 +31,7 @@ export type Database = {
           extreme_finish_wins?: number
           finish_wins?: number
           id?: string
+          liga_id?: string | null
           losses?: number
           month_key: string
           player_id: string
@@ -41,6 +43,7 @@ export type Database = {
           extreme_finish_wins?: number
           finish_wins?: number
           id?: string
+          liga_id?: string | null
           losses?: number
           month_key?: string
           player_id?: string
@@ -63,6 +66,7 @@ export type Database = {
           avatar: string
           created_at: string
           id: string
+          liga_id: string | null
           name: string
           nickname: string
           xp: number
@@ -71,6 +75,7 @@ export type Database = {
           avatar?: string
           created_at?: string
           id?: string
+          liga_id?: string | null
           name: string
           nickname?: string
           xp?: number
@@ -79,6 +84,7 @@ export type Database = {
           avatar?: string
           created_at?: string
           id?: string
+          liga_id?: string | null
           name?: string
           nickname?: string
           xp?: number
@@ -93,6 +99,7 @@ export type Database = {
           date: string
           final_standings: Json | null
           id: string
+          liga_id: string | null
           max_players: number | null
           name: string
           player_ids: string[]
@@ -109,6 +116,7 @@ export type Database = {
           date: string
           final_standings?: Json | null
           id?: string
+          liga_id?: string | null
           max_players?: number | null
           name: string
           player_ids?: string[]
@@ -125,6 +133,7 @@ export type Database = {
           date?: string
           final_standings?: Json | null
           id?: string
+          liga_id?: string | null
           max_players?: number | null
           name?: string
           player_ids?: string[]
