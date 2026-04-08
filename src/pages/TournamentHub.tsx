@@ -182,6 +182,8 @@ export default function TournamentHub() {
 
     // Trigger finish overlay
     setFinishOverlay(finishType);
+
+    const action: ScoreAction = {
       id: crypto.randomUUID(), playerId: winnerId, finishType, points: pts,
       timestamp: new Date().toISOString(),
     };
