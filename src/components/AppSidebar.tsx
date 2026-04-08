@@ -73,8 +73,14 @@ export function AppSidebar() {
     <aside className="w-[248px] shrink-0 h-screen flex flex-col sticky top-0" style={{ background: '#0a0d18', borderRight: '1px solid rgba(255,255,255,.06)' }}>
       <div className="h-[2px] shrink-0" style={{ background: 'linear-gradient(90deg, #2563EB, #7C3AED, transparent)' }} />
 
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,.05)', padding: '16px 16px 12px' }}>
-        <img src="/logo-bladex.png" alt="BLADEX" style={{ width: 180, height: 'auto', objectFit: 'contain', mixBlendMode: 'screen' }} />
+      <div className="flex items-center gap-3 px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,.05)' }}>
+        <div className="flex items-center justify-center shrink-0" style={{ width: 38, height: 38, borderRadius: 10, background: 'linear-gradient(135deg, #1e3a8a, #2563EB)', border: '1px solid rgba(37,99,235,.4)' }}>
+          <span className="font-heading text-[16px] font-bold text-white leading-none select-none">BX</span>
+        </div>
+        <div className="flex flex-col min-w-0">
+          <span className="font-heading text-[15px] font-bold text-white tracking-[0.5px] leading-tight">BLADE<span style={{ color: '#60A5FA' }}>X</span></span>
+          <span className="text-[10px] uppercase tracking-[1px] font-body leading-tight" style={{ color: '#2563EB' }}>Tournament Hub</span>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto py-2 px-2">

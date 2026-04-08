@@ -95,7 +95,7 @@ export default function TournamentPodium() {
       <div className="relative z-10 max-w-3xl mx-auto px-4 pt-8 pb-16 space-y-8">
         {/* Logo & Title */}
         <div className="text-center space-y-3">
-          <img src="/logo-bladex.png" alt="BLADEX" style={{ width: 200, height: 'auto', mixBlendMode: 'screen', margin: '0 auto 16px', display: 'block' }} />
+          <LigaLogo size={80} className="mx-auto" />
           <p className="font-heading text-sm font-semibold tracking-[0.15em] text-muted-foreground uppercase">{nomeLiga}</p>
           <p className="font-heading text-[13px] font-bold tracking-[0.3em] uppercase" style={{ color: '#F5A623', letterSpacing: '4px' }}>
             CAMPEÃO DO TORNEIO

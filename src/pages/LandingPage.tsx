@@ -186,7 +186,6 @@ export default function LandingPage() {
             width: '55%',
             objectFit: 'contain',
             objectPosition: 'bottom right',
-            mixBlendMode: 'screen',
             maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%), linear-gradient(to top, rgba(0,0,0,1) 90%, rgba(0,0,0,0) 100%)',
             WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%), linear-gradient(to top, rgba(0,0,0,1) 90%, rgba(0,0,0,0) 100%)',
             maskComposite: 'intersect',
@@ -198,7 +197,7 @@ export default function LandingPage() {
           src={promoImage}
           alt=""
           className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none md:hidden"
-          style={{ opacity: 0.12, mixBlendMode: 'screen' }}
+          style={{ opacity: 0.15 }}
         />
 
         {/* Content */}
@@ -209,7 +208,10 @@ export default function LandingPage() {
             <span className="text-[11px] font-heading font-bold tracking-[2px] uppercase text-blue-400">SISTEMA OFICIAL DE TORNEIOS</span>
           </div>
 
-          <img src="/logo-bladex.png" alt="BLADEX" style={{ width: 'clamp(280px, 40vw, 480px)', height: 'auto', objectFit: 'contain', mixBlendMode: 'screen', marginBottom: 24 }} />
+          <h1 className="font-heading font-bold leading-[1.05] mb-6" style={{ fontSize: 'clamp(52px, 8vw, 92px)' }}>
+            <span className="text-white">O SISTEMA</span><br />
+            <span className="text-[#60A5FA]">BLADEX</span>
+          </h1>
 
           <p className="text-[15px] text-muted-foreground font-body leading-relaxed mb-8 max-w-md">
             Organize torneios, gerencie ligas e acompanhe rankings em tempo real. A plataforma definitiva para a comunidade Beyblade X.
@@ -374,7 +376,9 @@ export default function LandingPage() {
       {/* ════════ FOOTER ════════ */}
       <footer className="py-8 px-6 border-t border-[rgba(255,255,255,0.05)]">
         <div className="max-w-5xl mx-auto flex items-center justify-between flex-wrap gap-4">
-          <img src="/logo-bladex.png" alt="BLADEX" style={{ height: 28, width: 'auto', objectFit: 'contain', mixBlendMode: 'screen' }} />
+          <span className="font-heading text-sm font-bold tracking-[0.15em]">
+            BLADE<span className="text-[#60A5FA]">X</span>
+          </span>
           <p className="text-xs text-muted-foreground font-body">Feito para a comunidade Beyblade X do Brasil</p>
           <p className="text-xs text-muted-foreground font-body">© 2025</p>
         </div>

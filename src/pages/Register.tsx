@@ -55,7 +55,9 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-[440px] surface-panel p-8 space-y-6">
         <div className="text-center">
-          <img src="/logo-bladex.png" alt="BLADEX" style={{ width: 220, height: 'auto', objectFit: 'contain', mixBlendMode: 'screen', margin: '0 auto 20px', display: 'block' }} />
+          <h1 className="font-heading text-3xl font-bold tracking-[0.12em]">
+            ARENA <span className="text-primary">X</span>
+          </h1>
           <p className="text-sm text-muted-foreground font-body mt-1">Criar conta da liga</p>
         </div>
 

@@ -85,9 +85,31 @@ export function AppTopbar() {
         ))}
       </nav>
 
-      {/* Center — Logo */}
-      <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none">
-        <img src="/logo-bladex.png" alt="BLADEX" style={{ height: 36, width: 'auto', objectFit: 'contain', mixBlendMode: 'screen' }} />
+      {/* Center — Liga identity */}
+      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 pointer-events-none">
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt={nomeLiga}
+            className="shrink-0 object-cover"
+            style={{ width: 26, height: 26, borderRadius: 7, border: '1px solid rgba(37,99,235,.3)' }}
+          />
+        ) : (
+          <div className="flex items-center justify-center shrink-0" style={{
+            width: 26, height: 26, borderRadius: 7,
+            background: 'linear-gradient(135deg, #1e3a8a, #2563EB)',
+            border: '1px solid rgba(37,99,235,.3)',
+          }}>
+            <span className="font-heading text-[11px] font-bold text-white leading-none select-none">BX</span>
+          </div>
+        )}
+        <span className="font-heading text-[14px] font-bold tracking-[0.3px] leading-none">
+          {nomeLiga ? (
+            <span className="text-white">{nomeLiga}</span>
+          ) : (
+            <span className="text-white">BLADE<span className="text-[#60A5FA]">X</span></span>
+          )}
+        </span>
       </div>
 
       {/* Right */}
