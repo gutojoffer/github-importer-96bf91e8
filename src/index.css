@@ -215,66 +215,20 @@
 
 /* ═══════ Arena Battle Animations ═══════ */
 
-/* Diagonal animated lines */
-.arena-line {
-  position: absolute;
-  width: 200%;
-  height: 2px;
-  top: 50%;
-  left: -50%;
-  transform-origin: center;
+/* Arena button hover states */
+.arena-btn-left:hover:not(:disabled) {
+  border-color: rgba(59,130,246,0.25) !important;
+  background: rgba(59,130,246,0.06) !important;
 }
-.arena-line-blue {
-  background: linear-gradient(90deg, transparent 0%, #4F8EF7 50%, transparent 100%);
-  opacity: 0.08;
-  animation: arena-line-rotate 60s linear infinite;
+.arena-btn-left:hover:not(:disabled) .arena-btn-label {
+  color: #93c5fd;
 }
-.arena-line-red {
-  background: linear-gradient(90deg, transparent 0%, #EF4444 50%, transparent 100%);
-  opacity: 0.08;
-  animation: arena-line-rotate 60s linear infinite reverse;
-  animation-delay: -30s;
+.arena-btn-right:hover:not(:disabled) {
+  border-color: rgba(239,68,68,0.25) !important;
+  background: rgba(239,68,68,0.06) !important;
 }
-@keyframes arena-line-rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* Orbital particles */
-.arena-particle {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  top: 50%;
-  left: 50%;
-  animation: arena-orbit var(--orbit-duration) linear infinite;
-  animation-delay: var(--orbit-delay);
-}
-.arena-particle-blue { background: #4F8EF7; box-shadow: 0 0 8px #4F8EF7; }
-.arena-particle-red { background: #EF4444; box-shadow: 0 0 8px #EF4444; }
-@keyframes arena-orbit {
-  from { transform: rotate(0deg) translateX(var(--orbit-size)) rotate(0deg); opacity: 0.6; }
-  50% { opacity: 1; }
-  to { transform: rotate(360deg) translateX(var(--orbit-size)) rotate(-360deg); opacity: 0.6; }
-}
-
-/* Avatar pulse */
-.arena-avatar-pulse {
-  position: relative;
-}
-.arena-avatar-pulse::before {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  animation: arena-avatar-breath 2s ease-in-out infinite;
-  border: 2px solid var(--pulse-color);
-  opacity: 0.3;
-}
-@keyframes arena-avatar-breath {
-  0%, 100% { transform: scale(1); opacity: 0.2; }
-  50% { transform: scale(1.04); opacity: 0.5; }
+.arena-btn-right:hover:not(:disabled) .arena-btn-label {
+  color: #fca5a5;
 }
 
 /* Score pop on change */
@@ -285,35 +239,6 @@
   0% { transform: scale(0.8); }
   50% { transform: scale(1.12); }
   100% { transform: scale(1); }
-}
-
-/* VS color alternation and pulse */
-.arena-vs-color {
-  animation: arena-vs-color-kf 1.5s ease-in-out infinite;
-}
-@keyframes arena-vs-color-kf {
-  0%, 100% { color: #4F8EF7; text-shadow: 0 0 30px rgba(79,142,247,0.4); }
-  50% { color: #EF4444; text-shadow: 0 0 30px rgba(239,68,68,0.4); }
-}
-.arena-vs-pulse {
-  animation: arena-vs-pulse-kf 2s ease-in-out infinite;
-}
-@keyframes arena-vs-pulse-kf {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-}
-
-/* Lightning bolts */
-.arena-bolt-left {
-  animation: arena-bolt-flash 1s ease-in-out infinite;
-}
-.arena-bolt-right {
-  animation: arena-bolt-flash 1s ease-in-out infinite;
-  animation-delay: -0.5s;
-}
-@keyframes arena-bolt-flash {
-  0%, 100% { opacity: 0; }
-  50% { opacity: 1; }
 }
 
 /* Finish overlay */
