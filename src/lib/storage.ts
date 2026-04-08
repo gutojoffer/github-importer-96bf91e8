@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { Player, PlayerStats, Tournament, TournamentStanding, PLACEMENT_XP, PLACEMENT_XP_DEFAULT } from '@/types/tournament';
+import { Player, PlayerStats, Tournament, TournamentStanding, PLACEMENT_XP, PLACEMENT_XP_DEFAULT, getRankingPoints } from '@/types/tournament';
 
 async function getLigaId(): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
