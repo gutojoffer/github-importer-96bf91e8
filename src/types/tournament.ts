@@ -94,6 +94,7 @@ export interface TournamentStanding {
   wins: number;
   losses: number;
   xpAwarded: number;
+  rankingPoints: number;
   dropped?: boolean;
 }
 
