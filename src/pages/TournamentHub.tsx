@@ -45,6 +45,16 @@ export default function TournamentHub() {
   } = useTournamentStore();
 
   const [view, setView] = useState<View>('list');
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'completed'>('upcoming');
+
+  const upcomingTournaments = useMemo(() => tournaments.filter(t => t.status === 'upcoming'), [tournaments]);
+  const completedTournaments = useMemo(() => tournaments.filter(t => t.status === 'completed'), [tournaments]);
+  const listStats = useMemo(() => ({
+    upcoming: upcomingTournaments.length,
+    active: tournaments.filter(t => t.status === 'active').length,
+    completed: completedTournaments.length,
+    totalPlayers: new Set(tournaments.flatMap(t => t.playerIds)).size,
+  }), [tournaments, upcomingTournaments, completedTournaments]);
 
   // Create form
   const [showCreate, setShowCreate] = useState(false);
