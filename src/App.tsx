@@ -118,11 +118,8 @@ const ProtectedLayout = () => {
     return () => { unsubPlayers(); unsubTournaments(); };
   }, []);
 
-  useEffect(() => {
-    const unsubPlayers = _ps.getState().subscribeRealtime();
-    const unsubTournaments = _ts.getState().subscribeRealtime();
-    return () => { unsubPlayers(); unsubTournaments(); };
-  }, []);
+
+
 
   return (
     <ProtectedRoute>
