@@ -6,6 +6,7 @@ interface BracketTreeProps {
   tournament: Tournament;
   getPlayer: (id: string) => Player | undefined;
   currentRoundHighlight?: number;
+  onDropPlayer?: (playerId: string) => void;
 }
 
 function BracketTree({ tournament, getPlayer, currentRoundHighlight }: BracketTreeProps) {
