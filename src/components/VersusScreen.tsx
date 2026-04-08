@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Player } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import EloBadge from '@/components/EloBadge';
+import LigaLogo from '@/components/LigaLogo';
 
 interface VersusScreenProps {
   player1: Player;
@@ -40,64 +41,90 @@ export default function VersusScreen({
   }, [player2Points, prevP2]);
 
   const renderPlayer = (player: Player, side: 'left' | 'right', points: number, isImpact: boolean) => {
-    const animClass = animate ? (side === 'left' ? 'anim-slide-left' : 'anim-slide-right') : '';
-    const sideColor = side === 'left' ? 'text-primary' : 'text-secondary';
-    const sideBorder = side === 'left' ? 'border-primary/50' : 'border-secondary/50';
-    const sideGlow = side === 'left' ? 'shadow-[0_0_20px_hsl(235_86%_65%/0.2)]' : 'shadow-[0_0_20px_hsl(350_90%_60%/0.2)]';
+    const isLeft = side === 'left';
+    const themeColor = isLeft ? '#4F8EF7' : '#EF4444';
+    const clipPath = isLeft
+      ? 'polygon(0 0, 92% 0, 100% 100%, 0 100%)'
+      : 'polygon(8% 0, 100% 0, 100% 100%, 0 100%)';
 
     return (
-      <div className={`flex flex-col items-center gap-2 flex-1 min-w-0 ${animClass} ${isImpact ? 'anim-score-shake' : ''}`}>
-        <div className={`relative ${sideGlow} rounded-full`}>
-          <Avatar className={`h-20 w-20 sm:h-28 sm:w-28 border-[3px] ${sideBorder}`}>
-            {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? (
-              <AvatarImage src={player.avatar} alt={player.name} />
-            ) : (
-              <AvatarFallback className="bg-muted text-3xl sm:text-4xl">{player.avatar}</AvatarFallback>
+      <div
+        className={`relative flex-1 min-w-0 py-6 px-4 sm:px-6 ${animate ? (isLeft ? 'anim-slide-left' : 'anim-slide-right') : ''}`}
+        style={{ clipPath }}
+      >
+        {/* Side tinted bg */}
+        <div className="absolute inset-0 opacity-[0.06]" style={{ background: themeColor }} />
+
+        <div className={`flex flex-col items-center gap-2 relative z-10 ${isImpact ? 'anim-score-shake' : ''}`}>
+          {/* Avatar with pulse */}
+          <div className="arena-avatar-pulse" style={{ '--pulse-color': themeColor } as React.CSSProperties}>
+            <Avatar className="h-[80px] w-[80px] sm:h-[100px] sm:w-[100px] border-[3px]" style={{ borderColor: themeColor }}>
+              {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? (
+                <AvatarImage src={player.avatar} alt={player.name} />
+              ) : (
+                <AvatarFallback className="bg-muted text-3xl sm:text-4xl">{player.avatar}</AvatarFallback>
+              )}
+            </Avatar>
+          </div>
+
+          <EloBadge xp={player.xp || 0} size="md" />
+
+          <div className="text-center min-w-0 w-full">
+            <p className="font-heading text-lg sm:text-2xl font-bold tracking-wide truncate italic" style={{ color: themeColor }}>
+              {player.name}
+            </p>
+            {player.nickname && (
+              <p className="text-xs text-muted-foreground font-body truncate">@{player.nickname.replace(/^@/, '')}</p>
             )}
-          </Avatar>
-        </div>
+          </div>
 
-        <EloBadge xp={player.xp || 0} size="md" />
-
-        <div className="text-center min-w-0 w-full">
-          <p className={`font-heading text-base sm:text-xl font-bold tracking-wide ${sideColor} truncate italic`}>
-            {player.name}
-          </p>
-          {player.nickname && (
-            <p className="text-xs text-muted-foreground font-body truncate">@{player.nickname.replace(/^@/, '')}</p>
-          )}
-        </div>
-
-        <div className="text-center">
-          <p className={`font-heading text-3xl sm:text-4xl font-bold ${sideColor} transition-all duration-200 ${isImpact ? 'anim-score-impact' : ''}`}>
-            {points}
-          </p>
-          <p className="text-[10px] text-muted-foreground font-heading tracking-wider">
-            {points} / {pointsToWin}
-          </p>
+          {/* Score */}
+          <div className="text-center">
+            <p
+              className={`font-heading text-6xl sm:text-7xl font-bold transition-all duration-200 ${isImpact ? 'arena-score-pop' : ''}`}
+              style={{ color: themeColor }}
+              key={points}
+            >
+              {points}
+            </p>
+            <p className="text-[10px] text-muted-foreground font-heading tracking-wider">
+              {points} / {pointsToWin}
+            </p>
+          </div>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="relative py-6 px-3">
-      <p className="text-center text-xs font-heading tracking-[0.3em] uppercase mb-5 text-muted-foreground">{arenaName}</p>
-      <div className="flex items-center justify-center gap-3 sm:gap-6">
+    <div className="relative">
+      <p className="text-center text-xs font-heading tracking-[0.3em] uppercase mb-3 text-muted-foreground relative z-10">{arenaName}</p>
+      
+      <div className="flex items-stretch justify-center relative">
         {renderPlayer(player1, 'left', player1Points, p1Anim)}
 
-        <div className={`flex flex-col items-center shrink-0 ${animate ? 'anim-vs-clash' : ''}`}>
+        {/* VS Central */}
+        <div className={`absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none ${animate ? 'anim-vs-clash' : ''}`}>
+          {/* Lightning bolts SVG */}
           <div className="relative">
-            <span className="font-heading text-4xl sm:text-6xl font-bold text-primary/90 tracking-tighter italic">VS</span>
-            <div className="absolute -inset-4 bg-primary/5 rounded-full blur-xl" />
+            <svg className="absolute -left-10 top-1/2 -translate-y-1/2 arena-bolt-left" width="32" height="48" viewBox="0 0 32 48" fill="none">
+              <path d="M20 0L0 28h12L8 48l24-28H20L24 0z" fill="#4F8EF7" fillOpacity="0.7" />
+            </svg>
+            <svg className="absolute -right-10 top-1/2 -translate-y-1/2 arena-bolt-right" width="32" height="48" viewBox="0 0 32 48" fill="none">
+              <path d="M12 0L32 28H20l4 20L0 20h12L8 0z" fill="#EF4444" fillOpacity="0.7" />
+            </svg>
+            <span className="font-heading text-7xl sm:text-[96px] font-bold tracking-tighter italic arena-vs-color arena-vs-pulse">
+              VS
+            </span>
           </div>
-          <div className="w-[2px] h-8 bg-gradient-to-b from-primary/30 to-transparent mt-1" />
+          <LigaLogo size={40} className="opacity-40 mt-1" />
         </div>
 
         {renderPlayer(player2, 'right', player2Points, p2Anim)}
       </div>
-      <p className="text-center text-[10px] text-muted-foreground font-heading mt-4 tracking-widest">
-        POINTS TO WIN: {pointsToWin}
+
+      <p className="text-center text-[10px] text-muted-foreground font-heading mt-3 tracking-widest relative z-10">
+        PONTOS PARA VENCER: {pointsToWin}
       </p>
     </div>
   );
