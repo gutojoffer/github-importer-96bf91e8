@@ -6,7 +6,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { LigaProvider } from "@/contexts/LigaContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import LigaLogo from "@/components/LigaLogo";
 import { Search, Plus } from "lucide-react";
 import Index from "./pages/Index";
 import PlayerManager from "@/pages/PlayerManager";
@@ -18,6 +20,8 @@ import TournamentSignup from "@/pages/TournamentSignup";
 import Settings from "@/pages/Settings";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +42,7 @@ const AppHeader = () => {
   return (
     <header className="h-14 flex items-center gap-3 border-b border-[rgba(255,255,255,0.07)] bg-[hsl(var(--bg2))] px-4 sticky top-0 z-50">
       <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
+      <LigaLogo size={28} />
       <h1 className="font-heading text-lg font-bold tracking-wider text-foreground flex-1">
         {title}
       </h1>
@@ -58,26 +63,28 @@ const AppHeader = () => {
 
 const ProtectedLayout = () => (
   <ProtectedRoute>
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          <AppHeader />
-          <main className="flex-1 overflow-auto">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/tournament" element={<TournamentHub />} />
-              <Route path="/players" element={<PlayerManager />} />
-              <Route path="/history" element={<TournamentHistory />} />
-              <Route path="/history/:id" element={<TournamentPodium />} />
-              <Route path="/rankings" element={<Leaderboard />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
+    <LigaProvider>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <AppSidebar />
+          <div className="flex-1 flex flex-col min-w-0">
+            <AppHeader />
+            <main className="flex-1 overflow-auto">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/tournament" element={<TournamentHub />} />
+                <Route path="/players" element={<PlayerManager />} />
+                <Route path="/history" element={<TournamentHistory />} />
+                <Route path="/history/:id" element={<TournamentPodium />} />
+                <Route path="/rankings" element={<Leaderboard />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </LigaProvider>
   </ProtectedRoute>
 );
 
@@ -91,6 +98,8 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Register />} />
+            <Route path="/recuperar-senha" element={<ForgotPassword />} />
+            <Route path="/nova-senha" element={<ResetPassword />} />
             <Route path="/signup/:tournamentId" element={<TournamentSignup />} />
             <Route path="*" element={<ProtectedLayout />} />
           </Routes>

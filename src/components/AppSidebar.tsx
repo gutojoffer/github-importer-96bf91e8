@@ -3,6 +3,8 @@ import { NavLink } from '@/components/NavLink';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTournamentStore } from '@/stores/useTournamentStore';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLiga } from '@/contexts/LigaContext';
+import LigaLogo from '@/components/LigaLogo';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
@@ -24,9 +26,8 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const tournaments = useTournamentStore(s => s.tournaments);
   const upcomingCount = tournaments.filter(t => t.status === 'upcoming' || t.status === 'active').length;
-  const { user, signOut } = useAuth();
-
-  const ligaName = user?.user_metadata?.nome_liga || user?.email?.split('@')[0] || 'Liga';
+  const { signOut } = useAuth();
+  const { nomeLiga } = useLiga();
 
   const isActive = (path: string) =>
     location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
@@ -90,11 +91,9 @@ export function AppSidebar() {
         {!collapsed ? (
           <div className="space-y-2">
             <div className="flex items-center gap-3 p-2 rounded-lg bg-[hsl(var(--surface))] border border-[rgba(255,255,255,0.07)]">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-xs font-bold shrink-0">
-                {ligaName.charAt(0).toUpperCase()}
-              </div>
+              <LigaLogo size={44} />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-foreground truncate">{ligaName}</p>
+                <p className="text-sm font-medium text-foreground truncate">{nomeLiga}</p>
                 <p className="text-[10px] text-muted-foreground">Organizador</p>
               </div>
             </div>
@@ -107,9 +106,7 @@ export function AppSidebar() {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-[10px] font-bold">
-              {ligaName.charAt(0).toUpperCase()}
-            </div>
+            <LigaLogo size={32} />
             <button onClick={handleLogout} className="text-muted-foreground hover:text-destructive transition-colors">
               <LogOut className="h-3.5 w-3.5" />
             </button>

@@ -6,10 +6,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import EloBadge from '@/components/EloBadge';
 import BracketTree from '@/components/BracketTree';
+import LigaLogo from '@/components/LigaLogo';
+import { useLiga } from '@/contexts/LigaContext';
 import { Crown, ArrowLeft, Trophy, Medal } from 'lucide-react';
 
 export default function TournamentPodium() {
   const { id } = useParams<{ id: string }>();
+  const { nomeLiga } = useLiga();
   const players = usePlayerStore(s => s.players);
   const loadPlayers = usePlayerStore(s => s.load);
   const { tournaments, load: loadTournaments } = useTournamentStore();
@@ -53,7 +56,9 @@ export default function TournamentPodium() {
         </Button>
       </Link>
 
-      <div className="text-center space-y-2">
+      <div className="text-center space-y-3">
+        <LigaLogo size={80} className="mx-auto" />
+        <p className="text-xs text-muted-foreground font-heading tracking-[0.15em] uppercase">{nomeLiga}</p>
         <h1 className="font-heading text-3xl font-bold tracking-[0.15em] text-foreground italic">{tournament.name}</h1>
         <p className="text-sm text-muted-foreground font-body">{new Date(tournament.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
       </div>
