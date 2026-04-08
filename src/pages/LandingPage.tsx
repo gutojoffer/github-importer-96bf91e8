@@ -92,6 +92,7 @@ const TAG_COLORS: Record<string, string> = {
 
 export default function LandingPage() {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
 
   // ─── Data queries ───
   const { data: ligas } = useQuery({
