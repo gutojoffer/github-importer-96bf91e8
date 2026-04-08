@@ -9,8 +9,10 @@ interface BracketTreeProps {
   onDropPlayer?: (playerId: string) => void;
 }
 
-function BracketTree({ tournament, getPlayer, currentRoundHighlight }: BracketTreeProps) {
+function BracketTree({ tournament, getPlayer, currentRoundHighlight, onDropPlayer }: BracketTreeProps) {
   const rounds = tournament.rounds;
+  const droppedIds = new Set(tournament.droppedPlayerIds || []);
+  const isActive = tournament.status === 'active';
 
   if (rounds.length === 0) return null;
 
@@ -29,6 +31,9 @@ function BracketTree({ tournament, getPlayer, currentRoundHighlight }: BracketTr
             getPlayer={getPlayer}
             isHighlighted={currentRoundHighlight === ri}
             totalRounds={rounds.length}
+            droppedIds={droppedIds}
+            isActive={isActive}
+            onDropPlayer={onDropPlayer}
           />
         ))}
       </div>
