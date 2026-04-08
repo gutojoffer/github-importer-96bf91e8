@@ -9,6 +9,7 @@ import { Player, DEFAULT_AVATARS } from '@/types/tournament';
 import EloBadge from '@/components/EloBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Camera, UserPlus, CheckCircle, Trophy, Search, X, Check } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function TournamentSignup() {
   const { tournamentId } = useParams<{ tournamentId: string }>();
@@ -17,7 +18,7 @@ export default function TournamentSignup() {
   const players = usePlayerStore(s => s.players);
   const loadPlayers = usePlayerStore(s => s.load);
   const addPlayerToStore = usePlayerStore(s => s.add);
-  const { tournaments, load: loadTournaments, enrollPlayer } = useTournamentStore();
+  const { tournaments, load: loadTournaments, enrollPlayer, unenrollPlayer } = useTournamentStore();
 
   const [tab, setTab] = useState<'existing' | 'new'>('existing');
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,11 +45,15 @@ export default function TournamentSignup() {
 
   const handleSelectPlayer = useCallback((player: Player) => {
     if (!tournament) return;
-    if (tournament.playerIds.includes(player.id)) return;
+    if (tournament.playerIds.includes(player.id)) {
+      // Unenroll
+      unenrollPlayer(tournament.id, player.id);
+      toast.success(`${player.nickname ? `@${player.nickname}` : player.name} removido da inscrição.`);
+      return;
+    }
     enrollPlayer(tournament.id, player.id);
-    setRegisteredName(player.nickname ? `@${player.nickname}` : player.name);
-    setRegistered(true);
-  }, [tournament, enrollPlayer]);
+    toast.success(`${player.nickname ? `@${player.nickname}` : player.name} inscrito!`);
+  }, [tournament, enrollPlayer, unenrollPlayer]);
 
   const handleNewRegister = useCallback(() => {
     if (!name.trim() || !tournament) return;
@@ -120,8 +125,8 @@ export default function TournamentSignup() {
               {filteredPlayers.map(p => {
                 const enrolled = tournament.playerIds.includes(p.id);
                 return (
-                  <button key={p.id} onClick={() => handleSelectPlayer(p)} disabled={enrolled}
-                    className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-all text-left ${enrolled ? 'bg-primary/10 border border-primary/30 opacity-60' : 'hover:bg-muted/30 border border-transparent'}`}>
+                  <button key={p.id} onClick={() => handleSelectPlayer(p)}
+                    className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-all text-left ${enrolled ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/30 border border-transparent'}`}>
                     <Avatar className="h-9 w-9 border border-muted">
                       {p.avatar.startsWith('http') || p.avatar.startsWith('data:') ? <AvatarImage src={p.avatar} /> : <AvatarFallback className="bg-muted text-sm">{p.avatar}</AvatarFallback>}
                     </Avatar>
@@ -130,7 +135,13 @@ export default function TournamentSignup() {
                       {p.nickname && <p className="text-[10px] text-muted-foreground">@{p.nickname}</p>}
                     </div>
                     <EloBadge xp={p.xp || 0} size="sm" />
-                    {enrolled && <Check className="h-4 w-4 text-primary" />}
+                    {enrolled ? (
+                      <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center shrink-0">
+                        <Check className="h-3.5 w-3.5 text-primary-foreground" />
+                      </div>
+                    ) : (
+                      <div className="h-6 w-6 rounded-full border-2 border-muted shrink-0" />
+                    )}
                   </button>
                 );
               })}
@@ -142,6 +153,26 @@ export default function TournamentSignup() {
                   </Button>
                 </div>
               )}
+            </div>
+
+            {/* Enrolled count + confirm button */}
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/30">
+              <span className="text-xs text-muted-foreground font-body">
+                {tournament.playerIds.length} inscrito{tournament.playerIds.length !== 1 ? 's' : ''}
+              </span>
+              <Button
+                onClick={() => {
+                  if (tournament.playerIds.length === 0) {
+                    toast.error('Nenhum blader inscrito!');
+                    return;
+                  }
+                  setRegisteredName(`${tournament.playerIds.length} blader${tournament.playerIds.length > 1 ? 's' : ''}`);
+                  setRegistered(true);
+                }}
+                className="font-heading tracking-wider gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <CheckCircle className="h-4 w-4" /> Confirmar Inscrições
+              </Button>
             </div>
           </div>
         ) : (
