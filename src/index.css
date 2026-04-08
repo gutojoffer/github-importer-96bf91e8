@@ -6,25 +6,25 @@
 
 @layer base {
   :root {
-    --background: 228 33% 5%;
-    --foreground: 228 20% 93%;
+    --background: 225 30% 4%;
+    --foreground: 220 20% 93%;
 
-    --card: 226 30% 8%;
-    --card-foreground: 228 20% 93%;
+    --card: 224 28% 7%;
+    --card-foreground: 220 20% 93%;
 
-    --popover: 226 30% 8%;
-    --popover-foreground: 228 20% 93%;
+    --popover: 224 28% 7%;
+    --popover-foreground: 220 20% 93%;
 
-    --primary: 217 91% 64%;
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 259 91% 65%;
+    --secondary: 259 85% 62%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 13% 15%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 220 14% 12%;
+    --muted-foreground: 220 10% 50%;
 
-    --accent: 217 91% 64%;
+    --accent: 217 91% 60%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -33,25 +33,26 @@
     --success: 160 64% 40%;
     --gold: 37 90% 55%;
 
-    --border: 220 15% 13%;
-    --input: 220 15% 13%;
-    --ring: 217 91% 64%;
+    --border: 220 15% 12%;
+    --input: 220 15% 12%;
+    --ring: 217 91% 60%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 228 37% 7%;
-    --sidebar-foreground: 228 20% 93%;
-    --sidebar-primary: 217 91% 64%;
+    --sidebar-background: 225 32% 6%;
+    --sidebar-foreground: 220 20% 93%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 13% 15%;
-    --sidebar-accent-foreground: 228 20% 93%;
+    --sidebar-accent: 220 14% 12%;
+    --sidebar-accent-foreground: 220 20% 93%;
     --sidebar-border: 220 15% 10%;
-    --sidebar-ring: 217 91% 64%;
+    --sidebar-ring: 217 91% 60%;
 
-    --surface: 226 28% 9%;
-    --surface2: 226 24% 11%;
-    --bg2: 228 37% 7%;
-    --bg3: 222 33% 11%;
+    --surface: 224 26% 8%;
+    --surface2: 224 22% 10%;
+    --surface3: 224 20% 13%;
+    --bg2: 225 32% 6%;
+    --bg3: 222 28% 10%;
   }
 }
 
@@ -67,7 +68,24 @@
   }
 }
 
-/* Glassmorphism panel */
+/* ═══════ Surface & Panel System ═══════ */
+.surface-panel {
+  background: hsl(var(--surface));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+}
+
+.surface-card {
+  background: hsl(var(--surface));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  transition: all 0.2s ease;
+}
+.surface-card:hover {
+  border-color: rgba(79, 142, 247, 0.15);
+  background: hsl(var(--surface2));
+}
+
 .glass-panel {
   background: hsl(var(--card) / 0.6);
   backdrop-filter: blur(16px);
@@ -76,43 +94,86 @@
   border-radius: var(--radius);
 }
 
-/* Dark panel (solid variant) */
 .dark-panel {
   background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius);
 }
 
-/* Surface panel for new design */
-.surface-panel {
+/* ═══════ Accent Lines ═══════ */
+.neon-line-cyan { border-left: 3px solid hsl(var(--accent)); }
+.neon-line-magenta { border-left: 3px solid hsl(var(--secondary)); }
+.neon-line-blurple { border-left: 3px solid hsl(var(--primary)); }
+
+/* ═══════ Glow Utilities ═══════ */
+.glow-cyan { box-shadow: 0 0 20px hsl(var(--accent) / 0.2), 0 0 40px hsl(var(--accent) / 0.1); }
+.glow-magenta { box-shadow: 0 0 20px hsl(var(--secondary) / 0.2), 0 0 40px hsl(var(--secondary) / 0.1); }
+.glow-blurple { box-shadow: 0 0 20px hsl(var(--primary) / 0.2), 0 0 40px hsl(var(--primary) / 0.1); }
+
+/* ═══════ Stat Card ═══════ */
+.stat-card {
   background: hsl(var(--surface));
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, hsl(var(--primary)) 0%, transparent 100%);
+  opacity: 0.6;
+}
+.stat-card-icon {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 10px;
+  background: hsl(var(--primary) / 0.1);
+  border: 1px solid hsl(var(--primary) / 0.15);
+  color: hsl(var(--primary));
+}
+.stat-card-secondary .stat-card-icon {
+  background: hsl(var(--secondary) / 0.1);
+  border-color: hsl(var(--secondary) / 0.15);
+  color: hsl(var(--secondary));
+}
+.stat-card-secondary::before {
+  background: linear-gradient(90deg, hsl(var(--secondary)) 0%, transparent 100%);
+}
+.stat-card-gold .stat-card-icon {
+  background: hsl(var(--gold) / 0.1);
+  border-color: hsl(var(--gold) / 0.15);
+  color: hsl(var(--gold));
+}
+.stat-card-gold::before {
+  background: linear-gradient(90deg, hsl(var(--gold)) 0%, transparent 100%);
+}
+.stat-card-success .stat-card-icon {
+  background: hsl(var(--success) / 0.1);
+  border-color: hsl(var(--success) / 0.15);
+  color: hsl(var(--success));
+}
+.stat-card-success::before {
+  background: linear-gradient(90deg, hsl(var(--success)) 0%, transparent 100%);
 }
 
-/* Neon accent lines */
-.neon-line-cyan {
-  border-left: 3px solid hsl(var(--accent));
+/* ═══════ Status Badges ═══════ */
+.badge-status {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
 }
-.neon-line-magenta {
-  border-left: 3px solid hsl(var(--secondary));
-}
-.neon-line-blurple {
-  border-left: 3px solid hsl(var(--primary));
-}
+.badge-upcoming { background: hsl(var(--primary) / 0.12); color: hsl(var(--primary)); border: 1px solid hsl(var(--primary) / 0.2); }
+.badge-active { background: hsl(var(--success) / 0.12); color: hsl(var(--success)); border: 1px solid hsl(var(--success) / 0.2); }
+.badge-completed { background: rgba(255,255,255,0.05); color: hsl(var(--muted-foreground)); border: 1px solid rgba(255,255,255,0.08); }
+.badge-full { background: hsl(var(--gold) / 0.12); color: hsl(var(--gold)); border: 1px solid hsl(var(--gold) / 0.2); }
 
-/* Neon glow utilities */
-.glow-cyan {
-  box-shadow: 0 0 20px hsl(var(--accent) / 0.2), 0 0 40px hsl(var(--accent) / 0.1);
-}
-.glow-magenta {
-  box-shadow: 0 0 20px hsl(var(--secondary) / 0.2), 0 0 40px hsl(var(--secondary) / 0.1);
-}
-.glow-blurple {
-  box-shadow: 0 0 20px hsl(var(--primary) / 0.2), 0 0 40px hsl(var(--primary) / 0.1);
-}
-
-/* Slide-in animations */
+/* ═══════ Animations ═══════ */
 @keyframes slide-from-left {
   from { opacity: 0; transform: translateX(-60px); }
   to { opacity: 1; transform: translateX(0); }
@@ -155,11 +216,8 @@
 .anim-victory { animation: victory-flash 1.8s ease-out both; }
 .anim-pulse { animation: pulse-neon 2s ease-in-out infinite; }
 
-/* Victory splash animations */
-@keyframes victory-overlay-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+/* Victory splash */
+@keyframes victory-overlay-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes victory-card-in {
   0% { opacity: 0; transform: scale(0.6) translateY(30px); }
   60% { opacity: 1; transform: scale(1.05) translateY(-5px); }
@@ -185,7 +243,7 @@
 .anim-glow-pulse { animation: glow-pulse 2s ease-in-out infinite; }
 .anim-text-glow { animation: text-glow 2s ease-in-out infinite; }
 
-/* Score impact animations */
+/* Score impact */
 @keyframes score-impact {
   0% { transform: scale(1); filter: brightness(1); }
   15% { transform: scale(1.4); filter: brightness(2.5); }
@@ -204,37 +262,26 @@
 .anim-score-impact { animation: score-impact 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
 .anim-score-shake { animation: score-shake 0.3s ease-out; }
 
-/* Atmospheric background fade-in with parallax */
+/* Atmospheric */
 @keyframes atmospheric-in {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.anim-atmospheric {
-  animation: atmospheric-in 1.5s ease-out both;
-}
+.anim-atmospheric { animation: atmospheric-in 1.5s ease-out both; }
 
-/* ═══════ Arena Battle Animations ═══════ */
-
-/* Arena button hover states */
+/* ═══════ Arena Battle ═══════ */
 .arena-btn-left:hover:not(:disabled) {
   border-color: rgba(59,130,246,0.25) !important;
   background: rgba(59,130,246,0.06) !important;
 }
-.arena-btn-left:hover:not(:disabled) .arena-btn-label {
-  color: #93c5fd;
-}
+.arena-btn-left:hover:not(:disabled) .arena-btn-label { color: #93c5fd; }
 .arena-btn-right:hover:not(:disabled) {
   border-color: rgba(239,68,68,0.25) !important;
   background: rgba(239,68,68,0.06) !important;
 }
-.arena-btn-right:hover:not(:disabled) .arena-btn-label {
-  color: #fca5a5;
-}
+.arena-btn-right:hover:not(:disabled) .arena-btn-label { color: #fca5a5; }
 
-/* Score pop on change */
-.arena-score-pop {
-  animation: arena-score-pop-kf 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
+.arena-score-pop { animation: arena-score-pop-kf 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
 @keyframes arena-score-pop-kf {
   0% { transform: scale(0.8); }
   50% { transform: scale(1.12); }
@@ -243,40 +290,23 @@
 
 /* Finish overlay */
 .finish-overlay {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%; border-radius: 12px;
 }
-.finish-overlay-in {
-  animation: finish-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-.finish-overlay-out {
-  animation: finish-out 0.4s ease-out forwards;
-}
+.finish-overlay-in { animation: finish-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.finish-overlay-out { animation: finish-out 0.4s ease-out forwards; }
 @keyframes finish-in {
   0% { transform: scale(0) rotate(-10deg); opacity: 0; }
   60% { transform: scale(1.2) rotate(3deg); opacity: 1; }
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
-@keyframes finish-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
+@keyframes finish-out { from { opacity: 1; } to { opacity: 0; } }
 
-/* ═══════ Podium Animations ═══════ */
-
-/* Confetti */
+/* ═══════ Podium ═══════ */
 .podium-confetti {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  top: -20px;
+  position: absolute; width: 8px; height: 8px; top: -20px;
   animation: podium-confetti-fall var(--fall-duration) linear infinite;
-  animation-delay: var(--fall-delay);
-  opacity: 0.8;
+  animation-delay: var(--fall-delay); opacity: 0.8;
 }
 .podium-confetti-circle { border-radius: 50%; }
 .podium-confetti-square { border-radius: 2px; }
@@ -285,60 +315,33 @@
   100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
 }
 
-/* Podium block rise */
 .podium-block-rise {
   animation: podium-rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: var(--rise-delay);
-  opacity: 0;
-  transform: translateY(120px);
+  animation-delay: var(--rise-delay); opacity: 0; transform: translateY(120px);
 }
-@keyframes podium-rise {
-  to { opacity: 1; transform: translateY(0); }
-}
+@keyframes podium-rise { to { opacity: 1; transform: translateY(0); } }
 
-/* Champion glow */
-.podium-champion-glow {
-  animation: podium-glow-pulse 1.5s ease-in-out infinite;
-}
+.podium-champion-glow { animation: podium-glow-pulse 1.5s ease-in-out infinite; }
 @keyframes podium-glow-pulse {
   0%, 100% { box-shadow: 0 0 0 rgba(245,166,35,0); }
   50% { box-shadow: 0 0 20px rgba(245,166,35,0.6), 0 0 40px rgba(245,166,35,0.2); }
 }
 
-/* ═══════ Skeleton Shimmer ═══════ */
+/* ═══════ Skeleton ═══════ */
 .skeleton-shimmer {
   background: linear-gradient(90deg, #141928 25%, #1a2035 50%, #141928 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-/* ═══════ Landing Page ═══════ */
-.landing-beyblade {
-  animation: landing-spin 4s linear infinite;
-}
-@keyframes landing-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
+/* ═══════ Landing ═══════ */
+.landing-beyblade { animation: landing-spin 4s linear infinite; }
+@keyframes landing-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-/* Clean native browser input controls for dark theme */
+/* ═══════ Input Clean ═══════ */
 .arena-input-clean::-webkit-inner-spin-button,
-.arena-input-clean::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.arena-input-clean[type="number"] {
-  -moz-appearance: textfield;
-}
-.arena-input-clean::-webkit-calendar-picker-indicator {
-  filter: invert(0.7);
-  cursor: pointer;
-  opacity: 0.6;
-}
-.arena-input-clean::-webkit-calendar-picker-indicator:hover {
-  opacity: 1;
-}
+.arena-input-clean::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.arena-input-clean[type="number"] { -moz-appearance: textfield; }
+.arena-input-clean::-webkit-calendar-picker-indicator { filter: invert(0.7); cursor: pointer; opacity: 0.6; }
+.arena-input-clean::-webkit-calendar-picker-indicator:hover { opacity: 1; }
