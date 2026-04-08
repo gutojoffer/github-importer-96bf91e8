@@ -9,6 +9,7 @@ import { Player, DEFAULT_AVATARS } from '@/types/tournament';
 import EloBadge from '@/components/EloBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Camera, UserPlus, CheckCircle, Trophy, Search, X, Check } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function TournamentSignup() {
   const { tournamentId } = useParams<{ tournamentId: string }>();
