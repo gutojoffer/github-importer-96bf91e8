@@ -109,34 +109,45 @@ const AppHeader = () => {
   );
 };
 
-const ProtectedLayout = () => (
-  <ProtectedRoute>
-    <LigaProvider>
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full">
-          <AppSidebar />
-          <div className="flex-1 flex flex-col min-w-0">
-            <AppHeader />
-            <main className="flex-1 overflow-auto">
-              <Suspense fallback={<LazyFallback />}>
-                <Routes>
-                  <Route path="/home" element={<Index />} />
-                  <Route path="/tournament" element={<TournamentHub />} />
-                  <Route path="/players" element={<PlayerManager />} />
-                  <Route path="/history" element={<TournamentHistory />} />
-                  <Route path="/history/:id" element={<TournamentPodium />} />
-                  <Route path="/rankings" element={<Leaderboard />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </main>
+const ProtectedLayout = () => {
+  const { usePlayerStore: _ps } = { usePlayerStore: require('@/stores/usePlayerStore').usePlayerStore };
+  const { useTournamentStore: _ts } = { useTournamentStore: require('@/stores/useTournamentStore').useTournamentStore };
+
+  useEffect(() => {
+    const unsubPlayers = _ps.getState().subscribeRealtime();
+    const unsubTournaments = _ts.getState().subscribeRealtime();
+    return () => { unsubPlayers(); unsubTournaments(); };
+  }, []);
+
+  return (
+    <ProtectedRoute>
+      <LigaProvider>
+        <SidebarProvider>
+          <div className="min-h-screen flex w-full">
+            <AppSidebar />
+            <div className="flex-1 flex flex-col min-w-0">
+              <AppHeader />
+              <main className="flex-1 overflow-auto">
+                <Suspense fallback={<LazyFallback />}>
+                  <Routes>
+                    <Route path="/home" element={<Index />} />
+                    <Route path="/tournament" element={<TournamentHub />} />
+                    <Route path="/players" element={<PlayerManager />} />
+                    <Route path="/history" element={<TournamentHistory />} />
+                    <Route path="/history/:id" element={<TournamentPodium />} />
+                    <Route path="/rankings" element={<Leaderboard />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </main>
+            </div>
           </div>
-        </div>
-      </SidebarProvider>
-    </LigaProvider>
-  </ProtectedRoute>
-);
+        </SidebarProvider>
+      </LigaProvider>
+    </ProtectedRoute>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
