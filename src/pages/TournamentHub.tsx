@@ -755,29 +755,42 @@ export default function TournamentHub() {
     );
   }
 
+  const upcomingTournaments = useMemo(() => tournaments.filter(t => t.status === 'upcoming'), [tournaments]);
+  const completedTournaments = useMemo(() => tournaments.filter(t => t.status === 'completed'), [tournaments]);
+
+  const stats = useMemo(() => ({
+    upcoming: upcomingTournaments.length,
+    active: tournaments.filter(t => t.status === 'active').length,
+    completed: completedTournaments.length,
+    totalPlayers: new Set(tournaments.flatMap(t => t.playerIds)).size,
+  }), [tournaments, upcomingTournaments, completedTournaments]);
+
+  // Tabs
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'completed'>('upcoming');
+
   // ─── LIST VIEW ───
   return (
-    <div className="p-5 max-w-4xl mx-auto space-y-6 relative">
+    <div className="p-6 lg:p-8 max-w-[1200px] mx-auto space-y-6 relative">
       
       {/* Enrollment Modal */}
       {enrollModalTournament && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => { setEnrollModal(null); setShowQuickAdd(false); setBatchSelected(new Set()); }}>
           <div className="absolute inset-0 bg-background/80 backdrop-blur-md" />
-          <div className="relative z-10 glass-panel p-6 max-w-lg w-full max-h-[85vh] overflow-auto glow-blurple" onClick={e => e.stopPropagation()}>
+          <div className="relative z-10 surface-card p-6 max-w-lg w-full max-h-[85vh] overflow-auto border-primary/15" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-heading text-xl font-bold text-primary tracking-wider">INSCREVER BLADERS</h2>
-              <button onClick={() => { setEnrollModal(null); setShowQuickAdd(false); setBatchSelected(new Set()); }} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-lg hover:bg-muted/30">
+              <h2 className="font-heading text-xl font-bold text-foreground tracking-wider">INSCREVER BLADERS</h2>
+              <button onClick={() => { setEnrollModal(null); setShowQuickAdd(false); setBatchSelected(new Set()); }} className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-muted/30">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <p className="text-xs text-muted-foreground font-body mb-4">{enrollModalTournament.name} — {enrollModalTournament.playerIds.length} inscritos</p>
 
             {!showQuickAdd ? (
-              <Button variant="outline" size="sm" onClick={() => setShowQuickAdd(true)} className="w-full mb-4 font-heading tracking-wider gap-2 border-secondary/50 text-secondary hover:bg-secondary/10">
+              <Button variant="outline" size="sm" onClick={() => setShowQuickAdd(true)} className="w-full mb-4 font-heading tracking-wider gap-2 border-secondary/30 text-secondary hover:bg-secondary/10">
                 <UserPlus className="h-4 w-4" /> Novo Blader (Cadastro Rápido)
               </Button>
             ) : (
-              <div className="dark-panel p-4 mb-4 space-y-3 border border-secondary/30">
+              <div className="surface-panel p-4 mb-4 space-y-3 border-secondary/20">
                 <p className="font-heading text-sm font-bold text-secondary tracking-wider">CADASTRO RÁPIDO</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
@@ -822,11 +835,8 @@ export default function TournamentHub() {
               return unenrolledFiltered.length > 0 ? (
                 <button
                   onClick={() => {
-                    if (allBatchSelected) {
-                      setBatchSelected(new Set());
-                    } else {
-                      setBatchSelected(new Set(unenrolledFiltered.map(p => p.id)));
-                    }
+                    if (allBatchSelected) setBatchSelected(new Set());
+                    else setBatchSelected(new Set(unenrolledFiltered.map(p => p.id)));
                   }}
                   className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 border border-transparent mb-1 text-left"
                 >
@@ -844,15 +854,11 @@ export default function TournamentHub() {
                 const isSelected = batchSelected.has(p.id);
                 return (
                   <button key={p.id} onClick={() => {
-                    if (enrolled) {
-                      // Toggle unenroll
-                      handleEnroll(p.id);
-                    } else {
-                      // Toggle batch selection
+                    if (enrolled) handleEnroll(p.id);
+                    else {
                       setBatchSelected(prev => {
                         const next = new Set(prev);
-                        if (next.has(p.id)) next.delete(p.id);
-                        else next.add(p.id);
+                        if (next.has(p.id)) next.delete(p.id); else next.add(p.id);
                         return next;
                       });
                     }
@@ -893,9 +899,7 @@ export default function TournamentHub() {
                 </span>
                 <Button
                   onClick={() => {
-                    for (const pid of batchSelected) {
-                      enrollPlayer(enrollModalTournament.id, pid);
-                    }
+                    for (const pid of batchSelected) enrollPlayer(enrollModalTournament.id, pid);
                     toast.success(`${batchSelected.size} blader${batchSelected.size > 1 ? 's' : ''} inscrito${batchSelected.size > 1 ? 's' : ''}!`);
                     setBatchSelected(new Set());
                   }}
@@ -909,20 +913,71 @@ export default function TournamentHub() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="font-heading text-3xl font-bold tracking-wider text-foreground italic neon-line-blurple pl-3 flex items-center gap-2">
-          <Trophy className="h-7 w-7 text-primary" /> TORNEIO
-        </h1>
-        <Button onClick={() => setShowCreate(!showCreate)} className="font-heading tracking-wider gap-2 bg-primary text-primary-foreground hover:bg-primary/80">
+      {/* Page Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/15 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(79,142,247,0.1)]">
+            <Swords className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="font-heading text-2xl font-bold tracking-[0.08em] text-foreground">Torneios</h1>
+            <p className="text-sm text-muted-foreground font-body mt-0.5">Gerencie campeonatos, inscrições e rodadas da sua liga</p>
+          </div>
+        </div>
+        <Button onClick={() => setShowCreate(!showCreate)} className="font-heading tracking-wider gap-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-5 shadow-[0_0_15px_rgba(79,142,247,0.2)]">
           <Plus className="h-4 w-4" /> Criar Torneio
         </Button>
       </div>
 
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="stat-card">
+          <div className="flex items-center gap-3">
+            <div className="stat-card-icon"><Calendar className="h-[18px] w-[18px]" /></div>
+            <div>
+              <p className="text-2xl font-heading font-bold text-foreground leading-none">{stats.upcoming}</p>
+              <p className="text-[11px] text-muted-foreground font-body mt-1">Agendados</p>
+            </div>
+          </div>
+        </div>
+        <div className="stat-card stat-card-success">
+          <div className="flex items-center gap-3">
+            <div className="stat-card-icon"><Play className="h-[18px] w-[18px]" /></div>
+            <div>
+              <p className="text-2xl font-heading font-bold text-foreground leading-none">{stats.active}</p>
+              <p className="text-[11px] text-muted-foreground font-body mt-1">Em andamento</p>
+            </div>
+          </div>
+        </div>
+        <div className="stat-card stat-card-secondary">
+          <div className="flex items-center gap-3">
+            <div className="stat-card-icon"><Trophy className="h-[18px] w-[18px]" /></div>
+            <div>
+              <p className="text-2xl font-heading font-bold text-foreground leading-none">{stats.completed}</p>
+              <p className="text-[11px] text-muted-foreground font-body mt-1">Finalizados</p>
+            </div>
+          </div>
+        </div>
+        <div className="stat-card stat-card-gold">
+          <div className="flex items-center gap-3">
+            <div className="stat-card-icon"><Users className="h-[18px] w-[18px]" /></div>
+            <div>
+              <p className="text-2xl font-heading font-bold text-foreground leading-none">{stats.totalPlayers}</p>
+              <p className="text-[11px] text-muted-foreground font-body mt-1">Participantes</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Create form */}
       {showCreate && (
-        <div className="glass-panel p-5 space-y-5 neon-line-magenta anim-fade-up">
-          <h2 className="font-heading text-lg font-bold text-secondary tracking-wider">NOVO TORNEIO</h2>
+        <div className="surface-card p-6 space-y-5 border-secondary/20 anim-fade-up">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-secondary/15 flex items-center justify-center">
+              <Plus className="h-4 w-4 text-secondary" />
+            </div>
+            <h2 className="font-heading text-lg font-bold text-foreground tracking-wider">NOVO TORNEIO</h2>
+          </div>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label className="font-heading text-muted-foreground text-xs tracking-wider">Nome do Torneio</Label>
@@ -941,15 +996,12 @@ export default function TournamentHub() {
                 <Label className="font-heading text-muted-foreground text-xs tracking-wider">Fase Final</Label>
                 <div className="flex gap-1.5 h-11 items-stretch">
                   {([null, 4, 8, 16] as EliminationSize[]).map(size => (
-                    <button
-                      key={String(size)}
-                      onClick={() => setTEliminationSize(size)}
+                    <button key={String(size)} onClick={() => setTEliminationSize(size)}
                       className={`flex-1 font-heading text-[11px] font-bold tracking-wider rounded-lg border-2 transition-all ${
                         tEliminationSize === size
                           ? 'border-primary bg-primary/15 text-primary'
                           : 'border-border/50 text-muted-foreground hover:border-primary/30 hover:text-foreground'
-                      }`}
-                    >
+                      }`}>
                       {size ? `TOP ${size}` : 'SEM'}
                     </button>
                   ))}
@@ -970,10 +1022,15 @@ export default function TournamentHub() {
 
       {/* Start config panel */}
       {startingTournament && (
-        <div className="glass-panel p-5 space-y-5 neon-line-blurple anim-fade-up glow-blurple">
-          <div>
-            <h2 className="font-heading text-lg font-bold text-primary tracking-wider">INICIAR: {startingTournament.name}</h2>
-            <p className="text-xs text-muted-foreground font-body mt-1">{(tournaments.find(t => t.id === startingTournament.id)?.playerIds.length) || startingTournament.playerIds.length} jogadores inscritos</p>
+        <div className="surface-card p-6 space-y-5 border-primary/20 anim-fade-up">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
+              <Play className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <h2 className="font-heading text-lg font-bold text-foreground tracking-wider">INICIAR: {startingTournament.name}</h2>
+              <p className="text-xs text-muted-foreground font-body mt-0.5">{(tournaments.find(t => t.id === startingTournament.id)?.playerIds.length) || startingTournament.playerIds.length} jogadores inscritos</p>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -997,15 +1054,12 @@ export default function TournamentHub() {
               <Label className="font-heading text-muted-foreground text-xs tracking-wider">Fase Final</Label>
               <div className="flex gap-1.5 h-11 items-stretch">
                 {([null, 4, 8, 16] as EliminationSize[]).map(size => (
-                  <button
-                    key={String(size)}
-                    onClick={() => setStartEliminationSize(size)}
+                  <button key={String(size)} onClick={() => setStartEliminationSize(size)}
                     className={`flex-1 font-heading text-[11px] font-bold tracking-wider rounded-lg border-2 transition-all ${
                       (startEliminationSize ?? startingTournament.eliminationSize) === size
                         ? 'border-primary bg-primary/15 text-primary'
                         : 'border-border/50 text-muted-foreground hover:border-primary/30 hover:text-foreground'
-                    }`}
-                  >
+                    }`}>
                     {size ? `T${size}` : 'SEM'}
                   </button>
                 ))}
@@ -1013,7 +1067,7 @@ export default function TournamentHub() {
             </div>
           </div>
           <div className="flex gap-3 pt-1">
-            <Button onClick={handleStartTournament} className="font-heading tracking-wider gap-2 bg-primary text-primary-foreground h-11 px-6">
+            <Button onClick={handleStartTournament} className="font-heading tracking-wider gap-2 bg-primary text-primary-foreground h-11 px-6 shadow-[0_0_15px_rgba(79,142,247,0.2)]">
               <Play className="h-4 w-4" /> INICIAR TORNEIO
             </Button>
             <Button variant="outline" onClick={() => setStartingTournament(null)} className="font-heading tracking-wider h-11">Cancelar</Button>
@@ -1021,78 +1075,177 @@ export default function TournamentHub() {
         </div>
       )}
 
+      {/* Tabs */}
+      <div className="flex items-center gap-1 p-1 rounded-xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] w-fit">
+        <button
+          onClick={() => setActiveTab('upcoming')}
+          className={`px-4 py-2 rounded-lg text-sm font-heading font-semibold tracking-wider transition-all ${
+            activeTab === 'upcoming'
+              ? 'bg-primary/15 text-primary border border-primary/20'
+              : 'text-muted-foreground hover:text-foreground border border-transparent'
+          }`}
+        >
+          Agendados ({upcomingTournaments.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('completed')}
+          className={`px-4 py-2 rounded-lg text-sm font-heading font-semibold tracking-wider transition-all ${
+            activeTab === 'completed'
+              ? 'bg-primary/15 text-primary border border-primary/20'
+              : 'text-muted-foreground hover:text-foreground border border-transparent'
+          }`}
+        >
+          Finalizados ({completedTournaments.length})
+        </button>
+      </div>
+
       {/* Tournament List */}
-      <div className="space-y-4">
-        <h2 className="font-heading text-xl font-bold tracking-wider text-muted-foreground">TORNEIOS AGENDADOS</h2>
-        {tournaments.filter(t => t.status === 'upcoming').length === 0 ? (
-          <div className="glass-panel p-12 text-center">
-            <Trophy className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="text-muted-foreground font-body text-sm">Nenhum torneio criado ainda.</p>
-          </div>
-        ) : (
-          tournaments.filter(t => t.status === 'upcoming').map((t, i) => (
-            <div key={t.id} className="glass-panel p-4 anim-fade-up" style={{ animationDelay: `${i * 80}ms` }}>
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-heading text-lg font-bold text-foreground italic">{t.name}</h3>
-                    {t.eliminationSize && (
-                      <span className="text-[9px] font-heading tracking-wider text-accent bg-accent/10 px-2 py-0.5 rounded border border-accent/20">
-                        TOP {t.eliminationSize}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1 font-body">
-                    <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{new Date(t.date).toLocaleDateString('pt-BR')}</span>
-                    <span className="flex items-center gap-1"><Users className="h-3 w-3" />{t.playerIds.length} inscritos</span>
-                  </div>
-                  {t.playerIds.length > 0 && (
-                    <div className="flex -space-x-2 mt-2">
-                      {t.playerIds.slice(0, 8).map(pid => {
-                        const p = getPlayer(pid);
-                        if (!p) return null;
-                        return (
-                          <Avatar key={pid} className="h-6 w-6 border border-card">
-                            {p.avatar.startsWith('http') || p.avatar.startsWith('data:') ? <AvatarImage src={p.avatar} /> : <AvatarFallback className="bg-muted text-[8px]">{p.avatar}</AvatarFallback>}
-                          </Avatar>
-                        );
-                      })}
-                      {t.playerIds.length > 8 && <span className="text-[10px] text-muted-foreground ml-2">+{t.playerIds.length - 8}</span>}
+      {activeTab === 'upcoming' && (
+        <div className="space-y-3">
+          {upcomingTournaments.length === 0 ? (
+            <div className="surface-card p-14 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-primary/8 border border-primary/12 flex items-center justify-center mx-auto mb-4">
+                <Trophy className="h-7 w-7 text-primary/50" />
+              </div>
+              <p className="font-heading text-lg text-foreground font-bold mb-1">Nenhum torneio agendado</p>
+              <p className="text-sm text-muted-foreground font-body mb-5">Crie seu primeiro torneio e comece a competição!</p>
+              <Button onClick={() => setShowCreate(true)} className="font-heading tracking-wider gap-2 bg-primary text-primary-foreground">
+                <Plus className="h-4 w-4" /> Criar Torneio
+              </Button>
+            </div>
+          ) : (
+            upcomingTournaments.map((t, i) => {
+              const spotsLeft = (t.maxPlayers || 32) - t.playerIds.length;
+              const fillPercent = Math.min(100, (t.playerIds.length / (t.maxPlayers || 32)) * 100);
+              return (
+                <div key={t.id} className="surface-card p-0 anim-fade-up overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
+                  {/* Top accent */}
+                  <div className="h-[2px] w-full bg-gradient-to-r from-primary to-transparent" />
+                  
+                  <div className="p-5 flex items-start gap-5">
+                    {/* Left: Info */}
+                    <div className="flex-1 min-w-0 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <h3 className="font-heading text-lg font-bold text-foreground tracking-wide truncate">{t.name}</h3>
+                        {t.eliminationSize && (
+                          <span className="badge-status badge-upcoming text-[10px] py-0.5">TOP {t.eliminationSize}</span>
+                        )}
+                        <span className={`badge-status text-[10px] py-0.5 ${
+                          spotsLeft <= 0 ? 'badge-full' : spotsLeft <= 5 ? 'badge-full' : 'badge-upcoming'
+                        }`}>
+                          {spotsLeft <= 0 ? 'Lotado' : spotsLeft <= 5 ? 'Quase lotado' : 'Aberto'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-5 text-xs text-muted-foreground font-body">
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {new Date(t.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Users className="h-3.5 w-3.5" />
+                          {t.playerIds.length} / {t.maxPlayers || 32} inscritos
+                        </span>
+                      </div>
+
+                      {/* Progress bar */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 h-1.5 rounded-full bg-[rgba(255,255,255,0.04)]">
+                          <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary/60 transition-all duration-500" style={{ width: `${fillPercent}%` }} />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-body">{Math.round(fillPercent)}%</span>
+                      </div>
+
+                      {/* Avatar stack */}
+                      {t.playerIds.length > 0 && (
+                        <div className="flex items-center gap-2">
+                          <div className="flex -space-x-2">
+                            {t.playerIds.slice(0, 6).map(pid => {
+                              const p = getPlayer(pid);
+                              if (!p) return null;
+                              return (
+                                <Avatar key={pid} className="h-7 w-7 border-2 border-[hsl(var(--surface))]">
+                                  {p.avatar.startsWith('http') || p.avatar.startsWith('data:') ? <AvatarImage src={p.avatar} /> : <AvatarFallback className="bg-muted text-[9px]">{p.avatar}</AvatarFallback>}
+                                </Avatar>
+                              );
+                            })}
+                          </div>
+                          {t.playerIds.length > 6 && <span className="text-[11px] text-muted-foreground font-body">+{t.playerIds.length - 6}</span>}
+                        </div>
+                      )}
                     </div>
-                  )}
+
+                    {/* Right: Actions */}
+                    <div className="flex items-center gap-2 shrink-0 pt-1">
+                      <Button size="sm" onClick={() => setEnrollModal(t.id)}
+                        className="font-heading tracking-wider gap-1.5 bg-secondary/15 text-secondary hover:bg-secondary/25 border border-secondary/25 h-9 px-3.5">
+                        <UserPlus className="h-3.5 w-3.5" /> Inscrever
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => { setStartingTournament(t); setStartEliminationSize(t.eliminationSize || null); }}
+                        className="font-heading tracking-wider gap-1.5 border-primary/30 text-primary hover:bg-primary/10 h-9 px-3.5" disabled={t.playerIds.length < 2}>
+                        <Play className="h-3.5 w-3.5" /> Iniciar
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => openEditModal(t)}
+                        className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted/30">
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => setConfirmDeleteTournament(t.id)}
+                        className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2 shrink-0">
-                  <Button size="sm" onClick={() => setEnrollModal(t.id)}
-                    className="font-heading tracking-wider gap-1 bg-secondary/20 text-secondary hover:bg-secondary/30 border border-secondary/30">
-                    <UserPlus className="h-3.5 w-3.5" /> Inscrever
-                  </Button>
-                   <Button variant="outline" size="sm" onClick={() => openEditModal(t)}
-                    className="font-heading tracking-wider gap-1 border-muted text-muted-foreground hover:bg-muted/20 hover:text-foreground">
-                    <Pencil className="h-3.5 w-3.5" /> Editar
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => { setStartingTournament(t); setStartEliminationSize(t.eliminationSize || null); }}
-                    className="font-heading tracking-wider gap-1 border-primary/50 text-primary hover:bg-primary/10" disabled={t.playerIds.length < 2}>
-                    <Play className="h-3.5 w-3.5" /> Iniciar
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteTournament(t.id)}
-                    className="font-heading tracking-wider gap-1 text-destructive hover:bg-destructive/10">
-                    <Trash2 className="h-3.5 w-3.5" /> Excluir
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {activeTab === 'completed' && (
+        <div className="space-y-3">
+          {completedTournaments.length === 0 ? (
+            <div className="surface-card p-14 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-muted/30 flex items-center justify-center mx-auto mb-4">
+                <Clock className="h-7 w-7 text-muted-foreground/50" />
+              </div>
+              <p className="font-heading text-lg text-foreground font-bold mb-1">Nenhum torneio finalizado</p>
+              <p className="text-sm text-muted-foreground font-body">Torneios encerrados aparecerão aqui.</p>
+            </div>
+          ) : (
+            completedTournaments.map((t, i) => (
+              <div key={t.id} className="surface-card p-0 anim-fade-up overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
+                <div className="h-[2px] w-full bg-gradient-to-r from-muted-foreground/30 to-transparent" />
+                <div className="p-5 flex items-center gap-5">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3">
+                      <h3 className="font-heading text-lg font-bold text-foreground/70 tracking-wide truncate">{t.name}</h3>
+                      <span className="badge-status badge-completed text-[10px] py-0.5">Finalizado</span>
+                    </div>
+                    <div className="flex items-center gap-5 text-xs text-muted-foreground font-body mt-1.5">
+                      <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" />{new Date(t.date).toLocaleDateString('pt-BR')}</span>
+                      <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" />{t.playerIds.length} participantes</span>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/history/${t.id}`)}
+                    className="font-heading tracking-wider gap-1.5 h-9 px-3.5 text-muted-foreground hover:text-foreground">
+                    <Award className="h-3.5 w-3.5" /> Ver Resultado
                   </Button>
                 </div>
               </div>
-            </div>
-          ))
-        )}
-      </div>
+            ))
+          )}
+        </div>
+      )}
 
       {/* Edit Tournament Modal */}
       {editingTournament && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setEditingTournament(null)}>
           <div className="absolute inset-0 bg-background/80 backdrop-blur-md" />
-          <div className="relative z-10 glass-panel p-6 max-w-md w-full glow-blurple anim-fade-up" onClick={e => e.stopPropagation()}>
+          <div className="relative z-10 surface-card p-6 max-w-md w-full border-primary/15 anim-fade-up" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h2 className="font-heading text-xl font-bold text-primary tracking-wider">EDITAR TORNEIO</h2>
-              <button onClick={() => setEditingTournament(null)} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-lg hover:bg-muted/30">
+              <h2 className="font-heading text-xl font-bold text-foreground tracking-wider">EDITAR TORNEIO</h2>
+              <button onClick={() => setEditingTournament(null)} className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-muted/30">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -1115,15 +1268,12 @@ export default function TournamentHub() {
                 <Label className="font-heading text-muted-foreground text-xs tracking-wider">Fase Final</Label>
                 <div className="flex gap-1.5 h-11 items-stretch">
                   {([null, 4, 8, 16] as EliminationSize[]).map(size => (
-                    <button
-                      key={String(size)}
-                      onClick={() => setEditEliminationSize(size)}
+                    <button key={String(size)} onClick={() => setEditEliminationSize(size)}
                       className={`flex-1 font-heading text-[11px] font-bold tracking-wider rounded-lg border-2 transition-all ${
                         editEliminationSize === size
                           ? 'border-primary bg-primary/15 text-primary'
                           : 'border-border/50 text-muted-foreground hover:border-primary/30 hover:text-foreground'
-                      }`}
-                    >
+                      }`}>
                       {size ? `TOP ${size}` : 'SEM'}
                     </button>
                   ))}
