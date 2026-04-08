@@ -38,6 +38,7 @@ export default {
         success: "hsl(var(--success))",
         surface: "hsl(var(--surface))",
         surface2: "hsl(var(--surface2))",
+        surface3: "hsl(var(--surface3))",
       },
       borderRadius: {
         lg: "var(--radius)",
