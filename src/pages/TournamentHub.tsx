@@ -765,19 +765,7 @@ export default function TournamentHub() {
     );
   }
 
-  const upcomingTournaments = useMemo(() => tournaments.filter(t => t.status === 'upcoming'), [tournaments]);
-  const completedTournaments = useMemo(() => tournaments.filter(t => t.status === 'completed'), [tournaments]);
-
-  const stats = useMemo(() => ({
-    upcoming: upcomingTournaments.length,
-    active: tournaments.filter(t => t.status === 'active').length,
-    completed: completedTournaments.length,
-    totalPlayers: new Set(tournaments.flatMap(t => t.playerIds)).size,
-  }), [tournaments, upcomingTournaments, completedTournaments]);
-
-  // Tabs
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'completed'>('upcoming');
-
+  const stats = listStats;
   // ─── LIST VIEW ───
   return (
     <div className="p-6 lg:p-8 max-w-[1200px] mx-auto space-y-6 relative">
