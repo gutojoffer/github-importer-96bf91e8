@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react';
+import { AdminSidebar } from '@/components/AdminSidebar';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation, Link, useNavigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -159,6 +160,8 @@ const ProtectedLayout = () => {
   );
 };
 
+const AdminSidebarWrapper = () => <AdminSidebar />;
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -173,6 +176,33 @@ const App = () => (
             <Route path="/recuperar-senha" element={<ForgotPassword />} />
             <Route path="/nova-senha" element={<ResetPassword />} />
             <Route path="/signup/:tournamentId" element={<Suspense fallback={<LazyFallback />}><TournamentSignup /></Suspense>} />
+            <Route path="/admin/*" element={
+              <AdminRoute>
+                <SidebarProvider>
+                  <div className="min-h-screen flex w-full">
+                    <AdminSidebarWrapper />
+                    <div className="flex-1 flex flex-col min-w-0">
+                      <header className="h-12 flex items-center border-b border-[rgba(255,255,255,0.06)] bg-[hsl(var(--bg2))/0.8] backdrop-blur-md px-4 sticky top-0 z-50">
+                        <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
+                        <div className="h-5 w-px bg-[rgba(255,255,255,0.08)] mx-3" />
+                        <span className="font-heading text-sm font-bold text-foreground">Admin Panel</span>
+                      </header>
+                      <main className="flex-1 overflow-auto">
+                        <Suspense fallback={<LazyFallback />}>
+                          <Routes>
+                            <Route path="/" element={<AdminDashboard />} />
+                            <Route path="/beyblades" element={<AdminBeyblades />} />
+                            <Route path="/release-notes" element={<AdminReleaseNotes />} />
+                            <Route path="/ligas" element={<AdminLigas />} />
+                            <Route path="/config" element={<AdminConfig />} />
+                          </Routes>
+                        </Suspense>
+                      </main>
+                    </div>
+                  </div>
+                </SidebarProvider>
+              </AdminRoute>
+            } />
             <Route path="*" element={<ProtectedLayout />} />
           </Routes>
         </AuthProvider>
