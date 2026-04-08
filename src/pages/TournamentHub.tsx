@@ -18,7 +18,7 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import BracketTree from '@/components/BracketTree';
 import EliminationBracket from '@/components/EliminationBracket';
 import EliminationTransition from '@/components/EliminationTransition';
-import ArenaBackground from '@/components/ArenaBackground';
+
 import FinishOverlay from '@/components/FinishOverlay';
 import LigaLogo from '@/components/LigaLogo';
 import EloBadge from '@/components/EloBadge';
@@ -590,42 +590,48 @@ export default function TournamentHub() {
 
         {/* Current match */}
         {currentMatch && players.length > 0 ? (
-          <div className="relative rounded-xl overflow-hidden p-4 space-y-4" key={`${currentMatch.id}-${vsKey}`}>
-            <ArenaBackground />
+          <div className="relative rounded-xl overflow-hidden space-y-0" key={`${currentMatch.id}-${vsKey}`}>
             <FinishOverlay finishType={finishOverlay} onDone={() => setFinishOverlay(null)} />
-            <div className="relative z-10">
-              <VersusScreen
-                player1={getPlayer(currentMatch.player1Id)!}
-                player2={getPlayer(currentMatch.player2Id)!}
-                arenaName={isElim ? (currentRound?.label || 'ELIMINATÓRIA') : 'ARENA PRINCIPAL'}
-                player1Points={currentMatch.player1Points}
-                player2Points={currentMatch.player2Points}
-                pointsToWin={activeTournament.pointsToWin}
+            <VersusScreen
+              player1={getPlayer(currentMatch.player1Id)!}
+              player2={getPlayer(currentMatch.player2Id)!}
+              arenaName={isElim ? (currentRound?.label || 'ELIMINATÓRIA') : 'ARENA PRINCIPAL'}
+              player1Points={currentMatch.player1Points}
+              player2Points={currentMatch.player2Points}
+              pointsToWin={activeTournament.pointsToWin}
+            />
+            <div
+              className="grid gap-3 px-3 py-4"
+              style={{
+                gridTemplateColumns: '1fr 1px 1fr',
+                background: 'radial-gradient(ellipse at center, #0d1a2e 0%, #090b12 70%)',
+              }}
+            >
+              <ResultButtons
+                playerName={getPlayer(currentMatch.player1Id)?.nickname || getPlayer(currentMatch.player1Id)?.name || ''}
+                side="left"
+                onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player1Id, ft, isElim)}
+                disabled={!!currentMatch.result}
               />
-              <div className="flex justify-center">
-                <Button
-                  variant="ghost"
+              <div style={{ background: 'rgba(255,255,255,0.04)' }} />
+              <ResultButtons
+                playerName={getPlayer(currentMatch.player2Id)?.nickname || getPlayer(currentMatch.player2Id)?.name || ''}
+                side="right"
+                onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player2Id, ft, isElim)}
+                disabled={!!currentMatch.result}
+              />
+              <div className="flex justify-center" style={{ gridColumn: '1 / -1' }}>
+                <button
                   onClick={() => handleUndoPoint(currentMatch.id, isElim)}
                   disabled={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0}
-                  className="font-heading tracking-wider text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+                  className="font-heading tracking-wider text-xs gap-1.5 text-muted-foreground hover:text-foreground/70 flex items-center gap-1.5 py-2 transition-opacity disabled:opacity-20"
+                  style={{ opacity: 0.4 }}
                   title={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0 ? 'Nenhum ponto para desfazer' : 'Desfazer último ponto'}
+                  onMouseEnter={e => (e.currentTarget.style.opacity = '0.7')}
+                  onMouseLeave={e => (e.currentTarget.style.opacity = '0.4')}
                 >
                   <Undo2 className="h-4 w-4" /> Desfazer último ponto
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 gap-4 px-2">
-                <ResultButtons
-                  playerName={getPlayer(currentMatch.player1Id)?.nickname || getPlayer(currentMatch.player1Id)?.name || ''}
-                  side="left"
-                  onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player1Id, ft, isElim)}
-                  disabled={!!currentMatch.result}
-                />
-                <ResultButtons
-                  playerName={getPlayer(currentMatch.player2Id)?.nickname || getPlayer(currentMatch.player2Id)?.name || ''}
-                  side="right"
-                  onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player2Id, ft, isElim)}
-                  disabled={!!currentMatch.result}
-                />
+                </button>
               </div>
             </div>
           </div>
