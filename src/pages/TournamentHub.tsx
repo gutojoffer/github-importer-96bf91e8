@@ -584,7 +584,12 @@ export default function TournamentHub() {
 
         {/* Current match */}
         {currentMatch && players.length > 0 ? (
-          <div className="glass-panel p-4 space-y-4 glow-blurple" key={`${currentMatch.id}-${vsKey}`}>
+          <div className="glass-panel p-4 space-y-4 glow-blurple relative" key={`${currentMatch.id}-${vsKey}`}>
+            {/* Liga logo watermark */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+              <LigaLogo size={64} className="opacity-[0.12]" />
+            </div>
+            <div className="relative z-10">
             <VersusScreen
               player1={getPlayer(currentMatch.player1Id)!}
               player2={getPlayer(currentMatch.player2Id)!}
