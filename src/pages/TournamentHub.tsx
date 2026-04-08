@@ -125,6 +125,28 @@ export default function TournamentHub() {
     toast.success('Torneio criado!');
   }, [tName, tDate, tMaxPlayers, tEliminationSize, createTournament]);
 
+  // ─── Edit Tournament ───
+  const openEditModal = useCallback((t: Tournament) => {
+    setEditingTournament(t);
+    setEditName(t.name);
+    setEditDate(t.date);
+    setEditMaxPlayers(t.maxPlayers || 32);
+    setEditEliminationSize(t.eliminationSize || null);
+  }, []);
+
+  const handleSaveEdit = useCallback(() => {
+    if (!editingTournament) return;
+    if (!editName.trim() || !editDate) { toast.error('Preencha nome e data!'); return; }
+    updateTournament(editingTournament.id, {
+      name: editName.trim(),
+      date: editDate,
+      maxPlayers: editMaxPlayers,
+      eliminationSize: editEliminationSize,
+    });
+    setEditingTournament(null);
+    toast.success('Torneio atualizado!');
+  }, [editingTournament, editName, editDate, editMaxPlayers, editEliminationSize, updateTournament]);
+
   // ─── Enrollment ───
   const handleEnroll = useCallback((playerId: string) => {
     if (!enrollModalTournament) return;
