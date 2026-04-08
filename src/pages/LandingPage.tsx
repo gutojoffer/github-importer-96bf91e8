@@ -186,6 +186,7 @@ export default function LandingPage() {
             width: '55%',
             objectFit: 'contain',
             objectPosition: 'bottom right',
+            mixBlendMode: 'screen',
             maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%), linear-gradient(to top, rgba(0,0,0,1) 90%, rgba(0,0,0,0) 100%)',
             WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%), linear-gradient(to top, rgba(0,0,0,1) 90%, rgba(0,0,0,0) 100%)',
             maskComposite: 'intersect',
@@ -197,7 +198,7 @@ export default function LandingPage() {
           src={promoImage}
           alt=""
           className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none md:hidden"
-          style={{ opacity: 0.15 }}
+          style={{ opacity: 0.12, mixBlendMode: 'screen' }}
         />
 
         {/* Content */}
