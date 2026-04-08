@@ -12,8 +12,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import LigaLogo from "@/components/LigaLogo";
 import SkeletonBox from "@/components/SkeletonBox";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Settings as SettingsIcon, LogOut, ChevronRight, User } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { ChevronRight } from "lucide-react";
 import Index from "./pages/Index";
 import PlayerManager from "@/pages/PlayerManager";
 import TournamentHub from "@/pages/TournamentHub";
@@ -54,27 +53,7 @@ const BREADCRUMB_MAP: Record<string, { label: string; path: string }> = {
 
 const AppHeader = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { nomeLiga } = useLiga();
-  const { user, signOut } = useAuth();
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  useEffect(() => {
-    if (searchOpen && searchRef.current) searchRef.current.focus();
-  }, [searchOpen]);
 
   // Build breadcrumb
   const pathParts = location.pathname.split('/').filter(Boolean);
@@ -91,7 +70,6 @@ const AppHeader = () => {
       if (mapped) {
         breadcrumbs.push({ label: mapped.label, path: mapped.path, active: isLast });
       } else if (i > 0) {
-        // ID segment — could be tournament result etc
         if (pathParts[i - 1] === 'history') {
           breadcrumbs.push({ label: 'Resultado', path: accumulated, active: isLast });
         }
@@ -99,25 +77,20 @@ const AppHeader = () => {
     });
   }
 
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/');
-  };
-
-  const userEmail = user?.email || '';
-  const userLiga = nomeLiga || userEmail.split('@')[0];
-
   return (
-    <header className="h-14 flex items-center gap-3 border-b border-[rgba(255,255,255,0.07)] bg-[hsl(var(--bg2))] px-4 sticky top-0 z-50">
+    <header className="h-12 flex items-center gap-3 border-b border-[rgba(255,255,255,0.06)] bg-[hsl(var(--bg2))/0.8] backdrop-blur-md px-4 sticky top-0 z-50">
       <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
+
+      {/* Divider */}
+      <div className="h-5 w-px bg-[rgba(255,255,255,0.08)]" />
 
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-1.5 flex-1 min-w-0">
         {breadcrumbs.map((bc, i) => (
           <span key={bc.path} className="flex items-center gap-1.5 min-w-0">
-            {i > 0 && <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />}
+            {i > 0 && <ChevronRight className="h-3 w-3 text-muted-foreground/50 shrink-0" />}
             {bc.active ? (
-              <span className="font-heading text-sm font-bold text-foreground truncate">{bc.label}</span>
+              <span className="font-heading text-sm font-bold text-foreground truncate tracking-wide">{bc.label}</span>
             ) : (
               <Link to={bc.path} className="font-heading text-sm text-muted-foreground hover:text-foreground transition-colors truncate">
                 {bc.label}
@@ -127,67 +100,10 @@ const AppHeader = () => {
         ))}
       </nav>
 
-      {/* Center: Liga info */}
-      <div className="hidden md:flex items-center gap-2">
-        <LigaLogo size={28} />
-        <span className="font-heading text-sm font-semibold text-foreground truncate max-w-[160px]">{userLiga}</span>
-      </div>
-
-      {/* Right side */}
-      <div className="flex items-center gap-2">
-        {/* Search */}
-        {searchOpen ? (
-          <input
-            ref={searchRef}
-            type="text"
-            placeholder="Buscar..."
-            className="w-40 sm:w-56 px-3 py-1.5 rounded-lg text-sm font-body bg-[hsl(var(--surface))] border border-[rgba(255,255,255,0.12)] text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-all"
-            onBlur={() => setSearchOpen(false)}
-            onKeyDown={(e) => e.key === 'Escape' && setSearchOpen(false)}
-          />
-        ) : (
-          <button
-            onClick={() => setSearchOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[rgba(255,255,255,0.12)] text-sm text-muted-foreground hover:bg-[hsl(var(--surface))] hover:text-foreground transition-all font-body"
-          >
-            <Search className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Buscar</span>
-          </button>
-        )}
-
-        {/* User avatar dropdown */}
-        <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setDropdownOpen(o => !o)}
-            className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary hover:bg-primary/30 transition-colors"
-          >
-            <User className="h-4 w-4" />
-          </button>
-          {dropdownOpen && (
-            <div
-              className="absolute right-0 top-10 w-56 rounded-xl p-2 z-50 shadow-xl"
-              style={{ background: '#141928', border: '1px solid rgba(255,255,255,0.12)' }}
-            >
-              <div className="px-3 py-2">
-                <p className="font-heading text-sm font-bold text-foreground truncate">{userLiga}</p>
-                <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
-              </div>
-              <div className="h-px bg-[rgba(255,255,255,0.07)] my-1" />
-              <button
-                onClick={() => { setDropdownOpen(false); navigate('/settings'); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-[hsl(var(--surface))] rounded-lg transition-colors font-body"
-              >
-                <SettingsIcon className="h-4 w-4" /> Configurações
-              </button>
-              <button
-                onClick={() => { setDropdownOpen(false); handleLogout(); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors font-body"
-              >
-                <LogOut className="h-4 w-4" /> Sair
-              </button>
-            </div>
-          )}
-        </div>
+      {/* Liga badge */}
+      <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)]">
+        <LigaLogo size={22} />
+        <span className="font-body text-xs font-medium text-muted-foreground truncate max-w-[140px]">{nomeLiga}</span>
       </div>
     </header>
   );
