@@ -20,7 +20,7 @@ const SYSTEM_ITEMS = [
 export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { nomeLiga } = useLiga();
+  const { nomeLiga, logoUrl } = useLiga();
   const { signOut } = useAuth();
 
   const { data: activeTournaments } = useQuery({
@@ -101,32 +101,36 @@ export function AppSidebar() {
         </nav>
       </div>
 
-      <div className="shrink-0" style={{ padding: '14px 16px', borderTop: '1px solid rgba(255,255,255,.05)' }}>
+      <div className="shrink-0" style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,.06)' }}>
         <div
-          className="flex items-center gap-2.5 rounded-[10px] cursor-pointer transition-all duration-150 mb-2"
-          style={{ padding: '10px 12px', background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)' }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.1)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.06)'; }}
+          className="flex items-center gap-2.5 cursor-pointer transition-all duration-150 mb-2"
+          style={{ padding: '12px 14px', background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 12 }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.14)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.08)'; }}
           onClick={() => navigate('/settings')}
         >
-          <div className="relative shrink-0" style={{ width: 34, height: 34 }}>
-            <div className="w-full h-full rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1e3a8a, #7c3aed)', border: '2px solid rgba(37,99,235,.35)' }}>
-              <span className="font-heading text-[13px] font-bold text-white leading-none select-none">{initials}</span>
-            </div>
+          <div className="relative shrink-0" style={{ width: 38, height: 38 }}>
+            {logoUrl ? (
+              <img src={logoUrl} alt={nomeLiga} className="w-full h-full rounded-full object-cover" style={{ border: '2px solid rgba(37,99,235,.4)' }} />
+            ) : (
+              <div className="w-full h-full rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1e3a8a, #7c3aed)', border: '2px solid rgba(37,99,235,.4)' }}>
+                <span className="font-heading text-[14px] font-bold text-white leading-none select-none">{initials}</span>
+              </div>
+            )}
             <div className="absolute bottom-0 right-0" style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981', border: '2px solid #0a0d18' }} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-semibold truncate" style={{ color: '#E2E8F0' }}>{nomeLiga || 'Minha Liga'}</p>
             <p className="text-[11px]" style={{ color: '#10B981' }}>● Organizador</p>
           </div>
-          <ChevronRight size={14} style={{ color: '#374151' }} className="shrink-0" />
+          <ChevronRight size={14} style={{ color: '#374151' }} className="shrink-0 ml-auto" />
         </div>
 
         <button
           onClick={handleSignOut}
           className="flex items-center gap-2 w-full rounded-lg cursor-pointer transition-all duration-150"
-          style={{ padding: '8px 12px', color: '#4B5563', fontSize: 12 }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#F87171'; e.currentTarget.style.background = 'rgba(239,68,68,.06)'; }}
+          style={{ padding: '7px 14px', color: '#4B5563', fontSize: 12, fontWeight: 500 }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = '#F87171'; e.currentTarget.style.background = 'rgba(239,68,68,.05)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.color = '#4B5563'; e.currentTarget.style.background = ''; }}
         >
           <LogOut size={14} strokeWidth={1.4} />

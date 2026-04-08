@@ -170,31 +170,36 @@ export function AppTopbar() {
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="flex items-center gap-2 transition-all duration-150"
             style={{
-              padding: '5px 12px 5px 6px',
-              background: 'rgba(255,255,255,.04)',
-              border: '1px solid rgba(255,255,255,.08)',
-              borderRadius: 10,
+              padding: '5px 10px 5px 5px',
+              background: 'rgba(255,255,255,.05)',
+              border: '1px solid rgba(255,255,255,.09)',
+              borderRadius: 20,
+              maxWidth: 200,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,.08)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,.15)';
+              e.currentTarget.style.background = 'rgba(255,255,255,.09)';
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,.16)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,.04)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,.08)';
+              e.currentTarget.style.background = 'rgba(255,255,255,.05)';
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,.09)';
             }}
           >
-            <div className="rounded-full flex items-center justify-center shrink-0" style={{
-              width: 26, height: 26,
-              background: 'linear-gradient(135deg, #1e3a8a, #7c3aed)',
-            }}>
-              <span className="font-heading text-[11px] font-bold text-white leading-none select-none">{initials}</span>
+            {logoUrl ? (
+              <img src={logoUrl} alt={nomeLiga} className="shrink-0 rounded-full object-cover" style={{ width: 30, height: 30 }} />
+            ) : (
+              <div className="shrink-0 rounded-full flex items-center justify-center" style={{
+                width: 30, height: 30,
+                background: 'linear-gradient(135deg, #1e3a8a, #7c3aed)',
+              }}>
+                <span className="font-heading text-[12px] font-bold text-white leading-none select-none">{initials}</span>
+              </div>
+            )}
+            <div className="flex flex-col text-left overflow-hidden">
+              <span className="text-[12px] font-semibold" style={{ color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}>{nomeLiga || 'Liga'}</span>
+              <span className="text-[10px]" style={{ color: '#64748B' }}>Organizador</span>
             </div>
-            <div className="flex flex-col text-left min-w-0">
-              <span className="text-[12px] font-semibold truncate max-w-[100px]" style={{ color: '#E2E8F0' }}>{nomeLiga || 'Liga'}</span>
-              <span className="text-[10px]" style={{ color: '#4B5563' }}>Organizador</span>
-            </div>
-            <ChevronDown size={14} style={{ color: '#4B5563' }} className="shrink-0" />
+            <ChevronDown size={12} style={{ color: '#4B5563' }} className="shrink-0" />
           </button>
 
           {/* Dropdown */}
