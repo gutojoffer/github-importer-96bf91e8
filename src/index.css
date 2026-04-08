@@ -379,3 +379,23 @@
   0%, 100% { box-shadow: 0 0 0 rgba(245,166,35,0); }
   50% { box-shadow: 0 0 20px rgba(245,166,35,0.6), 0 0 40px rgba(245,166,35,0.2); }
 }
+
+/* ═══════ Skeleton Shimmer ═══════ */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #141928 25%, #1a2035 50%, #141928 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ═══════ Landing Page ═══════ */
+.landing-beyblade {
+  animation: landing-spin 4s linear infinite;
+}
+@keyframes landing-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
