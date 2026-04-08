@@ -176,14 +176,14 @@ export default function LandingPage() {
 
         {/* Promo image right */}
         <div
-          className="absolute right-0 bottom-0 h-[95%] w-[45%] pointer-events-none hidden md:block"
+          className="absolute right-0 bottom-0 top-0 w-[50%] pointer-events-none hidden md:block flex items-end justify-end"
           style={{ animation: 'heroSlideRight 1s ease-out 0.3s both' }}
         >
           <img
             src={promoImage}
             alt="Beyblade X"
-            className="h-full w-full object-contain object-right-bottom"
-            style={{ maskImage: 'linear-gradient(to left, rgba(0,0,0,0.85) 30%, transparent 85%)' }}
+            className="absolute bottom-0 right-0 w-full max-h-full object-contain object-right-bottom"
+            style={{ maskImage: 'linear-gradient(to left, rgba(0,0,0,0.9) 40%, transparent 90%)' }}
           />
         </div>
         {/* Mobile bg */}
