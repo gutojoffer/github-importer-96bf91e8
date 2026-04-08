@@ -12,6 +12,7 @@ import { Crown, ArrowLeft, Trophy, Medal } from 'lucide-react';
 
 export default function TournamentPodium() {
   const { id } = useParams<{ id: string }>();
+  const { nomeLiga } = useLiga();
   const players = usePlayerStore(s => s.players);
   const loadPlayers = usePlayerStore(s => s.load);
   const { tournaments, load: loadTournaments } = useTournamentStore();
