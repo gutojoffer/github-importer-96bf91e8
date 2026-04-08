@@ -10,7 +10,7 @@ async function getLigaId(): Promise<string> {
 // ──────────── Players ────────────
 
 export async function getPlayers(): Promise<Player[]> {
-  const { data, error } = await supabase.from('players').select('*').order('created_at', { ascending: true });
+  const { data, error } = await supabase.from('players').select('id, name, nickname, avatar, xp, created_at').order('created_at', { ascending: true });
   if (error) { console.error('getPlayers error:', error); return []; }
   return (data || []).map(row => ({
     id: row.id,
@@ -57,7 +57,7 @@ export async function deletePlayer(id: string) {
 }
 
 export async function getPlayerById(id: string): Promise<Player | undefined> {
-  const { data } = await supabase.from('players').select('*').eq('id', id).single();
+  const { data } = await supabase.from('players').select('id, name, nickname, avatar, xp, created_at').eq('id', id).single();
   if (!data) return undefined;
   return { id: data.id, name: data.name, nickname: data.nickname || '', avatar: data.avatar || '🔵', xp: data.xp ?? 0, createdAt: data.created_at };
 }
@@ -65,7 +65,7 @@ export async function getPlayerById(id: string): Promise<Player | undefined> {
 // ──────────── Stats ────────────
 
 export async function getAllStats(): Promise<PlayerStats[]> {
-  const { data, error } = await supabase.from('player_stats').select('*');
+  const { data, error } = await supabase.from('player_stats').select('player_id, wins, losses, finish_wins, extreme_finish_wins, points, week_key, month_key');
   if (error) { console.error('getAllStats error:', error); return []; }
   return (data || []).map(row => ({
     playerId: row.player_id,
@@ -125,7 +125,7 @@ export async function awardXP(standings: TournamentStanding[]) {
   for (const s of standings) {
     const { data: existing } = await supabase
       .from('player_stats')
-      .select('*')
+      .select('id, points, wins, losses')
       .eq('player_id', s.playerId)
       .eq('week_key', weekKey)
       .maybeSingle();
@@ -194,7 +194,7 @@ function tournamentToRow(t: Tournament, ligaId: string) {
 }
 
 export async function getTournaments(): Promise<Tournament[]> {
-  const { data, error } = await supabase.from('tournaments').select('*').order('created_at', { ascending: false });
+  const { data, error } = await supabase.from('tournaments').select('id, name, date, signup_deadline, player_ids, rounds, current_round, arena_count, total_rounds, points_to_win, status, created_at, final_standings, max_players').order('created_at', { ascending: false });
   if (error) { console.error('getTournaments error:', error); return []; }
   return (data || []).map(tournamentFromRow);
 }
@@ -207,7 +207,7 @@ export async function saveTournaments(tournaments: Tournament[]) {
 }
 
 export async function getActiveTournament(): Promise<Tournament | null> {
-  const { data } = await supabase.from('tournaments').select('*').eq('status', 'active').limit(1).maybeSingle();
+  const { data } = await supabase.from('tournaments').select('id, name, date, signup_deadline, player_ids, rounds, current_round, arena_count, total_rounds, points_to_win, status, created_at, final_standings, max_players').eq('status', 'active').limit(1).maybeSingle();
   return data ? tournamentFromRow(data) : null;
 }
 
@@ -219,7 +219,7 @@ export async function saveActiveTournament(t: Tournament | null) {
 }
 
 export async function getCompletedTournaments(): Promise<Tournament[]> {
-  const { data, error } = await supabase.from('tournaments').select('*').eq('status', 'completed').order('created_at', { ascending: false });
+  const { data, error } = await supabase.from('tournaments').select('id, name, date, signup_deadline, player_ids, rounds, current_round, arena_count, total_rounds, points_to_win, status, created_at, final_standings, max_players').eq('status', 'completed').order('created_at', { ascending: false });
   if (error) { console.error('getCompletedTournaments error:', error); return []; }
   return (data || []).map(tournamentFromRow);
 }
