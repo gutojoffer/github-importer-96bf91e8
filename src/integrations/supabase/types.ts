@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      beyblades_meta: {
+        Row: {
+          ativo: boolean | null
+          bit: string
+          created_at: string | null
+          descricao: string | null
+          destaque: boolean | null
+          id: string
+          imagem_url: string | null
+          nome: string
+          ordem: number | null
+          ratchet: string
+          tier: string
+          tipo: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          bit: string
+          created_at?: string | null
+          descricao?: string | null
+          destaque?: boolean | null
+          id?: string
+          imagem_url?: string | null
+          nome: string
+          ordem?: number | null
+          ratchet: string
+          tier: string
+          tipo: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          bit?: string
+          created_at?: string | null
+          descricao?: string | null
+          destaque?: boolean | null
+          id?: string
+          imagem_url?: string | null
+          nome?: string
+          ordem?: number | null
+          ratchet?: string
+          tier?: string
+          tipo?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       player_stats: {
         Row: {
           extreme_finish_wins: number
@@ -91,6 +139,72 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          cidade: string | null
+          created_at: string | null
+          descricao: string | null
+          endereco: string | null
+          id: string
+          logo_url: string | null
+          nome_liga: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cidade?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          endereco?: string | null
+          id: string
+          logo_url?: string | null
+          nome_liga?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cidade?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          endereco?: string | null
+          id?: string
+          logo_url?: string | null
+          nome_liga?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      release_notes: {
+        Row: {
+          created_at: string | null
+          data: string
+          descricao: string
+          id: string
+          publicado: boolean | null
+          tag: string
+          titulo: string
+          versao: string
+        }
+        Insert: {
+          created_at?: string | null
+          data?: string
+          descricao: string
+          id?: string
+          publicado?: boolean | null
+          tag: string
+          titulo: string
+          versao: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: string
+          descricao?: string
+          id?: string
+          publicado?: boolean | null
+          tag?: string
+          titulo?: string
+          versao?: string
+        }
+        Relationships: []
+      }
       tournaments: {
         Row: {
           arena_count: number
@@ -145,15 +259,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "organizer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -280,6 +418,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "organizer"],
+    },
   },
 } as const
