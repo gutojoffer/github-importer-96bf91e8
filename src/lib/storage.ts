@@ -51,7 +51,20 @@ export async function addPlayer(p: Player) {
   if (error) console.error('addPlayer error:', error);
 }
 
+export async function updatePlayer(id: string, patch: Partial<Player>) {
+  const row: Record<string, any> = {};
+  if (patch.name !== undefined) row.name = patch.name;
+  if (patch.nickname !== undefined) row.nickname = patch.nickname;
+  if (patch.avatar !== undefined) row.avatar = patch.avatar;
+  if (patch.xp !== undefined) row.xp = patch.xp;
+  const { error } = await supabase.from('players').update(row).eq('id', id);
+  if (error) console.error('updatePlayer error:', error);
+}
+
 export async function deletePlayer(id: string) {
+  const { error } = await supabase.from('players').delete().eq('id', id);
+  if (error) console.error('deletePlayer error:', error);
+}
   const { error } = await supabase.from('players').delete().eq('id', id);
   if (error) console.error('deletePlayer error:', error);
 }

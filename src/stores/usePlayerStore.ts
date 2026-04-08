@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Player } from '@/types/tournament';
-import { getPlayers, addPlayer as apiAddPlayer, deletePlayer as apiDeletePlayer, savePlayers as apiSavePlayers } from '@/lib/storage';
+import { getPlayers, addPlayer as apiAddPlayer, deletePlayer as apiDeletePlayer, savePlayers as apiSavePlayers, updatePlayer as apiUpdatePlayer } from '@/lib/storage';
 
 interface PlayerStore {
   players: Player[];
