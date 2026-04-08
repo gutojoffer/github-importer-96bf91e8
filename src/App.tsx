@@ -23,6 +23,7 @@ import Register from "@/pages/Register";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import LandingPage from "@/pages/LandingPage";
+import SetupAdmin from "@/pages/SetupAdmin";
 import NotFound from "./pages/NotFound";
 
 // Lazy-loaded routes
