@@ -732,12 +732,12 @@ export default function TournamentHub() {
       
       {/* Enrollment Modal */}
       {enrollModalTournament && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => { setEnrollModal(null); setShowQuickAdd(false); }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => { setEnrollModal(null); setShowQuickAdd(false); setBatchSelected(new Set()); }}>
           <div className="absolute inset-0 bg-background/80 backdrop-blur-md" />
           <div className="relative z-10 glass-panel p-6 max-w-lg w-full max-h-[85vh] overflow-auto glow-blurple" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-heading text-xl font-bold text-primary tracking-wider">INSCREVER BLADERS</h2>
-              <button onClick={() => { setEnrollModal(null); setShowQuickAdd(false); }} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-lg hover:bg-muted/30">
+              <button onClick={() => { setEnrollModal(null); setShowQuickAdd(false); setBatchSelected(new Set()); }} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-lg hover:bg-muted/30">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -786,12 +786,54 @@ export default function TournamentHub() {
               <Input value={enrollSearch} onChange={e => setEnrollSearch(e.target.value)} placeholder="Buscar blader..." className="pl-9 bg-muted/30 border-border h-9" />
             </div>
 
+            {/* Batch select controls */}
+            {(() => {
+              const unenrolledFiltered = filteredPlayers.filter(p => !enrollModalTournament.playerIds.includes(p.id));
+              const allBatchSelected = unenrolledFiltered.length > 0 && unenrolledFiltered.every(p => batchSelected.has(p.id));
+              return unenrolledFiltered.length > 0 ? (
+                <button
+                  onClick={() => {
+                    if (allBatchSelected) {
+                      setBatchSelected(new Set());
+                    } else {
+                      setBatchSelected(new Set(unenrolledFiltered.map(p => p.id)));
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 border border-transparent mb-1 text-left"
+                >
+                  <div className={`h-4 w-4 rounded border-2 flex items-center justify-center shrink-0 transition-all ${allBatchSelected ? 'bg-primary border-primary' : 'border-muted'}`}>
+                    {allBatchSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                  </div>
+                  <span className="text-xs font-heading text-muted-foreground tracking-wider">Selecionar todos ({unenrolledFiltered.length})</span>
+                </button>
+              ) : null;
+            })()}
+
             <div className="space-y-1.5 max-h-[40vh] overflow-auto">
               {filteredPlayers.map(p => {
                 const enrolled = enrollModalTournament.playerIds.includes(p.id);
+                const isSelected = batchSelected.has(p.id);
                 return (
-                  <button key={p.id} onClick={() => handleEnroll(p.id)}
-                    className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-all text-left ${enrolled ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/30 border border-transparent'}`}>
+                  <button key={p.id} onClick={() => {
+                    if (enrolled) {
+                      // Toggle unenroll
+                      handleEnroll(p.id);
+                    } else {
+                      // Toggle batch selection
+                      setBatchSelected(prev => {
+                        const next = new Set(prev);
+                        if (next.has(p.id)) next.delete(p.id);
+                        else next.add(p.id);
+                        return next;
+                      });
+                    }
+                  }}
+                    className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-all text-left ${enrolled ? 'bg-primary/10 border border-primary/30' : isSelected ? 'bg-secondary/10 border border-secondary/30' : 'hover:bg-muted/30 border border-transparent'}`}>
+                    {!enrolled && (
+                      <div className={`h-4 w-4 rounded border-2 flex items-center justify-center shrink-0 transition-all ${isSelected ? 'bg-secondary border-secondary' : 'border-muted'}`}>
+                        {isSelected && <Check className="h-3 w-3 text-secondary-foreground" />}
+                      </div>
+                    )}
                     <Avatar className="h-9 w-9 border border-muted">
                       {p.avatar.startsWith('http') || p.avatar.startsWith('data:') ? <AvatarImage src={p.avatar} /> : <AvatarFallback className="bg-muted text-sm">{p.avatar}</AvatarFallback>}
                     </Avatar>
@@ -800,12 +842,10 @@ export default function TournamentHub() {
                       {p.nickname && <p className="text-[10px] text-muted-foreground">@{p.nickname}</p>}
                     </div>
                     <EloBadge xp={p.xp || 0} size="sm" />
-                    {enrolled ? (
+                    {enrolled && (
                       <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center shrink-0">
                         <Check className="h-3.5 w-3.5 text-primary-foreground" />
                       </div>
-                    ) : (
-                      <div className="h-6 w-6 rounded-full border-2 border-muted shrink-0" />
                     )}
                   </button>
                 );
@@ -814,6 +854,28 @@ export default function TournamentHub() {
                 <p className="text-center text-sm text-muted-foreground py-4">Nenhum blader encontrado.</p>
               )}
             </div>
+
+            {/* Batch enroll button */}
+            {batchSelected.size > 0 && (
+              <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/30">
+                <span className="text-xs text-muted-foreground font-body">
+                  <Users className="h-3 w-3 inline mr-1" />
+                  {batchSelected.size} selecionado{batchSelected.size !== 1 ? 's' : ''}
+                </span>
+                <Button
+                  onClick={() => {
+                    for (const pid of batchSelected) {
+                      enrollPlayer(enrollModalTournament.id, pid);
+                    }
+                    toast.success(`${batchSelected.size} blader${batchSelected.size > 1 ? 's' : ''} inscrito${batchSelected.size > 1 ? 's' : ''}!`);
+                    setBatchSelected(new Set());
+                  }}
+                  className="font-heading tracking-wider gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  Inscrever selecionados
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}
