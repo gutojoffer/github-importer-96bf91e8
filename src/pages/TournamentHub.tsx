@@ -180,7 +180,8 @@ export default function TournamentHub() {
     const match = currentRound.matches[matchIdx];
     const pts = FINISH_POINTS[finishType];
 
-    const action: ScoreAction = {
+    // Trigger finish overlay
+    setFinishOverlay(finishType);
       id: crypto.randomUUID(), playerId: winnerId, finishType, points: pts,
       timestamp: new Date().toISOString(),
     };
