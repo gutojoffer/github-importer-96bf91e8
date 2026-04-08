@@ -229,15 +229,14 @@ export default function LandingPage() {
           alt="Beyblade X"
           className="absolute pointer-events-none hidden md:block"
           style={{
-            right: 0,
+            right: -30,
             bottom: 0,
-            height: '88%',
-            width: '62%',
-            maxWidth: 'none',
+            height: '90%',
+            width: '68%',
             objectFit: 'contain',
             objectPosition: 'bottom right',
-            maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 30%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0) 100%)',
-            WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 30%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0) 100%)',
+            maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 20%, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,0.15) 78%, rgba(0,0,0,0) 88%)',
+            WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 20%, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,0.15) 78%, rgba(0,0,0,0) 88%)',
           }}
         />
         {/* Promo image — mobile bg */}
