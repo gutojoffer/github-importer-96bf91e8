@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Player } from '@/types/tournament';
-import { getPlayers, addPlayer as apiAddPlayer, deletePlayer as apiDeletePlayer, savePlayers as apiSavePlayers } from '@/lib/storage';
+import { getPlayers, addPlayer as apiAddPlayer, deletePlayer as apiDeletePlayer, savePlayers as apiSavePlayers, updatePlayer as apiUpdatePlayer } from '@/lib/storage';
 
 interface PlayerStore {
   players: Player[];
@@ -9,7 +9,7 @@ interface PlayerStore {
   reload: () => Promise<void>;
   add: (p: Player) => void;
   remove: (id: string) => void;
-  update: (id: string, patch: Partial<Player>) => void;
+  update: (id: string, patch: Partial<Player>) => Promise<void>;
   bulkSet: (players: Player[]) => void;
 }
 
@@ -38,12 +38,11 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     apiDeletePlayer(id).catch(console.error);
   },
 
-  update: (id: string, patch: Partial<Player>) => {
+  update: async (id: string, patch: Partial<Player>) => {
     set(s => ({
       players: s.players.map(p => p.id === id ? { ...p, ...patch } : p),
     }));
-    const updated = get().players;
-    apiSavePlayers(updated).catch(console.error);
+    await apiUpdatePlayer(id, patch);
   },
 
   bulkSet: (players: Player[]) => {
