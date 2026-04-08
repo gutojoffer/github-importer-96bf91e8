@@ -14,7 +14,7 @@ const NotFound = () => {
           A página que você procura foi eliminada ou nunca existiu.
         </p>
         <Link
-          to="/"
+          to="/home"
           className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-heading font-bold tracking-wider text-sm hover:bg-primary/90 transition-colors mt-4"
         >
           Voltar ao início

@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/sidebar';
 
 const navItems = [
-  { title: 'Home', url: '/', icon: Home },
+  { title: 'Home', url: '/home', icon: Home },
   { title: 'Torneio', url: '/tournament', icon: Swords, hasBadge: true },
   { title: 'Histórico', url: '/history', icon: Clock },
   { title: 'Rankings', url: '/rankings', icon: Crown },
@@ -30,11 +30,11 @@ export function AppSidebar() {
   const { nomeLiga } = useLiga();
 
   const isActive = (path: string) =>
-    location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
+    location.pathname === path || (path !== '/home' && location.pathname.startsWith(path));
 
   const handleLogout = async () => {
     await signOut();
-    navigate('/login');
+    navigate('/');
   };
 
   return (
@@ -62,7 +62,7 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <NavLink
                         to={item.url}
-                        end={item.url === '/'}
+                        end={item.url === '/home'}
                         className={`flex items-center gap-3 px-3 py-[9px] text-sm font-body font-medium rounded-lg transition-all
                           ${active
                             ? 'bg-[rgba(79,142,247,0.12)] text-primary border border-[rgba(79,142,247,0.25)]'

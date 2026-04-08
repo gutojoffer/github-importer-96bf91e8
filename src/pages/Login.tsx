@@ -20,7 +20,7 @@ export default function Login() {
     if (error) {
       setError('Email ou senha incorretos.');
     } else {
-      navigate('/');
+      navigate('/home');
     }
   };
 

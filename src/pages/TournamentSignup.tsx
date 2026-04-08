@@ -84,7 +84,7 @@ export default function TournamentSignup() {
           <p className="text-muted-foreground font-body text-sm mt-2">
             <strong className="text-primary">{registeredName}</strong> está inscrito no <strong className="text-primary">{tournament.name}</strong>. Prepare-se!
           </p>
-          <Button onClick={() => navigate('/')} className="mt-6 font-heading tracking-wider bg-primary text-primary-foreground">Voltar ao Hub</Button>
+          <Button onClick={() => navigate('/home')} className="mt-6 font-heading tracking-wider bg-primary text-primary-foreground">Voltar ao Hub</Button>
         </div>
       </div>
     );
