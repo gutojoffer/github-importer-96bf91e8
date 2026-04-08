@@ -161,7 +161,7 @@ export default function LandingPage() {
       `}</style>
 
       {/* ════════ HERO ════════ */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+      <section className="relative min-h-[90vh] flex items-center" style={{ overflow: 'hidden', position: 'relative' }}>
         {/* Bg gradient + grid */}
         <div className="absolute inset-0" style={{
           background: 'radial-gradient(ellipse 70% 60% at 55% 40%, rgba(37,99,235,0.1), transparent)',
@@ -174,23 +174,30 @@ export default function LandingPage() {
 
         <ParticleCanvas />
 
-        {/* Promo image right */}
-        <div
-          className="absolute right-0 bottom-0 top-0 w-[50%] pointer-events-none hidden md:block flex items-end justify-end"
-          style={{ animation: 'heroSlideRight 1s ease-out 0.3s both' }}
-        >
-          <img
-            src={promoImage}
-            alt="Beyblade X"
-            className="absolute bottom-0 right-0 w-full max-h-full object-contain object-right-bottom"
-            style={{ maskImage: 'linear-gradient(to left, rgba(0,0,0,0.9) 40%, transparent 90%)' }}
-          />
-        </div>
-        {/* Mobile bg */}
+        {/* Promo image — desktop */}
+        <img
+          src={promoImage}
+          alt="Beyblade X"
+          className="absolute pointer-events-none hidden md:block"
+          style={{
+            right: 0,
+            bottom: 0,
+            height: '100%',
+            width: '55%',
+            objectFit: 'contain',
+            objectPosition: 'bottom right',
+            maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%), linear-gradient(to top, rgba(0,0,0,1) 90%, rgba(0,0,0,0) 100%)',
+            WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%), linear-gradient(to top, rgba(0,0,0,1) 90%, rgba(0,0,0,0) 100%)',
+            maskComposite: 'intersect',
+            WebkitMaskComposite: 'destination-in' as any,
+          }}
+        />
+        {/* Promo image — mobile bg */}
         <img
           src={promoImage}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover object-center opacity-[0.12] md:hidden pointer-events-none"
+          className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none md:hidden"
+          style={{ opacity: 0.15 }}
         />
 
         {/* Content */}
