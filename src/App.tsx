@@ -112,8 +112,11 @@ const AppHeader = () => {
 };
 
 const ProtectedLayout = () => {
-  const { usePlayerStore: _ps } = { usePlayerStore: require('@/stores/usePlayerStore').usePlayerStore };
-  const { useTournamentStore: _ts } = { useTournamentStore: require('@/stores/useTournamentStore').useTournamentStore };
+  useEffect(() => {
+    const unsubPlayers = usePlayerStore.getState().subscribeRealtime();
+    const unsubTournaments = useTournamentStore.getState().subscribeRealtime();
+    return () => { unsubPlayers(); unsubTournaments(); };
+  }, []);
 
   useEffect(() => {
     const unsubPlayers = _ps.getState().subscribeRealtime();
