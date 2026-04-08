@@ -17,6 +17,7 @@ interface TournamentStore {
   updateActive: (t: Tournament) => void;
   endTournament: () => Promise<TournamentStanding[] | null>;
   cancelTournament: () => void;
+  updateTournament: (id: string, updates: Partial<Tournament>) => void;
   enrollPlayer: (tournamentId: string, playerId: string) => void;
   unenrollPlayer: (tournamentId: string, playerId: string) => void;
   refreshList: () => Promise<void>;
@@ -78,6 +79,16 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       tournaments: s.tournaments.filter(t => t.id !== activeTournament.id),
     }));
     apiDeleteTournament(activeTournament.id).catch(console.error);
+  },
+
+  updateTournament: (id: string, updates: Partial<Tournament>) => {
+    set(s => ({
+      tournaments: s.tournaments.map(t =>
+        t.id === id ? { ...t, ...updates } : t
+      ),
+    }));
+    const t = get().tournaments.find(t => t.id === id);
+    if (t) saveTournaments([t]).catch(console.error);
   },
 
   enrollPlayer: (tournamentId: string, playerId: string) => {
