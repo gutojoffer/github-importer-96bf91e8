@@ -5,6 +5,7 @@ import { useTournamentStore } from '@/stores/useTournamentStore';
 import { Player } from '@/types/tournament';
 import { Trophy, Calendar, Users, Swords, ChevronRight, Plus, Clock } from 'lucide-react';
 import DashboardHero from '@/components/dashboard/DashboardHero';
+import QuickActions from '@/components/dashboard/QuickActions';
 import TournamentCard from '@/components/dashboard/TournamentCard';
 import TopBladers from '@/components/dashboard/TopBladers';
 import ActivityFeed from '@/components/dashboard/ActivityFeed';
