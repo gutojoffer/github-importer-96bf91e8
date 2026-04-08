@@ -12,6 +12,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import LigaLogo from "@/components/LigaLogo";
 import SkeletonBox from "@/components/SkeletonBox";
 import { supabase } from "@/integrations/supabase/client";
+import { usePlayerStore } from "@/stores/usePlayerStore";
+import { useTournamentStore } from "@/stores/useTournamentStore";
 import { ChevronRight } from "lucide-react";
 import Index from "./pages/Index";
 import PlayerManager from "@/pages/PlayerManager";
