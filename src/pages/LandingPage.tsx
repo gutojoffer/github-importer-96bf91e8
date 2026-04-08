@@ -231,13 +231,13 @@ export default function LandingPage() {
           style={{
             right: 0,
             bottom: 0,
-            height: '95%',
-            width: 'auto',
-            maxWidth: '58%',
+            height: '88%',
+            width: '62%',
+            maxWidth: 'none',
             objectFit: 'contain',
             objectPosition: 'bottom right',
-            maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 92%)',
-            WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 92%)',
+            maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 30%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0) 100%)',
+            WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 30%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0) 100%)',
           }}
         />
         {/* Promo image — mobile bg */}
