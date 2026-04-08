@@ -312,16 +312,17 @@ export default function TournamentHub() {
 
   // ─── End Tournament ───
   const handleEndTournament = useCallback(async () => {
+    const tournamentId = activeTournament?.id;
+    if (!tournamentId) return;
     const standings = await endTournament();
     if (!standings) return;
     setView('list');
     setConfirmEndTournament(false);
-    await usePlayerStore.getState().load();
     usePlayerStore.setState({ loaded: false });
     await usePlayerStore.getState().load();
     toast.success('🏆 Torneio encerrado!');
-    navigate(`/history/${activeTournament?.id}`);
-  }, [endTournament, navigate, activeTournament]);
+    navigate(`/history/${tournamentId}`);
+  }, [endTournament, navigate, activeTournament?.id]);
 
   // ─── Cancel Tournament ───
   const handleCancelTournament = useCallback(() => {
