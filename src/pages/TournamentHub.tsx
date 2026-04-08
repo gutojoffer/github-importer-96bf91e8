@@ -18,6 +18,8 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import BracketTree from '@/components/BracketTree';
 import EliminationBracket from '@/components/EliminationBracket';
 import EliminationTransition from '@/components/EliminationTransition';
+import ArenaBackground from '@/components/ArenaBackground';
+import FinishOverlay from '@/components/FinishOverlay';
 import LigaLogo from '@/components/LigaLogo';
 import EloBadge from '@/components/EloBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -72,6 +74,7 @@ export default function TournamentHub() {
   const [victoryWinner, setVictoryWinner] = useState<Player | null>(null);
   const [victoryFinish, setVictoryFinish] = useState<string | undefined>();
   const [vsKey, setVsKey] = useState(0);
+  const [finishOverlay, setFinishOverlay] = useState<FinishType | null>(null);
 
   // Elimination transition
   const [showEliminationTransition, setShowEliminationTransition] = useState(false);
@@ -176,6 +179,9 @@ export default function TournamentHub() {
     if (matchIdx === -1) return;
     const match = currentRound.matches[matchIdx];
     const pts = FINISH_POINTS[finishType];
+
+    // Trigger finish overlay
+    setFinishOverlay(finishType);
 
     const action: ScoreAction = {
       id: crypto.randomUUID(), playerId: winnerId, finishType, points: pts,
@@ -584,45 +590,43 @@ export default function TournamentHub() {
 
         {/* Current match */}
         {currentMatch && players.length > 0 ? (
-          <div className="glass-panel p-4 space-y-4 glow-blurple relative" key={`${currentMatch.id}-${vsKey}`}>
-            {/* Liga logo watermark */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-              <LigaLogo size={64} className="opacity-[0.12]" />
-            </div>
+          <div className="relative rounded-xl overflow-hidden p-4 space-y-4" key={`${currentMatch.id}-${vsKey}`}>
+            <ArenaBackground />
+            <FinishOverlay finishType={finishOverlay} onDone={() => setFinishOverlay(null)} />
             <div className="relative z-10">
-            <VersusScreen
-              player1={getPlayer(currentMatch.player1Id)!}
-              player2={getPlayer(currentMatch.player2Id)!}
-              arenaName={isElim ? (currentRound?.label || 'ELIMINATÓRIA') : 'ARENA PRINCIPAL'}
-              player1Points={currentMatch.player1Points}
-              player2Points={currentMatch.player2Points}
-              pointsToWin={activeTournament.pointsToWin}
-            />
-            <div className="flex justify-center">
-              <Button
-                variant="ghost"
-                onClick={() => handleUndoPoint(currentMatch.id, isElim)}
-                disabled={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0}
-                className="font-heading tracking-wider text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-                title={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0 ? 'Nenhum ponto para desfazer' : 'Desfazer último ponto'}
-              >
-                <Undo2 className="h-4 w-4" /> Desfazer último ponto
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 gap-4 px-2">
-              <ResultButtons
-                playerName={getPlayer(currentMatch.player1Id)?.nickname || getPlayer(currentMatch.player1Id)?.name || ''}
-                side="left"
-                onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player1Id, ft, isElim)}
-                disabled={!!currentMatch.result}
+              <VersusScreen
+                player1={getPlayer(currentMatch.player1Id)!}
+                player2={getPlayer(currentMatch.player2Id)!}
+                arenaName={isElim ? (currentRound?.label || 'ELIMINATÓRIA') : 'ARENA PRINCIPAL'}
+                player1Points={currentMatch.player1Points}
+                player2Points={currentMatch.player2Points}
+                pointsToWin={activeTournament.pointsToWin}
               />
-              <ResultButtons
-                playerName={getPlayer(currentMatch.player2Id)?.nickname || getPlayer(currentMatch.player2Id)?.name || ''}
-                side="right"
-                onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player2Id, ft, isElim)}
-                disabled={!!currentMatch.result}
-              />
-            </div>
+              <div className="flex justify-center">
+                <Button
+                  variant="ghost"
+                  onClick={() => handleUndoPoint(currentMatch.id, isElim)}
+                  disabled={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0}
+                  className="font-heading tracking-wider text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+                  title={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0 ? 'Nenhum ponto para desfazer' : 'Desfazer último ponto'}
+                >
+                  <Undo2 className="h-4 w-4" /> Desfazer último ponto
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-4 px-2">
+                <ResultButtons
+                  playerName={getPlayer(currentMatch.player1Id)?.nickname || getPlayer(currentMatch.player1Id)?.name || ''}
+                  side="left"
+                  onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player1Id, ft, isElim)}
+                  disabled={!!currentMatch.result}
+                />
+                <ResultButtons
+                  playerName={getPlayer(currentMatch.player2Id)?.nickname || getPlayer(currentMatch.player2Id)?.name || ''}
+                  side="right"
+                  onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player2Id, ft, isElim)}
+                  disabled={!!currentMatch.result}
+                />
+              </div>
             </div>
           </div>
         ) : !shouldShowStartElimination ? (
