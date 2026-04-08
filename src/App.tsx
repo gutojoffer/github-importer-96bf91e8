@@ -235,7 +235,7 @@ const App = () => (
             <Route path="/cadastro" element={<Register />} />
             <Route path="/recuperar-senha" element={<ForgotPassword />} />
             <Route path="/nova-senha" element={<ResetPassword />} />
-            <Route path="/signup/:tournamentId" element={<TournamentSignup />} />
+            <Route path="/signup/:tournamentId" element={<Suspense fallback={<LazyFallback />}><TournamentSignup /></Suspense>} />
             <Route path="*" element={<ProtectedLayout />} />
           </Routes>
         </AuthProvider>
