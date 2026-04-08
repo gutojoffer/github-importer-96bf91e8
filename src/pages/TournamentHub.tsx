@@ -41,7 +41,7 @@ export default function TournamentHub() {
     tournaments, activeTournament, load: loadTournaments,
     createTournament, deleteTournament: deleteTournamentStore,
     setActiveTournament, updateActive, endTournament, cancelTournament: cancelTournamentStore,
-    enrollPlayer, unenrollPlayer,
+    enrollPlayer, unenrollPlayer, updateTournament,
   } = useTournamentStore();
 
   const [view, setView] = useState<View>('list');
@@ -52,6 +52,13 @@ export default function TournamentHub() {
   const [tDate, setTDate] = useState('');
   const [tMaxPlayers, setTMaxPlayers] = useState(32);
   const [tEliminationSize, setTEliminationSize] = useState<EliminationSize>(null);
+
+  // Edit tournament
+  const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [editMaxPlayers, setEditMaxPlayers] = useState(32);
+  const [editEliminationSize, setEditEliminationSize] = useState<EliminationSize>(null);
 
   // Enrollment modal
   const [enrollModal, setEnrollModal] = useState<string | null>(null);
