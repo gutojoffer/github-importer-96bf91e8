@@ -106,6 +106,22 @@ export const FINISH_POINTS: Record<FinishType, number> = {
 
 export const POINTS_TO_WIN = 4;
 
+/** Ranking points awarded by placement */
+export const RANKING_POINTS: Record<number, number> = {
+  1: 100,
+  2: 70,
+  3: 50,
+  4: 35,
+};
+
+export function getRankingPoints(placement: number, dropped: boolean): number {
+  if (dropped) return 0;
+  if (placement <= 4) return RANKING_POINTS[placement] || 0;
+  if (placement <= 8) return 20;
+  if (placement <= 16) return 10;
+  return 5; // Participation
+}
+
 /** XP awarded by placement */
 export const PLACEMENT_XP: Record<number, number> = {
   1: 50,
