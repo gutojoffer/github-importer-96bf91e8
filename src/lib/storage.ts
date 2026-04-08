@@ -52,7 +52,7 @@ export async function addPlayer(p: Player) {
 }
 
 export async function updatePlayer(id: string, patch: Partial<Player>) {
-  const row: Record<string, any> = {};
+  const row: { name?: string; nickname?: string; avatar?: string; xp?: number } = {};
   if (patch.name !== undefined) row.name = patch.name;
   if (patch.nickname !== undefined) row.nickname = patch.nickname;
   if (patch.avatar !== undefined) row.avatar = patch.avatar;
