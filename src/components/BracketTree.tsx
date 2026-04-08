@@ -1,4 +1,7 @@
 import { memo, useMemo } from 'react';
+import { X } from 'lucide-react';
+import { Tournament, Player, TournamentRound } from '@/types/tournament';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tournament, Player, TournamentRound } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
