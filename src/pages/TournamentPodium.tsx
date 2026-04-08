@@ -6,6 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import EloBadge from '@/components/EloBadge';
 import BracketTree from '@/components/BracketTree';
+import LigaLogo from '@/components/LigaLogo';
+import { useLiga } from '@/contexts/LigaContext';
 import { Crown, ArrowLeft, Trophy, Medal } from 'lucide-react';
 
 export default function TournamentPodium() {
