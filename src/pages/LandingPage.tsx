@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useRef, useState } from 'react';
 import { Trophy, ChevronLeft, ChevronRight, Disc3, Calendar, Users, MapPin } from 'lucide-react';
-import promoImage from '@/assets/beyblade-x-promo.jpg';
+import promoImage from '@/assets/beyblade-x-promo.png';
 
 // ─── Particle Canvas ───
 function ParticleCanvas() {
