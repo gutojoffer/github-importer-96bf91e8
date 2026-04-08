@@ -25,7 +25,7 @@ import EloBadge from '@/components/EloBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Plus, Play, Lightbulb, Calendar, Users, Trophy, XOctagon, Award,
-  CheckCircle, Camera, UserPlus, X, Search, Check, Trash2, UserMinus, Undo2, Ban, Swords,
+  CheckCircle, Camera, UserPlus, X, Search, Check, Trash2, UserMinus, Undo2, Ban, Swords, Pencil,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -1065,6 +1065,10 @@ export default function TournamentHub() {
                   <Button size="sm" onClick={() => setEnrollModal(t.id)}
                     className="font-heading tracking-wider gap-1 bg-secondary/20 text-secondary hover:bg-secondary/30 border border-secondary/30">
                     <UserPlus className="h-3.5 w-3.5" /> Inscrever
+                  </Button>
+                   <Button variant="outline" size="sm" onClick={() => openEditModal(t)}
+                    className="font-heading tracking-wider gap-1 border-muted text-muted-foreground hover:bg-muted/20 hover:text-foreground">
+                    <Pencil className="h-3.5 w-3.5" /> Editar
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => { setStartingTournament(t); setStartEliminationSize(t.eliminationSize || null); }}
                     className="font-heading tracking-wider gap-1 border-primary/50 text-primary hover:bg-primary/10" disabled={t.playerIds.length < 2}>
