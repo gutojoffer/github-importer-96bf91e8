@@ -514,7 +514,7 @@ export default function TournamentHub() {
 
         {/* Swiss Bracket Tree */}
         {!isElim && (
-          <BracketTree tournament={activeTournament} getPlayer={getPlayer} currentRoundHighlight={activeTournament.currentRound} />
+          <BracketTree tournament={activeTournament} getPlayer={getPlayer} currentRoundHighlight={activeTournament.currentRound} onDropPlayer={(pid) => setConfirmDropPlayer(pid)} />
         )}
 
         {/* Elimination Bracket */}
