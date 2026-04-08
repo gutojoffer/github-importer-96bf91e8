@@ -623,6 +623,7 @@ export default function TournamentHub() {
                 disabled={!!currentMatch.result}
               />
             </div>
+            </div>
           </div>
         ) : !shouldShowStartElimination ? (
           <div className="glass-panel text-center py-12">
