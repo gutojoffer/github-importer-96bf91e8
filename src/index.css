@@ -324,3 +324,21 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* Clean native browser input controls for dark theme */
+.arena-input-clean::-webkit-inner-spin-button,
+.arena-input-clean::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.arena-input-clean[type="number"] {
+  -moz-appearance: textfield;
+}
+.arena-input-clean::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  cursor: pointer;
+  opacity: 0.6;
+}
+.arena-input-clean::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
