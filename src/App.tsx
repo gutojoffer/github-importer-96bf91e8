@@ -98,6 +98,7 @@ const App = () => (
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Register />} />
+            <Route path="/setup-admin" element={<SetupAdmin />} />
             <Route path="/recuperar-senha" element={<ForgotPassword />} />
             <Route path="/nova-senha" element={<ResetPassword />} />
             <Route path="/signup/:tournamentId" element={<Suspense fallback={<LazyFallback />}><TournamentSignup /></Suspense>} />
