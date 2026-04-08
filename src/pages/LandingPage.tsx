@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useRef, useState } from 'react';
 import { Trophy, ChevronLeft, ChevronRight, Disc3, Calendar, Users, MapPin } from 'lucide-react';
-import promoImage from '@/assets/beyblade-x-promo.png';
+import promoImage from '@/assets/beyblade-heroes.png';
 
 // ─── Particle Canvas ───
 function ParticleCanvas() {
@@ -182,22 +182,27 @@ export default function LandingPage() {
           style={{
             right: 0,
             bottom: 0,
-            height: '100%',
-            width: '55%',
+            height: '95%',
+            width: 'auto',
+            maxWidth: '58%',
             objectFit: 'contain',
             objectPosition: 'bottom right',
-            maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%), linear-gradient(to top, rgba(0,0,0,1) 90%, rgba(0,0,0,0) 100%)',
-            WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%), linear-gradient(to top, rgba(0,0,0,1) 90%, rgba(0,0,0,0) 100%)',
-            maskComposite: 'intersect',
-            WebkitMaskComposite: 'destination-in' as any,
+            maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 92%)',
+            WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 92%)',
           }}
         />
         {/* Promo image — mobile bg */}
         <img
           src={promoImage}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none md:hidden"
-          style={{ opacity: 0.15 }}
+          className="absolute inset-0 pointer-events-none md:hidden"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center top',
+            opacity: 0.12,
+          }}
         />
 
         {/* Content */}
