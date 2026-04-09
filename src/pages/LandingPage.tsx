@@ -223,20 +223,31 @@ export default function LandingPage() {
 
         <ParticleCanvas />
 
-        {/* Promo image — desktop */}
+        {/* Promo image — desktop (sem máscara) */}
         <img
           src={promoImage}
           alt="Beyblade X"
           className="absolute pointer-events-none hidden md:block"
           style={{
-            right: -30,
+            right: 0,
             bottom: 0,
             height: '90%',
-            width: '68%',
+            width: 'auto',
             objectFit: 'contain',
             objectPosition: 'bottom right',
-            maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 20%, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,0.15) 78%, rgba(0,0,0,0) 88%)',
-            WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 20%, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,0.15) 78%, rgba(0,0,0,0) 88%)',
+            zIndex: 2,
+          }}
+        />
+        {/* Overlay de fade — elemento separado */}
+        <div
+          className="absolute hidden md:block pointer-events-none"
+          style={{
+            top: 0,
+            left: 0,
+            width: '45%',
+            height: '100%',
+            background: 'linear-gradient(to right, #060912 30%, rgba(6,9,18,0.95) 55%, rgba(6,9,18,0) 100%)',
+            zIndex: 3,
           }}
         />
         {/* Promo image — mobile bg */}
@@ -254,7 +265,7 @@ export default function LandingPage() {
         />
 
         {/* Content */}
-        <div className="relative z-10 max-w-[600px] px-6 sm:px-12 lg:px-20 py-20" style={{ animation: 'heroSlideLeft 0.8s ease-out both' }}>
+        <div className="relative max-w-[600px] px-6 sm:px-12 lg:px-20 py-20" style={{ animation: 'heroSlideLeft 0.8s ease-out both', zIndex: 4 }}>
           {/* Pill */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] mb-6">
             <span className="w-2 h-2 rounded-full bg-blue-500" style={{ animation: 'pulseDot 2s ease-in-out infinite' }} />
