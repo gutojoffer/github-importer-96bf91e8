@@ -1,6 +1,7 @@
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useLiga } from '@/contexts/LigaContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useRef, useEffect } from 'react';
 import { Search, Bell, ChevronDown, Settings, LogOut, LayoutGrid } from 'lucide-react';
