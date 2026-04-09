@@ -12,7 +12,7 @@ export default function SetupAdmin() {
 
   useEffect(() => {
     (async () => {
-      const { data: hasAdmin } = await supabase.rpc('has_any_admin');
+      const { data: hasAdmin } = await supabase.rpc('has_any_admin' as any);
       if (hasAdmin) {
         navigate('/login', { replace: true });
         return;
@@ -32,23 +32,20 @@ export default function SetupAdmin() {
       }
 
       // Double-check no admin exists
-      const { count } = await supabase
-        .from('user_roles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'admin');
-      if (count && count > 0) {
+      const { data: hasAdmin } = await supabase.rpc('has_any_admin' as any);
+      if (hasAdmin) {
         toast.error('Já existe um administrador cadastrado');
         return;
       }
 
-      // Update existing organizer role to admin
-      const { error: updateError } = await supabase
-        .from('user_roles')
-        .update({ role: 'admin' })
-        .eq('user_id', user.id);
+      // Call edge function to promote (uses service role)
+      const { data: session } = await supabase.auth.getSession();
+      const { error: fnError } = await supabase.functions.invoke('setup-admin', {
+        headers: { Authorization: `Bearer ${session.session?.access_token}` },
+      });
 
-      if (updateError) {
-        toast.error('Erro ao promover usuário: ' + updateError.message);
+      if (fnError) {
+        toast.error('Erro ao promover usuário: ' + fnError.message);
         return;
       }
 
