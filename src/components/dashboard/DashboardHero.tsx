@@ -41,7 +41,7 @@ const DashboardHero = React.memo(({ stats }: { stats: Stats }) => {
               {nomeLiga || 'Organizador de Torneios'}
             </p>
             <h1 className="font-heading text-4xl sm:text-[40px] font-bold tracking-wider text-foreground leading-tight">
-              ARENA <span className="text-primary">X</span>
+              BLADE<span className="text-primary">X</span>
             </h1>
             <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground font-body mt-1">
               BEYBLADE X · ORGANIZADOR

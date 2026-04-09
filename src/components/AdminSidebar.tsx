@@ -39,7 +39,7 @@ export function AdminSidebar() {
           </div>
           <div className="flex flex-col min-w-0">
             <span className="font-heading text-sm font-bold text-foreground tracking-wide">Admin Panel</span>
-            <span className="text-[10px] text-muted-foreground font-body">Arena X</span>
+            <span className="text-[10px] text-muted-foreground font-body"><span className="text-[10px] text-muted-foreground font-body">BladeX</span></span>
           </div>
         </div>
       </SidebarHeader>
