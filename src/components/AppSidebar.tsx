@@ -1,9 +1,10 @@
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useLiga } from '@/contexts/LigaContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { Home, Trophy, Clock, Star, Users, Settings, LogOut, ChevronRight } from 'lucide-react';
+import { Home, Trophy, Clock, Star, Users, Settings, LogOut, ChevronRight, Shield } from 'lucide-react';
 
 const NAV_ITEMS = [
   { title: 'Home', url: '/home', icon: Home },
