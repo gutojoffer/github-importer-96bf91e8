@@ -100,6 +100,7 @@ export function AppSidebar() {
         </div>
         <nav className="space-y-0.5">
           {SYSTEM_ITEMS.map((item) => <NavItem key={item.url} item={item} />)}
+          {isAdmin && <NavItem item={{ title: 'Admin', url: '/admin', icon: Shield }} />}
         </nav>
       </div>
 
