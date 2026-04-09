@@ -29,7 +29,7 @@ export default function Login() {
       <div className="w-full max-w-[400px] surface-panel p-8 space-y-6">
         <div className="text-center">
           <h1 className="font-heading text-3xl font-bold tracking-[0.12em]">
-            ARENA <span className="text-primary">X</span>
+            BLADE<span className="text-primary">X</span>
           </h1>
           <p className="text-sm text-muted-foreground font-body mt-1">Acesso para organizadores</p>
         </div>

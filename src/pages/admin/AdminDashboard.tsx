@@ -49,7 +49,7 @@ export default function AdminDashboard() {
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
       <div>
         <h1 className="font-heading text-2xl font-bold text-foreground">Dashboard Admin</h1>
-        <p className="text-sm text-muted-foreground font-body mt-1">Visão geral da plataforma Arena X</p>
+        <p className="text-sm text-muted-foreground font-body mt-1"><p className="text-sm text-muted-foreground font-body mt-1">Visão geral da plataforma BladeX</p></p>
       </div>
 
       {/* Stats */}

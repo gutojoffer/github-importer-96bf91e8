@@ -192,7 +192,7 @@ export default function Settings() {
           <h2 className="font-heading text-lg font-bold tracking-wider text-primary">SOBRE</h2>
         </div>
         <p className="text-sm text-muted-foreground font-body">
-          Arena X — Organizador de Torneios de Beyblade X
+          BladeX — Organizador de Torneios de Beyblade X
         </p>
         <p className="text-xs text-muted-foreground/60 font-body">
           Desenvolvido por Augusto Joffer
