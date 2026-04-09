@@ -265,7 +265,7 @@ export default function LandingPage() {
         />
 
         {/* Content */}
-        <div className="relative z-10 max-w-[600px] px-6 sm:px-12 lg:px-20 py-20" style={{ animation: 'heroSlideLeft 0.8s ease-out both' }}>
+        <div className="relative max-w-[600px] px-6 sm:px-12 lg:px-20 py-20" style={{ animation: 'heroSlideLeft 0.8s ease-out both', zIndex: 4 }}>
           {/* Pill */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] mb-6">
             <span className="w-2 h-2 rounded-full bg-blue-500" style={{ animation: 'pulseDot 2s ease-in-out infinite' }} />
