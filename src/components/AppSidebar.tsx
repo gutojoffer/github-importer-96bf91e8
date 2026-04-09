@@ -124,7 +124,7 @@ export function AppSidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-semibold truncate" style={{ color: '#E2E8F0' }}>{nomeLiga || 'Minha Liga'}</p>
-            <p className="text-[11px]" style={{ color: '#10B981' }}>● Organizador</p>
+            <p className="text-[11px]" style={{ color: '#10B981' }}>● {isAdmin ? 'Administrador' : 'Organizador'}</p>
           </div>
           <ChevronRight size={14} style={{ color: '#374151' }} className="shrink-0 ml-auto" />
         </div>
