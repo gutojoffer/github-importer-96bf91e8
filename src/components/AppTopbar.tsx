@@ -1,6 +1,7 @@
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useLiga } from '@/contexts/LigaContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useRef, useEffect } from 'react';
 import { Search, Bell, ChevronDown, Settings, LogOut, LayoutGrid } from 'lucide-react';
@@ -19,6 +20,7 @@ export function AppTopbar() {
   const navigate = useNavigate();
   const { nomeLiga, logoUrl } = useLiga();
   const { signOut } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -197,7 +199,7 @@ export function AppTopbar() {
             )}
             <div className="flex flex-col text-left overflow-hidden">
               <span className="text-[12px] font-semibold" style={{ color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}>{nomeLiga || 'Liga'}</span>
-              <span className="text-[10px]" style={{ color: '#64748B' }}>Organizador</span>
+              <span className="text-[10px]" style={{ color: '#64748B' }}>{isAdmin ? 'Administrador' : 'Organizador'}</span>
             </div>
             <ChevronDown size={12} style={{ color: '#4B5563' }} className="shrink-0" />
           </button>

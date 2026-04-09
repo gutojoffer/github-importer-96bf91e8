@@ -1,9 +1,10 @@
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useLiga } from '@/contexts/LigaContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { Home, Trophy, Clock, Star, Users, Settings, LogOut, ChevronRight } from 'lucide-react';
+import { Home, Trophy, Clock, Star, Users, Settings, LogOut, ChevronRight, Shield } from 'lucide-react';
 
 const NAV_ITEMS = [
   { title: 'Home', url: '/home', icon: Home },
@@ -22,6 +23,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { nomeLiga, logoUrl } = useLiga();
   const { signOut } = useAuth();
+  const { isAdmin } = useIsAdmin();
 
   const { data: activeTournaments } = useQuery({
     queryKey: ['active-tournament-count'],
@@ -98,6 +100,7 @@ export function AppSidebar() {
         </div>
         <nav className="space-y-0.5">
           {SYSTEM_ITEMS.map((item) => <NavItem key={item.url} item={item} />)}
+          {isAdmin && <NavItem item={{ title: 'Admin', url: '/admin', icon: Shield }} />}
         </nav>
       </div>
 
@@ -121,7 +124,7 @@ export function AppSidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-semibold truncate" style={{ color: '#E2E8F0' }}>{nomeLiga || 'Minha Liga'}</p>
-            <p className="text-[11px]" style={{ color: '#10B981' }}>● Organizador</p>
+            <p className="text-[11px]" style={{ color: '#10B981' }}>● {isAdmin ? 'Administrador' : 'Organizador'}</p>
           </div>
           <ChevronRight size={14} style={{ color: '#374151' }} className="shrink-0 ml-auto" />
         </div>
