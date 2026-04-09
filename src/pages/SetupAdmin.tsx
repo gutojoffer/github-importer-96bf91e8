@@ -12,11 +12,8 @@ export default function SetupAdmin() {
 
   useEffect(() => {
     (async () => {
-      const { count } = await supabase
-        .from('user_roles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'admin');
-      if (count && count > 0) {
+      const { data: hasAdmin } = await supabase.rpc('has_any_admin');
+      if (hasAdmin) {
         navigate('/login', { replace: true });
         return;
       }
