@@ -231,8 +231,9 @@ export default function LandingPage() {
           style={{
             right: 0,
             bottom: 0,
-            height: '90%',
+            height: '92%',
             width: 'auto',
+            maxWidth: '60%',
             objectFit: 'contain',
             objectPosition: 'bottom right',
             zIndex: 2,
@@ -244,9 +245,9 @@ export default function LandingPage() {
           style={{
             top: 0,
             left: 0,
-            width: '45%',
+            width: '42%',
             height: '100%',
-            background: 'linear-gradient(to right, #060912 30%, rgba(6,9,18,0.95) 55%, rgba(6,9,18,0) 100%)',
+            background: 'linear-gradient(to right, #060912 25%, rgba(6,9,18,0.85) 55%, rgba(6,9,18,0) 100%)',
             zIndex: 3,
           }}
         />
