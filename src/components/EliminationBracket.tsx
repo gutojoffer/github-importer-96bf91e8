@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react';
 import { Tournament, TournamentRound, Player } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Crown, Swords } from 'lucide-react';
+import StreakFrame from '@/components/StreakFrame';
 
 interface EliminationBracketProps {
   rounds: TournamentRound[];
@@ -37,16 +38,17 @@ function EliminationBracketView({ rounds, getPlayer, currentRound, champion }: E
               CAMPEÃO
             </div>
             <div className="flex flex-col items-center gap-2 py-4">
-              <Crown className="h-8 w-8 text-accent" />
-              <Avatar className="h-16 w-16 border-2 border-accent">
-                {(() => {
-                  const p = getPlayer(champion);
-                  if (!p) return <AvatarFallback className="bg-muted">?</AvatarFallback>;
-                  return p.avatar.startsWith('http') || p.avatar.startsWith('data:')
-                    ? <AvatarImage src={p.avatar} />
-                    : <AvatarFallback className="bg-muted text-2xl">{p.avatar}</AvatarFallback>;
-                })()}
-              </Avatar>
+              <StreakFrame streak={0} size={64} rankPosition={1}>
+                <Avatar className="h-16 w-16 border-2 border-accent">
+                  {(() => {
+                    const p = getPlayer(champion);
+                    if (!p) return <AvatarFallback className="bg-muted">?</AvatarFallback>;
+                    return p.avatar.startsWith('http') || p.avatar.startsWith('data:')
+                      ? <AvatarImage src={p.avatar} />
+                      : <AvatarFallback className="bg-muted text-2xl">{p.avatar}</AvatarFallback>;
+                  })()}
+                </Avatar>
+              </StreakFrame>
               <span className="font-heading text-sm font-bold text-accent italic">
                 {getPlayer(champion)?.nickname || getPlayer(champion)?.name || '?'}
               </span>
@@ -117,11 +119,13 @@ const EliminationSlot = memo(function EliminationSlot({ player, points, isWinner
 
   return (
     <div className={`flex items-center gap-2 px-2 py-1.5 transition-all ${isWinner ? 'bg-accent/10' : hasResult ? 'opacity-50' : ''}`}>
-      <Avatar className="h-5 w-5 border border-border/50 shrink-0">
-        {player.avatar.startsWith('http') || player.avatar.startsWith('data:')
-          ? <AvatarImage src={player.avatar} />
-          : <AvatarFallback className="bg-muted text-[7px]">{player.avatar}</AvatarFallback>}
-      </Avatar>
+      <StreakFrame streak={0} size={20} showBadge={false} animated={false}>
+        <Avatar className="h-5 w-5 border border-border/50 shrink-0">
+          {player.avatar.startsWith('http') || player.avatar.startsWith('data:')
+            ? <AvatarImage src={player.avatar} />
+            : <AvatarFallback className="bg-muted text-[7px]">{player.avatar}</AvatarFallback>}
+        </Avatar>
+      </StreakFrame>
       <span className={`text-[10px] font-heading truncate flex-1 ${isWinner ? 'text-accent font-bold' : 'text-foreground'}`}>
         {player.nickname || player.name.split(' ')[0]}
       </span>

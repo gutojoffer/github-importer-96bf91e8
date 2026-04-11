@@ -2,6 +2,8 @@ import { memo } from 'react';
 import { X } from 'lucide-react';
 import { Tournament, Player, TournamentRound } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import StreakFrame from '@/components/StreakFrame';
+import { getPlayerStreak } from '@/lib/streak';
 
 interface BracketTreeProps {
   tournament: Tournament;
@@ -14,6 +16,7 @@ function BracketTree({ tournament, getPlayer, currentRoundHighlight, onDropPlaye
   const rounds = tournament.rounds;
   const droppedIds = new Set(tournament.droppedPlayerIds || []);
   const isActive = tournament.status === 'active';
+  const getStreak = (playerId: string) => getPlayerStreak(tournament, playerId);
 
   if (rounds.length === 0) return null;
 
@@ -35,6 +38,7 @@ function BracketTree({ tournament, getPlayer, currentRoundHighlight, onDropPlaye
             droppedIds={droppedIds}
             isActive={isActive}
             onDropPlayer={onDropPlayer}
+            getStreak={getStreak}
           />
         ))}
       </div>
@@ -51,9 +55,10 @@ interface RoundColumnProps {
   droppedIds: Set<string>;
   isActive: boolean;
   onDropPlayer?: (playerId: string) => void;
+  getStreak: (playerId: string) => number;
 }
 
-const RoundColumn = memo(function RoundColumn({ round, roundIndex, getPlayer, isHighlighted, totalRounds, droppedIds, isActive, onDropPlayer }: RoundColumnProps) {
+const RoundColumn = memo(function RoundColumn({ round, roundIndex, getPlayer, isHighlighted, totalRounds, droppedIds, isActive, onDropPlayer, getStreak }: RoundColumnProps) {
   const nonByeMatches = round.matches.filter(m => !m.isBye);
 
   return (
@@ -85,6 +90,7 @@ const RoundColumn = memo(function RoundColumn({ round, roundIndex, getPlayer, is
               isDropped={droppedIds.has(match.player1Id)}
               isActive={isActive}
               onDrop={onDropPlayer && !droppedIds.has(match.player1Id) ? () => onDropPlayer(match.player1Id) : undefined}
+              streak={getStreak(match.player1Id)}
             />
             <div className="h-px bg-border/30" />
             <MatchSlot
@@ -96,6 +102,7 @@ const RoundColumn = memo(function RoundColumn({ round, roundIndex, getPlayer, is
               isDropped={droppedIds.has(match.player2Id)}
               isActive={isActive}
               onDrop={onDropPlayer && !droppedIds.has(match.player2Id) ? () => onDropPlayer(match.player2Id) : undefined}
+              streak={getStreak(match.player2Id)}
             />
           </div>
         );
@@ -121,19 +128,22 @@ interface MatchSlotProps {
   isDropped: boolean;
   isActive: boolean;
   onDrop?: () => void;
+  streak?: number;
 }
 
-const MatchSlot = memo(function MatchSlot({ player, points, isWinner, hasResult, side, isDropped, isActive, onDrop }: MatchSlotProps) {
+const MatchSlot = memo(function MatchSlot({ player, points, isWinner, hasResult, side, isDropped, isActive, onDrop, streak = 0 }: MatchSlotProps) {
   if (!player) return <div className="h-8 bg-muted/20" />;
 
   return (
     <div className={`flex items-center gap-2 px-2 py-1.5 transition-all group/slot ${isDropped ? 'opacity-40 line-through' : isWinner ? 'bg-primary/10' : hasResult ? 'opacity-50' : ''}`}>
-      <Avatar className="h-5 w-5 border border-border/50 shrink-0">
-        {player.avatar.startsWith('http') || player.avatar.startsWith('data:')
-          ? <AvatarImage src={player.avatar} />
-          : <AvatarFallback className="bg-muted text-[7px]">{player.avatar}</AvatarFallback>
-        }
-      </Avatar>
+      <StreakFrame streak={streak} size={20} showBadge={streak >= 1} animated={false}>
+        <Avatar className="h-5 w-5 border border-border/50 shrink-0">
+          {player.avatar.startsWith('http') || player.avatar.startsWith('data:')
+            ? <AvatarImage src={player.avatar} />
+            : <AvatarFallback className="bg-muted text-[7px]">{player.avatar}</AvatarFallback>
+          }
+        </Avatar>
+      </StreakFrame>
       <span className={`text-[10px] font-heading truncate flex-1 ${isDropped ? 'text-destructive' : isWinner ? 'text-primary font-bold' : 'text-foreground'}`}>
         {player.nickname || player.name.split(' ')[0]}
       </span>
