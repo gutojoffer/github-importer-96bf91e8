@@ -210,7 +210,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ════════ HERO ════════ */}
-      <section className="relative min-h-[90vh] flex items-center" style={{ overflow: 'hidden', position: 'relative' }}>
+      <section className="relative min-h-[90vh] flex items-center" style={{ overflow: 'visible', position: 'relative' }}>
         {/* Bg gradient + grid */}
         <div className="absolute inset-0" style={{
           background: 'radial-gradient(ellipse 70% 60% at 55% 40%, rgba(37,99,235,0.1), transparent)',
@@ -231,11 +231,10 @@ export default function LandingPage() {
           style={{
             right: 0,
             bottom: 0,
-            height: '92%',
-            width: 'auto',
-            maxWidth: '60%',
+            width: '55vw',
+            height: 'auto',
             objectFit: 'contain',
-            objectPosition: 'bottom right',
+            objectPosition: 'bottom center',
             zIndex: 2,
           }}
         />
