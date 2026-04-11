@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Player, getEloFromXP } from '@/types/tournament';
 import { Crown } from 'lucide-react';
+import StreakFrame from '@/components/StreakFrame';
 
 const positionColors = ['text-gold', 'text-[hsl(210,10%,70%)]', 'text-[hsl(30,50%,45%)]'];
 
@@ -33,15 +34,17 @@ const TopBladers = React.memo(({ players }: { players: Player[] }) => {
                 <span className={`font-heading text-lg font-bold w-6 text-center ${i < 3 ? positionColors[i] : 'text-muted-foreground'}`}>
                   {i + 1}
                 </span>
-                <div
-                  className="h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-                  style={{ backgroundColor: `hsl(${elo.tier.color} / 0.2)`, color: `hsl(${elo.tier.color})` }}
-                >
-                  {p.avatar?.startsWith('http') || p.avatar?.startsWith('data:')
-                    ? <img src={p.avatar} className="h-full w-full rounded-full object-cover" alt="" />
-                    : (p.avatar || p.name.charAt(0))
-                  }
-                </div>
+                <StreakFrame streak={0} size={32} rankPosition={i < 3 ? i + 1 : undefined} showBadge={false} animated={i < 3}>
+                  <div
+                    className="h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+                    style={{ backgroundColor: `hsl(${elo.tier.color} / 0.2)`, color: `hsl(${elo.tier.color})` }}
+                  >
+                    {p.avatar?.startsWith('http') || p.avatar?.startsWith('data:')
+                      ? <img src={p.avatar} className="h-full w-full rounded-full object-cover" alt="" />
+                      : (p.avatar || p.name.charAt(0))
+                    }
+                  </div>
+                </StreakFrame>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate font-body">{p.name}</p>
                 </div>
