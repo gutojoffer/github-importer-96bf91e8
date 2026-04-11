@@ -152,7 +152,7 @@ export default function LandingPage() {
   if (user) return <Navigate to="/home" replace />;
 
   return (
-    <div className="min-h-screen bg-[#060912] text-white overflow-hidden">
+    <div className="min-h-screen bg-[#060912] text-white overflow-x-hidden">
       <style>{`
         @keyframes scrollForward { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         @keyframes scrollReverse { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
