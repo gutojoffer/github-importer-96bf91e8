@@ -3,6 +3,7 @@ import { Player } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import EloBadge from '@/components/EloBadge';
 import LigaLogo from '@/components/LigaLogo';
+import StreakFrame from '@/components/StreakFrame';
 
 interface VersusScreenProps {
   player1: Player;
@@ -12,12 +13,14 @@ interface VersusScreenProps {
   player2Points?: number;
   pointsToWin?: number;
   animate?: boolean;
+  player1Streak?: number;
+  player2Streak?: number;
 }
 
 export default function VersusScreen({
   player1, player2, arenaName,
   player1Points = 0, player2Points = 0, pointsToWin = 4,
-  animate = true,
+  animate = true, player1Streak = 0, player2Streak = 0,
 }: VersusScreenProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [p1Anim, setP1Anim] = useState(false);
@@ -101,7 +104,7 @@ export default function VersusScreen({
     };
   }, []);
 
-  const renderPlayer = (player: Player, side: 'left' | 'right', points: number, isImpact: boolean) => {
+  const renderPlayer = (player: Player, side: 'left' | 'right', points: number, isImpact: boolean, streak: number) => {
     const isLeft = side === 'left';
 
     return (
@@ -113,7 +116,7 @@ export default function VersusScreen({
             : 'linear-gradient(225deg, rgba(239,68,68,0.07) 0%, transparent 60%)',
         }}
       >
-        {/* Avatar */}
+        {/* Avatar with StreakFrame */}
         <div
           className="rounded-full"
           style={{
@@ -122,18 +125,20 @@ export default function VersusScreen({
               : '0 0 20px rgba(239,68,68,0.15)',
           }}
         >
-          <Avatar
-            className="h-[88px] w-[88px]"
-            style={{
-              border: isLeft ? '2.5px solid #3b82f6' : '2.5px solid #ef4444',
-            }}
-          >
-            {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? (
-              <AvatarImage src={player.avatar} alt={player.name} />
-            ) : (
-              <AvatarFallback className="bg-muted text-3xl">{player.avatar}</AvatarFallback>
-            )}
-          </Avatar>
+          <StreakFrame streak={streak} size={88} playerName={player.name}>
+            <Avatar
+              className="h-[88px] w-[88px]"
+              style={{
+                border: isLeft ? '2.5px solid #3b82f6' : '2.5px solid #ef4444',
+              }}
+            >
+              {player.avatar.startsWith('http') || player.avatar.startsWith('data:') ? (
+                <AvatarImage src={player.avatar} alt={player.name} />
+              ) : (
+                <AvatarFallback className="bg-muted text-3xl">{player.avatar}</AvatarFallback>
+              )}
+            </Avatar>
+          </StreakFrame>
         </div>
 
         {/* Rank badge */}
@@ -206,7 +211,7 @@ export default function VersusScreen({
 
         {/* Left player */}
         <div className="relative" style={{ zIndex: 2 }}>
-          {renderPlayer(player1, 'left', player1Points, p1Anim)}
+          {renderPlayer(player1, 'left', player1Points, p1Anim, player1Streak)}
         </div>
 
         {/* VS Central */}
@@ -247,7 +252,7 @@ export default function VersusScreen({
 
         {/* Right player */}
         <div className="relative" style={{ zIndex: 2 }}>
-          {renderPlayer(player2, 'right', player2Points, p2Anim)}
+          {renderPlayer(player2, 'right', player2Points, p2Anim, player2Streak)}
         </div>
       </div>
 
