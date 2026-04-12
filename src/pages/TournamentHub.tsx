@@ -658,6 +658,9 @@ export default function TournamentHub() {
                 <Swords className="h-3 w-3" /> TOP {activeTournament.eliminationSize}
               </span>
             )}
+            <Button onClick={() => setShowCorrectModal(true)} variant="outline" className="font-heading tracking-wider gap-2 border-muted-foreground/30 text-muted-foreground hover:text-foreground">
+              <History className="h-4 w-4" /> Corrigir
+            </Button>
             <Button onClick={() => setConfirmEndTournament(true)} variant="outline" className="font-heading tracking-wider gap-2 border-primary/50 text-primary">
               <Trophy className="h-4 w-4" /> Encerrar
             </Button>
