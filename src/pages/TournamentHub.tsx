@@ -244,51 +244,148 @@ export default function TournamentHub() {
 
     const ptw = t.pointsToWin;
     if (match.player1Points >= ptw || match.player2Points >= ptw) {
-      const matchWinnerId = match.player1Points >= ptw ? match.player1Id : match.player2Id;
-      match.result = { winnerId: matchWinnerId, finishType };
-      const winner = getPlayer(matchWinnerId);
-      if (winner) { setVictoryWinner(winner); setVictoryFinish(finishType); }
-      setTimeout(() => { setVictoryWinner(null); setVictoryFinish(undefined); setVsKey(k => k + 1); }, 3500);
+      // Show confirmation modal instead of auto-registering
+      updateActive(t); // Save points first
+      setPendingResult({
+        matchId, winnerId, finishType, isElimination, tournament: t,
+        p1Points: match.player1Points, p2Points: match.player2Points,
+      });
+      return;
+    }
 
-      const allDone = currentRound.matches.every(m => m.result);
-      if (allDone) {
-        currentRound.completed = true;
+    updateActive(t);
+  }, [activeTournament, updateActive]);
 
-        if (isElimination) {
-          // Generate next elimination round
-          const totalElimRounds = Math.ceil(Math.log2(t.eliminationPlayerIds?.length || 2));
-          const nextElimRound = generateNextEliminationRound(currentRound, currentRoundIdx + 1, t.arenaCount, totalElimRounds);
-          if (nextElimRound && nextElimRound.matches.filter(m => !m.isBye).length > 0) {
-            t.eliminationRounds!.push(nextElimRound);
-            t.currentEliminationRound = currentRoundIdx + 1;
-            toast.success(`${nextElimRound.label || 'Próxima fase'} gerada!`);
-          } else {
-            // Final match done - champion!
-            toast.info('🏆 CAMPEÃO DEFINIDO! Encerre o torneio.');
+  // ─── Confirm match result ───
+  const handleConfirmResult = useCallback(() => {
+    if (!pendingResult) return;
+    const t: Tournament = {
+      ...pendingResult.tournament,
+      rounds: pendingResult.tournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m })) })),
+      eliminationRounds: (pendingResult.tournament.eliminationRounds || []).map(r => ({ ...r, matches: r.matches.map(m => ({ ...m })) })),
+    };
+
+    const roundsArray = pendingResult.isElimination ? t.eliminationRounds! : t.rounds;
+    const currentRoundIdx = pendingResult.isElimination ? (t.currentEliminationRound || 0) : t.currentRound;
+    const currentRound = roundsArray[currentRoundIdx];
+    if (!currentRound) { setPendingResult(null); return; }
+
+    const match = currentRound.matches.find(m => m.id === pendingResult.matchId);
+    if (!match) { setPendingResult(null); return; }
+
+    const matchWinnerId = match.player1Points >= t.pointsToWin ? match.player1Id : match.player2Id;
+    match.result = { winnerId: matchWinnerId, finishType: pendingResult.finishType };
+    const winner = getPlayer(matchWinnerId);
+    if (winner) { setVictoryWinner(winner); setVictoryFinish(pendingResult.finishType); }
+    setTimeout(() => { setVictoryWinner(null); setVictoryFinish(undefined); setVsKey(k => k + 1); }, 3500);
+
+    const allDone = currentRound.matches.every(m => m.result);
+    if (allDone) {
+      currentRound.completed = true;
+
+      if (pendingResult.isElimination) {
+        const totalElimRounds = Math.ceil(Math.log2(t.eliminationPlayerIds?.length || 2));
+        const nextElimRound = generateNextEliminationRound(currentRound, currentRoundIdx + 1, t.arenaCount, totalElimRounds);
+        if (nextElimRound && nextElimRound.matches.filter(m => !m.isBye).length > 0) {
+          t.eliminationRounds!.push(nextElimRound);
+          t.currentEliminationRound = currentRoundIdx + 1;
+          toast.success(`${nextElimRound.label || 'Próxima fase'} gerada!`);
+        } else {
+          toast.info('🏆 CAMPEÃO DEFINIDO! Encerre o torneio.');
+        }
+      } else {
+        if (t.currentRound + 1 < t.totalRounds) {
+          const nextRound = generateSwissRound({ ...t, currentRound: t.currentRound + 1 });
+          if (nextRound) {
+            t.rounds.push(nextRound);
+            t.currentRound++;
+            toast.success(`Rodada ${t.currentRound + 1} gerada!`);
           }
         } else {
-          // Swiss round complete
-          if (t.currentRound + 1 < t.totalRounds) {
-            const nextRound = generateSwissRound({ ...t, currentRound: t.currentRound + 1 });
-            if (nextRound) {
-              t.rounds.push(nextRound);
-              t.currentRound++;
-              toast.success(`Rodada ${t.currentRound + 1} gerada!`);
-            }
+          if (t.eliminationSize) {
+            toast.info(`Rodadas Swiss concluídas! Preparando TOP ${t.eliminationSize}...`);
           } else {
-            // All swiss rounds complete
-            if (t.eliminationSize) {
-              toast.info(`Rodadas Swiss concluídas! Preparando TOP ${t.eliminationSize}...`);
-            } else {
-              toast.info('Todas as rodadas concluídas! Encerre o torneio.');
-            }
+            toast.info('Todas as rodadas concluídas! Encerre o torneio.');
           }
         }
       }
     }
 
     updateActive(t);
-  }, [activeTournament, getPlayer, updateActive]);
+    setPendingResult(null);
+  }, [pendingResult, getPlayer, updateActive]);
+
+  // ─── Cancel pending result (go back to editing score) ───
+  const handleCancelPendingResult = useCallback(() => {
+    if (!pendingResult) return;
+    // Undo the last score action that triggered the confirmation
+    const t: Tournament = {
+      ...pendingResult.tournament,
+      rounds: pendingResult.tournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m, scoreLog: m.scoreLog ? [...m.scoreLog] : [] })) })),
+      eliminationRounds: (pendingResult.tournament.eliminationRounds || []).map(r => ({ ...r, matches: r.matches.map(m => ({ ...m, scoreLog: m.scoreLog ? [...m.scoreLog] : [] })) })),
+    };
+
+    const roundsArray = pendingResult.isElimination ? t.eliminationRounds! : t.rounds;
+    const currentRoundIdx = pendingResult.isElimination ? (t.currentEliminationRound || 0) : t.currentRound;
+    const match = roundsArray[currentRoundIdx]?.matches.find(m => m.id === pendingResult.matchId);
+    if (match && match.scoreLog && match.scoreLog.length > 0) {
+      const activeLog = match.scoreLog.filter(a => !a.undone);
+      if (activeLog.length > 0) {
+        const lastAction = activeLog[activeLog.length - 1];
+        const origIdx = match.scoreLog.findIndex(a => a.id === lastAction.id);
+        if (origIdx !== -1) match.scoreLog[origIdx] = { ...match.scoreLog[origIdx], undone: true };
+        if (lastAction.playerId === match.player1Id) match.player1Points -= lastAction.points;
+        else match.player2Points -= lastAction.points;
+        match.player1Points = Math.max(0, match.player1Points);
+        match.player2Points = Math.max(0, match.player2Points);
+      }
+    }
+    updateActive(t);
+    setPendingResult(null);
+  }, [pendingResult, updateActive]);
+
+  // ─── Correct past match result ───
+  const handleCorrectResult = useCallback((matchId: string, roundIndex: number, isElimination: boolean, newP1Points: number, newP2Points: number) => {
+    if (!activeTournament) return;
+    const t: Tournament = {
+      ...activeTournament,
+      rounds: activeTournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m })) })),
+      eliminationRounds: (activeTournament.eliminationRounds || []).map(r => ({ ...r, matches: r.matches.map(m => ({ ...m })) })),
+    };
+
+    const roundsArray = isElimination ? t.eliminationRounds! : t.rounds;
+    const match = roundsArray[roundIndex]?.matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    match.player1Points = newP1Points;
+    match.player2Points = newP2Points;
+
+    const ptw = t.pointsToWin;
+    if (newP1Points >= ptw || newP2Points >= ptw) {
+      const newWinnerId = newP1Points >= ptw ? match.player1Id : match.player2Id;
+      match.result = { winnerId: newWinnerId, finishType: match.result?.finishType || 'spin' };
+    } else {
+      match.result = undefined;
+    }
+
+    // Regenerate subsequent rounds if in swiss and not last round
+    if (!isElimination && roundIndex < t.rounds.length - 1) {
+      // Remove all rounds after the corrected one and regenerate
+      t.rounds = t.rounds.slice(0, roundIndex + 1);
+      let currentIdx = roundIndex;
+      while (currentIdx + 1 < t.totalRounds && t.rounds[currentIdx]?.completed) {
+        const nextRound = generateSwissRound({ ...t, currentRound: currentIdx + 1 });
+        if (nextRound) {
+          t.rounds.push(nextRound);
+          currentIdx++;
+        } else break;
+      }
+      t.currentRound = t.rounds.length - 1;
+    }
+
+    updateActive(t);
+    toast.success('Resultado corrigido. O chaveamento foi atualizado.');
+  }, [activeTournament, updateActive]);
 
   // ─── Undo Last Point ───
   const handleUndoPoint = useCallback((matchId: string, isElimination = false) => {
