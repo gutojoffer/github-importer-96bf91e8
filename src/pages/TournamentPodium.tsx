@@ -175,10 +175,13 @@ export default function TournamentPodium() {
                     </p>
                   )}
                   <EloBadge xp={player.xp || 0} size="sm" />
+                  <p className="text-sm font-heading font-bold mt-1" style={{ color: config.color }}>
+                    🏆 {standing.wins} vitória{standing.wins !== 1 ? 's' : ''}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">{standing.losses} derrota{standing.losses !== 1 ? 's' : ''}</p>
                   <p className="text-xs font-heading font-bold mt-1" style={{ color: config.color }}>
                     +{standing.xpAwarded} XP
                   </p>
-                  <p className="text-[10px] text-muted-foreground">{standing.wins}W / {standing.losses}L</p>
                 </div>
               </div>
             );
@@ -227,7 +230,7 @@ export default function TournamentPodium() {
                       {s.dropped && <span className="text-[9px] font-heading text-destructive tracking-wider">DESISTENTE</span>}
                     </div>
                     <EloBadge xp={player.xp || 0} size="sm" />
-                    <span className="text-xs text-muted-foreground font-body">{s.wins}W/{s.losses}L</span>
+                    <span className="text-xs text-muted-foreground font-body">{s.wins}V/{s.losses}D</span>
                     <span className="font-heading font-bold text-sm" style={{ color: '#4F8EF7' }}>
                       {s.dropped ? '-' : `+${s.xpAwarded} XP`}
                     </span>
