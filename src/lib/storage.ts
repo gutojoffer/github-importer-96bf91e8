@@ -245,43 +245,42 @@ export async function saveCompletedTournament(t: Tournament) {
 export function calculateStandings(tournament: Tournament): TournamentStanding[] {
   const winsMap = new Map<string, number>();
   const lossesMap = new Map<string, number>();
+  const pointsMap = new Map<string, number>();
   const droppedSet = new Set(tournament.droppedPlayerIds || []);
-  for (const pid of tournament.playerIds) { winsMap.set(pid, 0); lossesMap.set(pid, 0); }
+  for (const pid of tournament.playerIds) { winsMap.set(pid, 0); lossesMap.set(pid, 0); pointsMap.set(pid, 0); }
 
-  for (const round of tournament.rounds) {
-    for (const match of round.matches) {
-      if (match.isBye) { winsMap.set(match.player1Id, (winsMap.get(match.player1Id) || 0) + 1); continue; }
-      if (match.result) {
-        const winnerId = match.result.winnerId;
-        const loserId = match.player1Id === winnerId ? match.player2Id : match.player1Id;
-        winsMap.set(winnerId, (winsMap.get(winnerId) || 0) + 1);
-        lossesMap.set(loserId, (lossesMap.get(loserId) || 0) + 1);
+  const processRounds = (rounds: typeof tournament.rounds) => {
+    for (const round of rounds) {
+      for (const match of round.matches) {
+        if (match.isBye) { winsMap.set(match.player1Id, (winsMap.get(match.player1Id) || 0) + 1); continue; }
+        // Accumulate points
+        pointsMap.set(match.player1Id, (pointsMap.get(match.player1Id) || 0) + (match.player1Points || 0));
+        pointsMap.set(match.player2Id, (pointsMap.get(match.player2Id) || 0) + (match.player2Points || 0));
+        if (match.result) {
+          const winnerId = match.result.winnerId;
+          const loserId = match.player1Id === winnerId ? match.player2Id : match.player1Id;
+          winsMap.set(winnerId, (winsMap.get(winnerId) || 0) + 1);
+          lossesMap.set(loserId, (lossesMap.get(loserId) || 0) + 1);
+        }
       }
     }
-  }
+  };
 
-  for (const round of (tournament.eliminationRounds || [])) {
-    for (const match of round.matches) {
-      if (match.isBye) { winsMap.set(match.player1Id, (winsMap.get(match.player1Id) || 0) + 1); continue; }
-      if (match.result) {
-        const winnerId = match.result.winnerId;
-        const loserId = match.player1Id === winnerId ? match.player2Id : match.player1Id;
-        winsMap.set(winnerId, (winsMap.get(winnerId) || 0) + 1);
-        lossesMap.set(loserId, (lossesMap.get(loserId) || 0) + 1);
-      }
-    }
-  }
+  processRounds(tournament.rounds);
+  processRounds(tournament.eliminationRounds || []);
 
   const sorted = tournament.playerIds
     .map(pid => ({
       playerId: pid,
       wins: winsMap.get(pid) || 0,
       losses: lossesMap.get(pid) || 0,
+      totalPoints: pointsMap.get(pid) || 0,
       dropped: droppedSet.has(pid),
     }))
     .sort((a, b) => {
       if (a.dropped !== b.dropped) return a.dropped ? 1 : -1;
-      return b.wins - a.wins || a.losses - b.losses;
+      if (b.wins !== a.wins) return b.wins - a.wins;
+      return b.totalPoints - a.totalPoints; // Tiebreak by total points
     });
 
   return sorted.map((entry, i) => ({

@@ -15,17 +15,18 @@ import ByeBanner from '@/components/ByeBanner';
 import TournamentHUD from '@/components/TournamentHUD';
 import VictorySplash from '@/components/VictorySplash';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import ConfirmResultModal from '@/components/ConfirmResultModal';
+import CorrectResultModal from '@/components/CorrectResultModal';
 import BracketTree from '@/components/BracketTree';
 import EliminationBracket from '@/components/EliminationBracket';
 import EliminationTransition from '@/components/EliminationTransition';
-
 import FinishOverlay from '@/components/FinishOverlay';
 import LigaLogo from '@/components/LigaLogo';
 import EloBadge from '@/components/EloBadge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Plus, Play, Lightbulb, Calendar, Users, Trophy, XOctagon, Award,
-  CheckCircle, Camera, UserPlus, X, Search, Check, Trash2, UserMinus, Undo2, Ban, Swords, Pencil, Clock,
+  CheckCircle, Camera, UserPlus, X, Search, Check, Trash2, UserMinus, Undo2, Ban, Swords, Pencil, Clock, History,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -96,6 +97,15 @@ export default function TournamentHub() {
 
   // Elimination transition
   const [showEliminationTransition, setShowEliminationTransition] = useState(false);
+
+  // Pending result confirmation
+  const [pendingResult, setPendingResult] = useState<{
+    matchId: string; winnerId: string; finishType: FinishType; isElimination: boolean;
+    tournament: Tournament; p1Points: number; p2Points: number;
+  } | null>(null);
+
+  // Correction modal
+  const [showCorrectModal, setShowCorrectModal] = useState(false);
 
   // Confirmations
   const [confirmEndTournament, setConfirmEndTournament] = useState(false);
@@ -234,51 +244,148 @@ export default function TournamentHub() {
 
     const ptw = t.pointsToWin;
     if (match.player1Points >= ptw || match.player2Points >= ptw) {
-      const matchWinnerId = match.player1Points >= ptw ? match.player1Id : match.player2Id;
-      match.result = { winnerId: matchWinnerId, finishType };
-      const winner = getPlayer(matchWinnerId);
-      if (winner) { setVictoryWinner(winner); setVictoryFinish(finishType); }
-      setTimeout(() => { setVictoryWinner(null); setVictoryFinish(undefined); setVsKey(k => k + 1); }, 3500);
+      // Show confirmation modal instead of auto-registering
+      updateActive(t); // Save points first
+      setPendingResult({
+        matchId, winnerId, finishType, isElimination, tournament: t,
+        p1Points: match.player1Points, p2Points: match.player2Points,
+      });
+      return;
+    }
 
-      const allDone = currentRound.matches.every(m => m.result);
-      if (allDone) {
-        currentRound.completed = true;
+    updateActive(t);
+  }, [activeTournament, updateActive]);
 
-        if (isElimination) {
-          // Generate next elimination round
-          const totalElimRounds = Math.ceil(Math.log2(t.eliminationPlayerIds?.length || 2));
-          const nextElimRound = generateNextEliminationRound(currentRound, currentRoundIdx + 1, t.arenaCount, totalElimRounds);
-          if (nextElimRound && nextElimRound.matches.filter(m => !m.isBye).length > 0) {
-            t.eliminationRounds!.push(nextElimRound);
-            t.currentEliminationRound = currentRoundIdx + 1;
-            toast.success(`${nextElimRound.label || 'Próxima fase'} gerada!`);
-          } else {
-            // Final match done - champion!
-            toast.info('🏆 CAMPEÃO DEFINIDO! Encerre o torneio.');
+  // ─── Confirm match result ───
+  const handleConfirmResult = useCallback(() => {
+    if (!pendingResult) return;
+    const t: Tournament = {
+      ...pendingResult.tournament,
+      rounds: pendingResult.tournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m })) })),
+      eliminationRounds: (pendingResult.tournament.eliminationRounds || []).map(r => ({ ...r, matches: r.matches.map(m => ({ ...m })) })),
+    };
+
+    const roundsArray = pendingResult.isElimination ? t.eliminationRounds! : t.rounds;
+    const currentRoundIdx = pendingResult.isElimination ? (t.currentEliminationRound || 0) : t.currentRound;
+    const currentRound = roundsArray[currentRoundIdx];
+    if (!currentRound) { setPendingResult(null); return; }
+
+    const match = currentRound.matches.find(m => m.id === pendingResult.matchId);
+    if (!match) { setPendingResult(null); return; }
+
+    const matchWinnerId = match.player1Points >= t.pointsToWin ? match.player1Id : match.player2Id;
+    match.result = { winnerId: matchWinnerId, finishType: pendingResult.finishType };
+    const winner = getPlayer(matchWinnerId);
+    if (winner) { setVictoryWinner(winner); setVictoryFinish(pendingResult.finishType); }
+    setTimeout(() => { setVictoryWinner(null); setVictoryFinish(undefined); setVsKey(k => k + 1); }, 3500);
+
+    const allDone = currentRound.matches.every(m => m.result);
+    if (allDone) {
+      currentRound.completed = true;
+
+      if (pendingResult.isElimination) {
+        const totalElimRounds = Math.ceil(Math.log2(t.eliminationPlayerIds?.length || 2));
+        const nextElimRound = generateNextEliminationRound(currentRound, currentRoundIdx + 1, t.arenaCount, totalElimRounds);
+        if (nextElimRound && nextElimRound.matches.filter(m => !m.isBye).length > 0) {
+          t.eliminationRounds!.push(nextElimRound);
+          t.currentEliminationRound = currentRoundIdx + 1;
+          toast.success(`${nextElimRound.label || 'Próxima fase'} gerada!`);
+        } else {
+          toast.info('🏆 CAMPEÃO DEFINIDO! Encerre o torneio.');
+        }
+      } else {
+        if (t.currentRound + 1 < t.totalRounds) {
+          const nextRound = generateSwissRound({ ...t, currentRound: t.currentRound + 1 });
+          if (nextRound) {
+            t.rounds.push(nextRound);
+            t.currentRound++;
+            toast.success(`Rodada ${t.currentRound + 1} gerada!`);
           }
         } else {
-          // Swiss round complete
-          if (t.currentRound + 1 < t.totalRounds) {
-            const nextRound = generateSwissRound({ ...t, currentRound: t.currentRound + 1 });
-            if (nextRound) {
-              t.rounds.push(nextRound);
-              t.currentRound++;
-              toast.success(`Rodada ${t.currentRound + 1} gerada!`);
-            }
+          if (t.eliminationSize) {
+            toast.info(`Rodadas Swiss concluídas! Preparando TOP ${t.eliminationSize}...`);
           } else {
-            // All swiss rounds complete
-            if (t.eliminationSize) {
-              toast.info(`Rodadas Swiss concluídas! Preparando TOP ${t.eliminationSize}...`);
-            } else {
-              toast.info('Todas as rodadas concluídas! Encerre o torneio.');
-            }
+            toast.info('Todas as rodadas concluídas! Encerre o torneio.');
           }
         }
       }
     }
 
     updateActive(t);
-  }, [activeTournament, getPlayer, updateActive]);
+    setPendingResult(null);
+  }, [pendingResult, getPlayer, updateActive]);
+
+  // ─── Cancel pending result (go back to editing score) ───
+  const handleCancelPendingResult = useCallback(() => {
+    if (!pendingResult) return;
+    // Undo the last score action that triggered the confirmation
+    const t: Tournament = {
+      ...pendingResult.tournament,
+      rounds: pendingResult.tournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m, scoreLog: m.scoreLog ? [...m.scoreLog] : [] })) })),
+      eliminationRounds: (pendingResult.tournament.eliminationRounds || []).map(r => ({ ...r, matches: r.matches.map(m => ({ ...m, scoreLog: m.scoreLog ? [...m.scoreLog] : [] })) })),
+    };
+
+    const roundsArray = pendingResult.isElimination ? t.eliminationRounds! : t.rounds;
+    const currentRoundIdx = pendingResult.isElimination ? (t.currentEliminationRound || 0) : t.currentRound;
+    const match = roundsArray[currentRoundIdx]?.matches.find(m => m.id === pendingResult.matchId);
+    if (match && match.scoreLog && match.scoreLog.length > 0) {
+      const activeLog = match.scoreLog.filter(a => !a.undone);
+      if (activeLog.length > 0) {
+        const lastAction = activeLog[activeLog.length - 1];
+        const origIdx = match.scoreLog.findIndex(a => a.id === lastAction.id);
+        if (origIdx !== -1) match.scoreLog[origIdx] = { ...match.scoreLog[origIdx], undone: true };
+        if (lastAction.playerId === match.player1Id) match.player1Points -= lastAction.points;
+        else match.player2Points -= lastAction.points;
+        match.player1Points = Math.max(0, match.player1Points);
+        match.player2Points = Math.max(0, match.player2Points);
+      }
+    }
+    updateActive(t);
+    setPendingResult(null);
+  }, [pendingResult, updateActive]);
+
+  // ─── Correct past match result ───
+  const handleCorrectResult = useCallback((matchId: string, roundIndex: number, isElimination: boolean, newP1Points: number, newP2Points: number) => {
+    if (!activeTournament) return;
+    const t: Tournament = {
+      ...activeTournament,
+      rounds: activeTournament.rounds.map(r => ({ ...r, matches: r.matches.map(m => ({ ...m })) })),
+      eliminationRounds: (activeTournament.eliminationRounds || []).map(r => ({ ...r, matches: r.matches.map(m => ({ ...m })) })),
+    };
+
+    const roundsArray = isElimination ? t.eliminationRounds! : t.rounds;
+    const match = roundsArray[roundIndex]?.matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    match.player1Points = newP1Points;
+    match.player2Points = newP2Points;
+
+    const ptw = t.pointsToWin;
+    if (newP1Points >= ptw || newP2Points >= ptw) {
+      const newWinnerId = newP1Points >= ptw ? match.player1Id : match.player2Id;
+      match.result = { winnerId: newWinnerId, finishType: match.result?.finishType || 'spin' };
+    } else {
+      match.result = undefined;
+    }
+
+    // Regenerate subsequent rounds if in swiss and not last round
+    if (!isElimination && roundIndex < t.rounds.length - 1) {
+      // Remove all rounds after the corrected one and regenerate
+      t.rounds = t.rounds.slice(0, roundIndex + 1);
+      let currentIdx = roundIndex;
+      while (currentIdx + 1 < t.totalRounds && t.rounds[currentIdx]?.completed) {
+        const nextRound = generateSwissRound({ ...t, currentRound: currentIdx + 1 });
+        if (nextRound) {
+          t.rounds.push(nextRound);
+          currentIdx++;
+        } else break;
+      }
+      t.currentRound = t.rounds.length - 1;
+    }
+
+    updateActive(t);
+    toast.success('Resultado corrigido. O chaveamento foi atualizado.');
+  }, [activeTournament, updateActive]);
 
   // ─── Undo Last Point ───
   const handleUndoPoint = useCallback((matchId: string, isElimination = false) => {
@@ -551,6 +658,9 @@ export default function TournamentHub() {
                 <Swords className="h-3 w-3" /> TOP {activeTournament.eliminationSize}
               </span>
             )}
+            <Button onClick={() => setShowCorrectModal(true)} variant="outline" className="font-heading tracking-wider gap-2 border-muted-foreground/30 text-muted-foreground hover:text-foreground">
+              <History className="h-4 w-4" /> Corrigir
+            </Button>
             <Button onClick={() => setConfirmEndTournament(true)} variant="outline" className="font-heading tracking-wider gap-2 border-primary/50 text-primary">
               <Trophy className="h-4 w-4" /> Encerrar
             </Button>
@@ -661,19 +771,32 @@ export default function TournamentHub() {
                 onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player2Id, ft, isElim)}
                 disabled={!!currentMatch.result}
               />
-              <div className="flex justify-center" style={{ gridColumn: '1 / -1' }}>
-                <button
-                  onClick={() => handleUndoPoint(currentMatch.id, isElim)}
-                  disabled={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0}
-                  className="font-heading tracking-wider text-xs gap-1.5 text-muted-foreground hover:text-foreground/70 flex items-center gap-1.5 py-2 transition-opacity disabled:opacity-20"
-                  style={{ opacity: 0.4 }}
-                  title={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0 ? 'Nenhum ponto para desfazer' : 'Desfazer último ponto'}
-                  onMouseEnter={e => (e.currentTarget.style.opacity = '0.7')}
-                  onMouseLeave={e => (e.currentTarget.style.opacity = '0.4')}
-                >
-                  <Undo2 className="h-4 w-4" /> Desfazer último ponto
-                </button>
-              </div>
+              <button
+                onClick={() => handleUndoPoint(currentMatch.id, isElim)}
+                disabled={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0}
+                className="flex items-center justify-center gap-2 w-full py-3 px-6 rounded-[10px] font-body text-[13px] font-medium transition-all duration-150 disabled:opacity-20 disabled:cursor-not-allowed"
+                style={{
+                  gridColumn: '1 / -1',
+                  marginTop: 4,
+                  background: 'rgba(255,255,255,.04)',
+                  border: '1px solid rgba(255,255,255,.12)',
+                  color: '#9CA3AF',
+                }}
+                onMouseEnter={e => {
+                  if (!e.currentTarget.disabled) {
+                    e.currentTarget.style.background = 'rgba(255,255,255,.08)';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,.22)';
+                    e.currentTarget.style.color = '#E2E8F0';
+                  }
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,.04)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,.12)';
+                  e.currentTarget.style.color = '#9CA3AF';
+                }}
+              >
+                <Undo2 className="h-4 w-4" /> Desfazer último ponto
+              </button>
             </div>
           </div>
         ) : !shouldShowStartElimination ? (
@@ -761,6 +884,29 @@ export default function TournamentHub() {
         <ConfirmDialog open={!!confirmDropPlayer} onOpenChange={(open) => { if (!open) setConfirmDropPlayer(null); }}
           title="Dropar Jogador" description={`Tem certeza que deseja dropar "${confirmDropPlayer ? (getPlayer(confirmDropPlayer)?.name || '') : ''}"? Esta ação não pode ser desfeita. Partidas em andamento serão encerradas com W/O.`}
           confirmLabel="Dropar" onConfirm={handleDropPlayer} />
+
+        {/* Confirm Result Modal */}
+        {pendingResult && currentMatch && (
+          <ConfirmResultModal
+            open={!!pendingResult}
+            player1={getPlayer(currentMatch.player1Id)!}
+            player2={getPlayer(currentMatch.player2Id)!}
+            player1Points={pendingResult.p1Points}
+            player2Points={pendingResult.p2Points}
+            pointsToWin={activeTournament.pointsToWin}
+            onConfirm={handleConfirmResult}
+            onCancel={handleCancelPendingResult}
+          />
+        )}
+
+        {/* Correct Result Modal */}
+        <CorrectResultModal
+          open={showCorrectModal}
+          tournament={activeTournament}
+          getPlayer={getPlayer}
+          onClose={() => setShowCorrectModal(false)}
+          onCorrect={handleCorrectResult}
+        />
       </div>
     );
   }
