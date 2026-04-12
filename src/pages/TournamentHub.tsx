@@ -771,19 +771,32 @@ export default function TournamentHub() {
                 onResult={(ft) => handleScorePoint(currentMatch.id, currentMatch.player2Id, ft, isElim)}
                 disabled={!!currentMatch.result}
               />
-              <div className="flex justify-center" style={{ gridColumn: '1 / -1' }}>
-                <button
-                  onClick={() => handleUndoPoint(currentMatch.id, isElim)}
-                  disabled={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0}
-                  className="font-heading tracking-wider text-xs gap-1.5 text-muted-foreground hover:text-foreground/70 flex items-center gap-1.5 py-2 transition-opacity disabled:opacity-20"
-                  style={{ opacity: 0.4 }}
-                  title={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0 ? 'Nenhum ponto para desfazer' : 'Desfazer último ponto'}
-                  onMouseEnter={e => (e.currentTarget.style.opacity = '0.7')}
-                  onMouseLeave={e => (e.currentTarget.style.opacity = '0.4')}
-                >
-                  <Undo2 className="h-4 w-4" /> Desfazer último ponto
-                </button>
-              </div>
+              <button
+                onClick={() => handleUndoPoint(currentMatch.id, isElim)}
+                disabled={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0}
+                className="flex items-center justify-center gap-2 w-full py-3 px-6 rounded-[10px] font-body text-[13px] font-medium transition-all duration-150 disabled:opacity-20 disabled:cursor-not-allowed"
+                style={{
+                  gridColumn: '1 / -1',
+                  marginTop: 4,
+                  background: 'rgba(255,255,255,.04)',
+                  border: '1px solid rgba(255,255,255,.12)',
+                  color: '#9CA3AF',
+                }}
+                onMouseEnter={e => {
+                  if (!e.currentTarget.disabled) {
+                    e.currentTarget.style.background = 'rgba(255,255,255,.08)';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,.22)';
+                    e.currentTarget.style.color = '#E2E8F0';
+                  }
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,.04)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,.12)';
+                  e.currentTarget.style.color = '#9CA3AF';
+                }}
+              >
+                <Undo2 className="h-4 w-4" /> Desfazer último ponto
+              </button>
             </div>
           </div>
         ) : !shouldShowStartElimination ? (
