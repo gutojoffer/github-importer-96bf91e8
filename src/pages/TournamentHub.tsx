@@ -15,10 +15,11 @@ import ByeBanner from '@/components/ByeBanner';
 import TournamentHUD from '@/components/TournamentHUD';
 import VictorySplash from '@/components/VictorySplash';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import ConfirmResultModal from '@/components/ConfirmResultModal';
+import CorrectResultModal from '@/components/CorrectResultModal';
 import BracketTree from '@/components/BracketTree';
 import EliminationBracket from '@/components/EliminationBracket';
 import EliminationTransition from '@/components/EliminationTransition';
-
 import FinishOverlay from '@/components/FinishOverlay';
 import LigaLogo from '@/components/LigaLogo';
 import EloBadge from '@/components/EloBadge';
