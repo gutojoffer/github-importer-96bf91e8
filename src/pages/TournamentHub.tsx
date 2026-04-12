@@ -98,6 +98,15 @@ export default function TournamentHub() {
   // Elimination transition
   const [showEliminationTransition, setShowEliminationTransition] = useState(false);
 
+  // Pending result confirmation
+  const [pendingResult, setPendingResult] = useState<{
+    matchId: string; winnerId: string; finishType: FinishType; isElimination: boolean;
+    tournament: Tournament; p1Points: number; p2Points: number;
+  } | null>(null);
+
+  // Correction modal
+  const [showCorrectModal, setShowCorrectModal] = useState(false);
+
   // Confirmations
   const [confirmEndTournament, setConfirmEndTournament] = useState(false);
   const [confirmCancelTournament, setConfirmCancelTournament] = useState(false);
