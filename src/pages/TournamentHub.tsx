@@ -884,6 +884,29 @@ export default function TournamentHub() {
         <ConfirmDialog open={!!confirmDropPlayer} onOpenChange={(open) => { if (!open) setConfirmDropPlayer(null); }}
           title="Dropar Jogador" description={`Tem certeza que deseja dropar "${confirmDropPlayer ? (getPlayer(confirmDropPlayer)?.name || '') : ''}"? Esta ação não pode ser desfeita. Partidas em andamento serão encerradas com W/O.`}
           confirmLabel="Dropar" onConfirm={handleDropPlayer} />
+
+        {/* Confirm Result Modal */}
+        {pendingResult && currentMatch && (
+          <ConfirmResultModal
+            open={!!pendingResult}
+            player1={getPlayer(currentMatch.player1Id)!}
+            player2={getPlayer(currentMatch.player2Id)!}
+            player1Points={pendingResult.p1Points}
+            player2Points={pendingResult.p2Points}
+            pointsToWin={activeTournament.pointsToWin}
+            onConfirm={handleConfirmResult}
+            onCancel={handleCancelPendingResult}
+          />
+        )}
+
+        {/* Correct Result Modal */}
+        <CorrectResultModal
+          open={showCorrectModal}
+          tournament={activeTournament}
+          getPlayer={getPlayer}
+          onClose={() => setShowCorrectModal(false)}
+          onCorrect={handleCorrectResult}
+        />
       </div>
     );
   }
