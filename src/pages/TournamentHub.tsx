@@ -774,25 +774,30 @@ export default function TournamentHub() {
               <button
                 onClick={() => handleUndoPoint(currentMatch.id, isElim)}
                 disabled={!currentMatch.scoreLog || currentMatch.scoreLog.filter(a => !a.undone).length === 0}
-                className="flex items-center justify-center gap-2 w-full py-3 px-6 rounded-[10px] font-body text-[13px] font-medium transition-all duration-150 disabled:opacity-20 disabled:cursor-not-allowed"
+                className="flex items-center justify-center gap-2 w-full font-body transition-all duration-150 disabled:opacity-20 disabled:cursor-not-allowed"
                 style={{
                   gridColumn: '1 / -1',
                   marginTop: 4,
-                  background: 'rgba(255,255,255,.04)',
-                  border: '1px solid rgba(255,255,255,.12)',
-                  color: '#9CA3AF',
+                  padding: '12px 24px',
+                  background: 'rgba(255,255,255,.06)',
+                  border: '1px solid rgba(255,255,255,.15)',
+                  borderRadius: 10,
+                  color: '#C4C9D4',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  letterSpacing: 0.3,
                 }}
                 onMouseEnter={e => {
                   if (!e.currentTarget.disabled) {
-                    e.currentTarget.style.background = 'rgba(255,255,255,.08)';
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,.22)';
-                    e.currentTarget.style.color = '#E2E8F0';
+                    e.currentTarget.style.background = 'rgba(255,255,255,.1)';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,.25)';
+                    e.currentTarget.style.color = '#fff';
                   }
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,.04)';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,.12)';
-                  e.currentTarget.style.color = '#9CA3AF';
+                  e.currentTarget.style.background = 'rgba(255,255,255,.06)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,.15)';
+                  e.currentTarget.style.color = '#C4C9D4';
                 }}
               >
                 <Undo2 className="h-4 w-4" /> Desfazer último ponto

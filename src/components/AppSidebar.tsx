@@ -75,7 +75,7 @@ export function AppSidebar() {
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto">
         <div style={{ padding: '16px 16px 6px' }}>
-          <span className="font-body font-bold uppercase" style={{ fontSize: 10, letterSpacing: 2, color: 'rgba(255,255,255,.3)' }}>
+          <span className="font-body font-bold uppercase" style={{ fontSize: 10, letterSpacing: 2, color: 'rgba(255,255,255,.55)' }}>
             NAVEGAÇÃO
           </span>
         </div>
@@ -146,7 +146,7 @@ export function AppSidebar() {
 
         {/* System section */}
         <div style={{ padding: '4px 16px 6px' }}>
-          <span className="font-body font-bold uppercase" style={{ fontSize: 10, letterSpacing: 2, color: 'rgba(255,255,255,.3)' }}>
+          <span className="font-body font-bold uppercase" style={{ fontSize: 10, letterSpacing: 2, color: 'rgba(255,255,255,.55)' }}>
             SISTEMA
           </span>
         </div>

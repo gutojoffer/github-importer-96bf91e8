@@ -20,7 +20,18 @@ export default function ResultButtons({ playerName, side, onResult, disabled }: 
 
   return (
     <div className={`flex flex-col gap-2 ${side === 'right' ? 'items-end' : 'items-start'}`}>
-      <p className="font-heading text-[9px] font-bold tracking-[0.15em] mb-0.5 uppercase text-muted-foreground">
+      {/* Column label */}
+      <p
+        className="font-heading font-bold uppercase w-full"
+        style={{
+          fontSize: 11,
+          letterSpacing: 1.5,
+          color: 'rgba(255,255,255,.6)',
+          padding: '0 2px 6px',
+          borderBottom: '1px solid rgba(255,255,255,.08)',
+          marginBottom: 2,
+        }}
+      >
         {playerName}
       </p>
       {finishTypes.map(({ type, label, icon }) => (
@@ -28,8 +39,9 @@ export default function ResultButtons({ playerName, side, onResult, disabled }: 
           key={type}
           disabled={disabled}
           onClick={() => onResult(type)}
-          className="w-full flex items-center justify-between gap-2 font-heading tracking-wider text-xs h-10 rounded-[9px] px-[14px] py-[10px] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-between gap-2 font-heading tracking-wider text-xs rounded-[9px] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
           style={{
+            padding: '10px 14px',
             background: '#111827',
             border: `1px solid ${isLeft ? 'rgba(37,99,235,.2)' : 'rgba(220,38,38,.2)'}`,
           }}
