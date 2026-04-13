@@ -2,9 +2,8 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useLiga } from '@/contexts/LigaContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
-import { supabase } from '@/integrations/supabase/client';
 import { useState, useRef, useEffect } from 'react';
-import { Search, Bell, ChevronDown, Settings, LogOut, LayoutGrid } from 'lucide-react';
+import { Settings, LogOut, ChevronDown, LayoutGrid } from 'lucide-react';
 
 const BREADCRUMB_MAP: Record<string, string> = {
   '/home': 'Home',
@@ -26,7 +25,6 @@ export function AppTopbar() {
 
   const initials = (nomeLiga || 'BX').slice(0, 2).toUpperCase();
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -65,9 +63,10 @@ export function AppTopbar() {
       className="relative flex items-center shrink-0 sticky top-0 z-50"
       style={{
         height: 56,
-        background: '#0a0d18',
+        background: '#080c18',
         borderBottom: '1px solid rgba(255,255,255,.06)',
         padding: '0 24px',
+        gap: 16,
       }}
     >
       {/* Left — Breadcrumb */}
@@ -94,79 +93,31 @@ export function AppTopbar() {
             src={logoUrl}
             alt={nomeLiga}
             className="shrink-0 object-cover"
-            style={{ width: 26, height: 26, borderRadius: 7, border: '1px solid rgba(37,99,235,.3)' }}
+            style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid rgba(37,99,235,.3)' }}
           />
         ) : (
-          <div className="flex items-center justify-center shrink-0" style={{
-            width: 26, height: 26, borderRadius: 7,
-            background: 'linear-gradient(135deg, #1e3a8a, #2563EB)',
-            border: '1px solid rgba(37,99,235,.3)',
-          }}>
-            <span className="font-heading text-[11px] font-bold text-white leading-none select-none">BX</span>
+          <div
+            className="flex items-center justify-center shrink-0"
+            style={{
+              width: 28, height: 28, borderRadius: 8,
+              background: 'linear-gradient(135deg, #1e3a8a, #2563EB)',
+              border: '1px solid rgba(37,99,235,.3)',
+            }}
+          >
+            <span className="font-heading font-bold text-white leading-none select-none" style={{ fontSize: 11 }}>BX</span>
           </div>
         )}
-        <span className="font-heading text-[14px] font-bold tracking-[0.3px] leading-none">
+        <span className="font-heading font-bold leading-none" style={{ fontSize: 14, letterSpacing: 0.3 }}>
           {nomeLiga ? (
             <span className="text-white">{nomeLiga}</span>
           ) : (
-            <span className="text-white">BLADE<span className="text-[#60A5FA]">X</span></span>
+            <span className="text-white">BLADE<span style={{ color: '#60A5FA' }}>X</span></span>
           )}
         </span>
       </div>
 
-      {/* Right */}
-      <div className="flex items-center gap-2">
-        {/* Search */}
-        <button
-          className="flex items-center justify-center shrink-0 transition-all duration-150"
-          style={{
-            width: 34, height: 34, borderRadius: 8,
-            border: '1px solid rgba(255,255,255,.08)',
-            color: '#64748B',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255,255,255,.06)';
-            e.currentTarget.style.color = '#E2E8F0';
-            e.currentTarget.style.borderColor = 'rgba(255,255,255,.15)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent';
-            e.currentTarget.style.color = '#64748B';
-            e.currentTarget.style.borderColor = 'rgba(255,255,255,.08)';
-          }}
-        >
-          <Search size={16} strokeWidth={1.4} />
-        </button>
-
-        {/* Notifications */}
-        <button
-          className="flex items-center justify-center shrink-0 relative transition-all duration-150"
-          style={{
-            width: 34, height: 34, borderRadius: 8,
-            border: '1px solid rgba(255,255,255,.08)',
-            color: '#64748B',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255,255,255,.06)';
-            e.currentTarget.style.color = '#E2E8F0';
-            e.currentTarget.style.borderColor = 'rgba(255,255,255,.15)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent';
-            e.currentTarget.style.color = '#64748B';
-            e.currentTarget.style.borderColor = 'rgba(255,255,255,.08)';
-          }}
-        >
-          <Bell size={16} strokeWidth={1.4} />
-          {/* Notification dot */}
-          <div className="absolute" style={{
-            top: 6, right: 6,
-            width: 6, height: 6, borderRadius: '50%',
-            background: '#EF4444', border: '1.5px solid #0a0d18',
-          }} />
-        </button>
-
-        {/* User pill */}
+      {/* Right — User pill only */}
+      <div className="flex items-center">
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -188,23 +139,27 @@ export function AppTopbar() {
             }}
           >
             {logoUrl ? (
-              <img src={logoUrl} alt={nomeLiga} className="shrink-0 rounded-full object-cover" style={{ width: 30, height: 30 }} />
+              <img src={logoUrl} alt={nomeLiga} className="shrink-0 rounded-full object-cover" style={{ width: 28, height: 28 }} />
             ) : (
-              <div className="shrink-0 rounded-full flex items-center justify-center" style={{
-                width: 30, height: 30,
-                background: 'linear-gradient(135deg, #1e3a8a, #7c3aed)',
-              }}>
-                <span className="font-heading text-[12px] font-bold text-white leading-none select-none">{initials}</span>
+              <div
+                className="shrink-0 rounded-full flex items-center justify-center"
+                style={{ width: 28, height: 28, background: 'linear-gradient(135deg, #1e3a8a, #7c3aed)' }}
+              >
+                <span className="font-heading font-bold text-white leading-none select-none" style={{ fontSize: 11 }}>{initials}</span>
               </div>
             )}
             <div className="flex flex-col text-left overflow-hidden">
-              <span className="text-[12px] font-semibold" style={{ color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}>{nomeLiga || 'Liga'}</span>
-              <span className="text-[10px]" style={{ color: '#64748B' }}>{isAdmin ? 'Administrador' : 'Organizador'}</span>
+              <span
+                className="font-semibold"
+                style={{ fontSize: 12, color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}
+              >
+                {nomeLiga || 'Liga'}
+              </span>
+              <span style={{ fontSize: 10, color: '#64748B' }}>{isAdmin ? 'Administrador' : 'Organizador'}</span>
             </div>
             <ChevronDown size={12} style={{ color: '#4B5563' }} className="shrink-0" />
           </button>
 
-          {/* Dropdown */}
           {dropdownOpen && (
             <div
               className="absolute right-0 mt-2 z-50"
@@ -219,8 +174,8 @@ export function AppTopbar() {
             >
               <button
                 onClick={() => { setDropdownOpen(false); navigate('/settings'); }}
-                className="flex items-center gap-2.5 w-full rounded-lg transition-all duration-150 font-body text-[13px]"
-                style={{ padding: '8px 10px', color: '#9CA3AF' }}
+                className="flex items-center gap-2.5 w-full rounded-lg transition-all duration-150 font-body"
+                style={{ padding: '8px 10px', fontSize: 13, color: '#9CA3AF' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,.06)'; e.currentTarget.style.color = '#E2E8F0'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#9CA3AF'; }}
               >
@@ -229,8 +184,8 @@ export function AppTopbar() {
               </button>
               <button
                 onClick={() => { setDropdownOpen(false); handleSignOut(); }}
-                className="flex items-center gap-2.5 w-full rounded-lg transition-all duration-150 font-body text-[13px]"
-                style={{ padding: '8px 10px', color: '#9CA3AF' }}
+                className="flex items-center gap-2.5 w-full rounded-lg transition-all duration-150 font-body"
+                style={{ padding: '8px 10px', fontSize: 13, color: '#9CA3AF' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,.06)'; e.currentTarget.style.color = '#F87171'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#9CA3AF'; }}
               >
