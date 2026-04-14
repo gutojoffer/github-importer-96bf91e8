@@ -253,6 +253,18 @@ export function generateNextEliminationRound(
   };
 }
 
+/** Promote waiting matches to active after a match completes */
+export function promoteWaitingMatches(round: TournamentRound, arenaCount: number): void {
+  const activeCount = round.matches.filter(m => m.matchStatus === 'active').length;
+  const slotsAvailable = arenaCount - activeCount;
+  if (slotsAvailable <= 0) return;
+
+  const waiting = round.matches.filter(m => m.matchStatus === 'waiting');
+  for (let i = 0; i < Math.min(slotsAvailable, waiting.length); i++) {
+    waiting[i].matchStatus = 'active';
+  }
+}
+
 function getRoundLabels(totalRounds: number): string[] {
   const labels: string[] = [];
   for (let i = 0; i < totalRounds; i++) {
