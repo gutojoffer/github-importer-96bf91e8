@@ -275,7 +275,10 @@ export default function TournamentHub() {
 
     const matchWinnerId = match.player1Points >= t.pointsToWin ? match.player1Id : match.player2Id;
     match.result = { winnerId: matchWinnerId, finishType: pendingResult.finishType };
-    const winner = getPlayer(matchWinnerId);
+    match.matchStatus = 'completed';
+
+    // Promote next waiting match(es) to active
+    promoteWaitingMatches(currentRound, t.arenaCount);
     if (winner) { setVictoryWinner(winner); setVictoryFinish(pendingResult.finishType); }
     setTimeout(() => { setVictoryWinner(null); setVictoryFinish(undefined); setVsKey(k => k + 1); }, 3500);
 
