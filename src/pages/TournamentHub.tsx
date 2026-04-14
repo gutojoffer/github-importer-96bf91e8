@@ -279,6 +279,7 @@ export default function TournamentHub() {
 
     // Promote next waiting match(es) to active
     promoteWaitingMatches(currentRound, t.arenaCount);
+    const winner = getPlayer(matchWinnerId);
     if (winner) { setVictoryWinner(winner); setVictoryFinish(pendingResult.finishType); }
     setTimeout(() => { setVictoryWinner(null); setVictoryFinish(undefined); setVsKey(k => k + 1); }, 3500);
 
