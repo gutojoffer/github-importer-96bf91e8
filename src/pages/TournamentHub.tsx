@@ -102,6 +102,7 @@ export default function TournamentHub() {
   const [pendingResult, setPendingResult] = useState<{
     matchId: string; winnerId: string; finishType: FinishType; isElimination: boolean;
     tournament: Tournament; p1Points: number; p2Points: number;
+    player1Id: string; player2Id: string;
   } | null>(null);
 
   // Correction modal
