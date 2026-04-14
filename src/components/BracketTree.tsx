@@ -75,7 +75,15 @@ const RoundColumn = memo(function RoundColumn({ round, roundIndex, getPlayer, is
         return (
           <div
             key={match.id}
-            className={`relative border rounded-lg overflow-hidden transition-all ${hasResult ? 'border-primary/30' : 'border-border/50'} ${isHighlighted && !hasResult ? 'ring-1 ring-primary/20' : ''}`}
+            className={`relative border rounded-lg overflow-hidden transition-all ${
+              match.matchStatus === 'active'
+                ? 'border-primary/50 ring-1 ring-primary/20 animate-[pulse-blue_2.5s_ease-in-out_infinite]'
+                : match.matchStatus === 'waiting'
+                  ? 'border-[rgba(255,255,255,.08)]'
+                  : hasResult
+                    ? 'border-primary/30'
+                    : 'border-border/50'
+            }`}
           >
             {hasResult && (
               <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-primary/60 to-primary/20 rounded-l" />
@@ -104,6 +112,11 @@ const RoundColumn = memo(function RoundColumn({ round, roundIndex, getPlayer, is
               onDrop={onDropPlayer && !droppedIds.has(match.player2Id) ? () => onDropPlayer(match.player2Id) : undefined}
               streak={getStreak(match.player2Id)}
             />
+            {match.matchStatus === 'waiting' && !hasResult && (
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <span className="text-[9px] font-heading tracking-wider" style={{ color: 'rgba(255,255,255,.35)' }}>Aguardando arena...</span>
+              </div>
+            )}
           </div>
         );
       })}
