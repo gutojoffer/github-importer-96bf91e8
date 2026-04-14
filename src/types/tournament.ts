@@ -34,6 +34,8 @@ export interface ScoreAction {
   undone?: boolean;
 }
 
+export type MatchStatus = 'active' | 'waiting' | 'completed';
+
 export interface Match {
   id: string;
   player1Id: string;
@@ -46,6 +48,7 @@ export interface Match {
   player1Points: number;
   player2Points: number;
   scoreLog?: ScoreAction[];
+  matchStatus?: MatchStatus;
 }
 
 export interface TournamentRound {
