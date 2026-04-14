@@ -1,4 +1,4 @@
-import { Match, Tournament, TournamentRound, EliminationSize } from '@/types/tournament';
+import { Match, Tournament, TournamentRound, EliminationSize, MatchStatus } from '@/types/tournament';
 
 export function suggestRounds(playerCount: number): number {
   if (playerCount <= 1) return 0;
@@ -31,6 +31,23 @@ function createByeMatch(playerId: string, roundIndex: number): Match {
   };
 }
 
+/** Assign matchStatus to matches: first `arenaCount` non-bye matches are 'active', rest are 'waiting' */
+function assignMatchStatuses(matches: Match[], arenaCount: number): void {
+  let activeCount = 0;
+  for (const m of matches) {
+    if (m.isBye) {
+      m.matchStatus = 'completed';
+      continue;
+    }
+    if (activeCount < arenaCount) {
+      m.matchStatus = 'active';
+      activeCount++;
+    } else {
+      m.matchStatus = 'waiting';
+    }
+  }
+}
+
 export function generateFirstRound(playerIds: string[], arenaCount: number): TournamentRound {
   const shuffled = [...playerIds].sort(() => Math.random() - 0.5);
   const matches: Match[] = [];
@@ -46,6 +63,7 @@ export function generateFirstRound(playerIds: string[], arenaCount: number): Tou
     matches.push(createMatch(shuffled[i], shuffled[i + 1], Math.floor(i / 2) % arenaCount, 0));
   }
 
+  assignMatchStatuses(matches, arenaCount);
   return { index: 0, matches, completed: false, byePlayerId };
 }
 
@@ -121,6 +139,7 @@ export function generateSwissRound(tournament: Tournament): TournamentRound | nu
     }
   }
 
+  assignMatchStatuses(matches, tournament.arenaCount);
   return { index: roundIndex, matches, completed: false, byePlayerId };
 }
 
@@ -187,6 +206,8 @@ export function generateEliminationBracket(qualifiedIds: string[], arenaCount: n
 
   const roundLabels = getRoundLabels(totalRoundsNeeded);
 
+  assignMatchStatuses(firstRoundMatches, arenaCount);
+
   rounds.push({
     index: 0,
     matches: firstRoundMatches,
@@ -221,6 +242,8 @@ export function generateNextEliminationRound(
   }
 
   const roundLabels = getRoundLabels(totalEliminationRounds);
+
+  assignMatchStatuses(matches, arenaCount);
 
   return {
     index: roundIndex,
