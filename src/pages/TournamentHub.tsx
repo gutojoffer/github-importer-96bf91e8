@@ -846,14 +846,14 @@ export default function TournamentHub() {
           </div>
         ) : null}
 
-        {/* Pending queue */}
-        {allPending.length > 1 && (
+        {/* Waiting queue */}
+        {waitingMatches.length > 0 && (
           <div className="space-y-2">
-            <p className="font-heading text-[10px] text-muted-foreground tracking-[0.2em] uppercase">
-              Fila ({allPending.length - 1} partida{allPending.length - 1 > 1 ? 's' : ''})
+            <p className="font-heading text-[10px] tracking-[0.2em] uppercase" style={{ color: 'rgba(255,255,255,.55)' }}>
+              Aguardando arena ({waitingMatches.length} partida{waitingMatches.length > 1 ? 's' : ''})
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-              {allPending.slice(1).map(m => {
+              {waitingMatches.map(m => {
                 const p1 = getPlayer(m.player1Id);
                 const p2 = getPlayer(m.player2Id);
                 if (!p1 || !p2) return null;
@@ -913,11 +913,11 @@ export default function TournamentHub() {
           confirmLabel="Dropar" onConfirm={handleDropPlayer} />
 
         {/* Confirm Result Modal */}
-        {pendingResult && currentMatch && (
+        {pendingResult && (
           <ConfirmResultModal
             open={!!pendingResult}
-            player1={getPlayer(currentMatch.player1Id)!}
-            player2={getPlayer(currentMatch.player2Id)!}
+            player1={getPlayer(pendingResult.tournament.rounds.flatMap(r => r.matches).find(m => m.id === pendingResult.matchId)?.player1Id || '')!}
+            player2={getPlayer(pendingResult.tournament.rounds.flatMap(r => r.matches).find(m => m.id === pendingResult.matchId)?.player2Id || '')!}
             player1Points={pendingResult.p1Points}
             player2Points={pendingResult.p2Points}
             pointsToWin={activeTournament.pointsToWin}
