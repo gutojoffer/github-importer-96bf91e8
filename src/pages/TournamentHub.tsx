@@ -918,8 +918,8 @@ export default function TournamentHub() {
         {pendingResult && (
           <ConfirmResultModal
             open={!!pendingResult}
-            player1={getPlayer(pendingResult.tournament.rounds.flatMap(r => r.matches).find(m => m.id === pendingResult.matchId)?.player1Id || '')!}
-            player2={getPlayer(pendingResult.tournament.rounds.flatMap(r => r.matches).find(m => m.id === pendingResult.matchId)?.player2Id || '')!}
+            player1={getPlayer(pendingResult.player1Id)!}
+            player2={getPlayer(pendingResult.player2Id)!}
             player1Points={pendingResult.p1Points}
             player2Points={pendingResult.p2Points}
             pointsToWin={activeTournament.pointsToWin}
