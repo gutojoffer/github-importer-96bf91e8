@@ -616,9 +616,10 @@ export default function TournamentHub() {
     if (!currentRound && !shouldShowStartElimination) return null;
 
     const allNonBye = currentRound ? currentRound.matches.filter(m => !m.isBye) : [];
+    const activeMatches = allNonBye.filter(m => m.matchStatus === 'active' || (!m.matchStatus && !m.result));
+    const waitingMatches = allNonBye.filter(m => m.matchStatus === 'waiting');
     const allPending = allNonBye.filter(m => !m.result);
     const byePlayer = currentRound?.byePlayerId ? getPlayer(currentRound.byePlayerId) : null;
-    const currentMatch = allPending[0];
     const completedMatches = allNonBye.filter(m => m.result);
 
     return (
