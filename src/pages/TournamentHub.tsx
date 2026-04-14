@@ -529,6 +529,7 @@ export default function TournamentHub() {
           if (!involves) continue;
           const opponentId = match.player1Id === droppedId ? match.player2Id : match.player1Id;
           match.result = { winnerId: opponentId, finishType: 'spin' };
+          match.matchStatus = 'completed';
           match.isWalkover = true;
           if (opponentId === match.player1Id) {
             match.player1Points = t.pointsToWin;
