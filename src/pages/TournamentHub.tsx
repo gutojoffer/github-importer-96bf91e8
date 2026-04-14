@@ -250,6 +250,7 @@ export default function TournamentHub() {
       setPendingResult({
         matchId, winnerId, finishType, isElimination, tournament: t,
         p1Points: match.player1Points, p2Points: match.player2Points,
+        player1Id: match.player1Id, player2Id: match.player2Id,
       });
       return;
     }
