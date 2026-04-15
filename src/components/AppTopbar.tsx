@@ -96,7 +96,8 @@ export function AppTopbar() {
         </nav>
       )}
 
-      {/* Center — Liga identity */}
+      {/* Center — Liga identity (hidden on mobile) */}
+      {!isMobile && (
       <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 pointer-events-none">
         {logoUrl ? (
           <img
