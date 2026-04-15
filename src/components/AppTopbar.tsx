@@ -21,6 +21,7 @@ export function AppTopbar() {
   const { nomeLiga, logoUrl } = useLiga();
   const { signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
+  const isMobile = useIsMobile();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
