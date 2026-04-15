@@ -279,9 +279,7 @@ export default function TournamentHub() {
     match.result = { winnerId: matchWinnerId, finishType: pendingResult.finishType };
     match.matchStatus = 'completed';
 
-    // Promote next waiting match(es) to active
-    promoteWaitingMatches(currentRound, t.arenaCount);
-    const winner = getPlayer(matchWinnerId);
+    // All matches are active simultaneously — no queue promotion needed
     if (winner) { setVictoryWinner(winner); setVictoryFinish(pendingResult.finishType); }
     setTimeout(() => { setVictoryWinner(null); setVictoryFinish(undefined); setVsKey(k => k + 1); }, 3500);
 
@@ -547,8 +545,6 @@ export default function TournamentHub() {
     const currentRound = currentRoundsArr[currentRoundIdx];
 
     if (currentRound) {
-      // Promote waiting matches since a player was dropped
-      promoteWaitingMatches(currentRound, t.arenaCount);
       const allDone = currentRound.matches.every(m => m.result || m.isBye);
       if (allDone) {
         currentRound.completed = true;
