@@ -619,11 +619,27 @@ export default function TournamentHub() {
     if (!currentRound && !shouldShowStartElimination) return null;
 
     const allNonBye = currentRound ? currentRound.matches.filter(m => !m.isBye) : [];
-    const activeMatches = allNonBye.filter(m => m.matchStatus === 'active' || (!m.matchStatus && !m.result));
-    const waitingMatches = allNonBye.filter(m => m.matchStatus === 'waiting');
-    const allPending = allNonBye.filter(m => !m.result);
+    const activeMatches = allNonBye.filter(m => !m.result);
+    const allPending = activeMatches;
     const byePlayer = currentRound?.byePlayerId ? getPlayer(currentRound.byePlayerId) : null;
     const completedMatches = allNonBye.filter(m => m.result);
+
+    // Group matches by arena number
+    const arenaGroups: { arenaIdx: number; matches: typeof allNonBye }[] = [];
+    const arenaMap = new Map<number, typeof allNonBye>();
+    for (const m of activeMatches) {
+      const ai = m.arenaIndex ?? 0;
+      if (!arenaMap.has(ai)) arenaMap.set(ai, []);
+      arenaMap.get(ai)!.push(m);
+    }
+    const sortedArenaKeys = [...arenaMap.keys()].sort((a, b) => a - b);
+    for (const key of sortedArenaKeys) {
+      arenaGroups.push({ arenaIdx: key, matches: arenaMap.get(key)! });
+    }
+    // Clamp selected arena
+    const clampedArena = Math.min(selectedArena, Math.max(0, arenaGroups.length - 1));
+    const currentArenaGroup = arenaGroups[clampedArena];
+    const currentArenaMatch = currentArenaGroup?.matches[0];
 
     return (
       <div className="p-5 max-w-5xl mx-auto space-y-4 relative">
