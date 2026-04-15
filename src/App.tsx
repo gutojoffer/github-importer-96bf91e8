@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { AdminSidebar } from '@/components/AdminSidebar';
+import { BottomNav } from '@/components/BottomNav';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -66,7 +67,7 @@ const ProtectedLayout = () => {
           <AppSidebar />
           <div className="flex-1 flex flex-col min-w-0">
             <AppTopbar />
-            <main className="flex-1 overflow-auto">
+            <main className="flex-1 overflow-auto pb-[72px] md:pb-0">
               <Suspense fallback={<LazyFallback />}>
                 <Routes>
                   <Route path="/home" element={<Index />} />
