@@ -763,89 +763,132 @@ export default function TournamentHub() {
 
         {byePlayer && <ByeBanner player={byePlayer} />}
 
-        {/* Active matches (multi-arena) */}
-        {activeMatches.length > 0 && players.length > 0 ? (
-          <div className="space-y-4">
-            {activeMatches.length > 1 && (
-              <p className="font-heading text-[10px] tracking-[0.2em] uppercase" style={{ color: 'rgba(255,255,255,.55)' }}>
-                {activeMatches.length} partidas em andamento · {activeTournament.arenaCount} arena{activeTournament.arenaCount > 1 ? 's' : ''}
-              </p>
-            )}
-            {activeMatches.map((match, idx) => (
-              <div className="relative rounded-xl overflow-hidden space-y-0" key={`${match.id}-${vsKey}`}>
-                {idx === 0 && <FinishOverlay finishType={finishOverlay} onDone={() => setFinishOverlay(null)} />}
-                {activeMatches.length > 1 && (
-                  <div className="px-4 py-2 flex items-center gap-2" style={{ background: 'rgba(255,255,255,.03)', borderBottom: '1px solid rgba(255,255,255,.06)' }}>
-                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#10B981', boxShadow: '0 0 6px #10B981', animation: 'blink 2s ease-in-out infinite' }} />
-                    <span className="font-heading text-[11px] tracking-[1.5px] uppercase" style={{ color: 'rgba(255,255,255,.6)' }}>
-                      Arena {idx + 1}
-                    </span>
-                  </div>
-                )}
-                <VersusScreen
-                  player1={getPlayer(match.player1Id)!}
-                  player2={getPlayer(match.player2Id)!}
-                  arenaName={isElim ? (currentRound?.label || 'ELIMINATÓRIA') : `ARENA ${idx + 1}`}
-                  player1Points={match.player1Points}
-                  player2Points={match.player2Points}
-                  pointsToWin={activeTournament.pointsToWin}
-                />
-                <div
-                  className="grid gap-3 px-3 py-4"
+        {/* Arena tab selector */}
+        {arenaGroups.length > 1 && (
+          <div
+            className="flex gap-2 overflow-x-auto"
+            style={{
+              padding: '12px 16px',
+              background: '#0d1120',
+              borderRadius: 12,
+              border: '1px solid rgba(255,255,255,.06)',
+            }}
+          >
+            {arenaGroups.map((group, idx) => {
+              const isSelected = idx === clampedArena;
+              const match = group.matches[0];
+              const p1 = match ? getPlayer(match.player1Id) : null;
+              const p2 = match ? getPlayer(match.player2Id) : null;
+              const isDone = match?.result;
+              return (
+                <button
+                  key={group.arenaIdx}
+                  onClick={() => setSelectedArena(idx)}
+                  className="flex flex-col items-center gap-1 shrink-0 transition-all duration-150"
                   style={{
-                    gridTemplateColumns: '1fr 1px 1fr',
-                    background: 'radial-gradient(ellipse at center, #0d1a2e 0%, #090b12 70%)',
+                    padding: '10px 16px',
+                    borderRadius: 10,
+                    cursor: 'pointer',
+                    border: `1px solid ${isSelected ? 'rgba(37,99,235,.3)' : 'rgba(255,255,255,.08)'}`,
+                    background: isSelected ? 'rgba(37,99,235,.12)' : 'transparent',
+                    minWidth: 120,
                   }}
                 >
-                  <ResultButtons
-                    playerName={getPlayer(match.player1Id)?.nickname || getPlayer(match.player1Id)?.name || ''}
-                    side="left"
-                    onResult={(ft) => handleScorePoint(match.id, match.player1Id, ft, isElim)}
-                    disabled={!!match.result}
-                  />
-                  <div style={{ background: 'rgba(255,255,255,0.04)' }} />
-                  <ResultButtons
-                    playerName={getPlayer(match.player2Id)?.nickname || getPlayer(match.player2Id)?.name || ''}
-                    side="right"
-                    onResult={(ft) => handleScorePoint(match.id, match.player2Id, ft, isElim)}
-                    disabled={!!match.result}
-                  />
-                  <button
-                    onClick={() => handleUndoPoint(match.id, isElim)}
-                    disabled={!match.scoreLog || match.scoreLog.filter(a => !a.undone).length === 0}
-                    className="flex items-center justify-center gap-2 w-full font-body transition-all duration-150 disabled:opacity-20 disabled:cursor-not-allowed"
-                    style={{
-                      gridColumn: '1 / -1',
-                      marginTop: 4,
-                      padding: '12px 24px',
-                      background: 'rgba(255,255,255,.06)',
-                      border: '1px solid rgba(255,255,255,.15)',
-                      borderRadius: 10,
-                      color: '#C4C9D4',
-                      fontSize: 13,
-                      fontWeight: 600,
-                      letterSpacing: 0.3,
-                    }}
-                    onMouseEnter={e => {
-                      if (!e.currentTarget.disabled) {
-                        e.currentTarget.style.background = 'rgba(255,255,255,.1)';
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,.25)';
-                        e.currentTarget.style.color = '#fff';
-                      }
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.background = 'rgba(255,255,255,.06)';
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,.15)';
-                      e.currentTarget.style.color = '#C4C9D4';
-                    }}
+                  <span
+                    className="font-heading uppercase"
+                    style={{ fontSize: 9, letterSpacing: 2, color: isSelected ? '#60A5FA' : 'rgba(255,255,255,.3)' }}
                   >
-                    <Undo2 className="h-4 w-4" /> Desfazer último ponto
-                  </button>
-                </div>
-              </div>
-            ))}
+                    ARENA {group.arenaIdx + 1}
+                  </span>
+                  <span
+                    className="font-body font-semibold truncate max-w-[100px]"
+                    style={{ fontSize: 12, color: '#fff' }}
+                  >
+                    {p1 && p2 ? `${p1.nickname || p1.name.split(' ')[0]} · ${p2.nickname || p2.name.split(' ')[0]}` : '—'}
+                  </span>
+                  {!isDone && (
+                    <div className="flex items-center gap-1">
+                      <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#10B981', boxShadow: '0 0 6px #10B981', animation: 'blink 2s ease-in-out infinite' }} />
+                      <span style={{ fontSize: 9, color: 'rgba(255,255,255,.4)' }}>Em andamento</span>
+                    </div>
+                  )}
+                  {isDone && (
+                    <span style={{ fontSize: 9, color: 'rgba(255,255,255,.3)' }}>Finalizada</span>
+                  )}
+                </button>
+              );
+            })}
           </div>
-        ) : !shouldShowStartElimination ? (
+        )}
+
+        {/* Current arena match */}
+        {currentArenaMatch && !currentArenaMatch.result && players.length > 0 ? (
+          <div className="space-y-0">
+            <div className="relative rounded-xl overflow-hidden" key={`${currentArenaMatch.id}-${vsKey}`}>
+              <FinishOverlay finishType={finishOverlay} onDone={() => setFinishOverlay(null)} />
+              <VersusScreen
+                player1={getPlayer(currentArenaMatch.player1Id)!}
+                player2={getPlayer(currentArenaMatch.player2Id)!}
+                arenaName={isElim ? (currentRound?.label || 'ELIMINATÓRIA') : `ARENA ${(currentArenaGroup?.arenaIdx ?? 0) + 1}`}
+                player1Points={currentArenaMatch.player1Points}
+                player2Points={currentArenaMatch.player2Points}
+                pointsToWin={activeTournament.pointsToWin}
+              />
+              <div
+                className="grid gap-3 px-3 py-4"
+                style={{
+                  gridTemplateColumns: '1fr 1px 1fr',
+                  background: 'radial-gradient(ellipse at center, #0d1a2e 0%, #090b12 70%)',
+                }}
+              >
+                <ResultButtons
+                  playerName={getPlayer(currentArenaMatch.player1Id)?.nickname || getPlayer(currentArenaMatch.player1Id)?.name || ''}
+                  side="left"
+                  onResult={(ft) => handleScorePoint(currentArenaMatch.id, currentArenaMatch.player1Id, ft, isElim)}
+                  disabled={!!currentArenaMatch.result}
+                />
+                <div style={{ background: 'rgba(255,255,255,0.04)' }} />
+                <ResultButtons
+                  playerName={getPlayer(currentArenaMatch.player2Id)?.nickname || getPlayer(currentArenaMatch.player2Id)?.name || ''}
+                  side="right"
+                  onResult={(ft) => handleScorePoint(currentArenaMatch.id, currentArenaMatch.player2Id, ft, isElim)}
+                  disabled={!!currentArenaMatch.result}
+                />
+                <button
+                  onClick={() => handleUndoPoint(currentArenaMatch.id, isElim)}
+                  disabled={!currentArenaMatch.scoreLog || currentArenaMatch.scoreLog.filter(a => !a.undone).length === 0}
+                  className="flex items-center justify-center gap-2 w-full font-body transition-all duration-150 disabled:opacity-20 disabled:cursor-not-allowed"
+                  style={{
+                    gridColumn: '1 / -1',
+                    marginTop: 4,
+                    padding: '12px 24px',
+                    background: 'rgba(255,255,255,.06)',
+                    border: '1px solid rgba(255,255,255,.15)',
+                    borderRadius: 10,
+                    color: '#C4C9D4',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    letterSpacing: 0.3,
+                  }}
+                  onMouseEnter={e => {
+                    if (!e.currentTarget.disabled) {
+                      e.currentTarget.style.background = 'rgba(255,255,255,.1)';
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,.25)';
+                      e.currentTarget.style.color = '#fff';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,.06)';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,.15)';
+                    e.currentTarget.style.color = '#C4C9D4';
+                  }}
+                >
+                  <Undo2 className="h-4 w-4" /> Desfazer último ponto
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : activeMatches.length === 0 && !shouldShowStartElimination ? (
           <div className="glass-panel text-center py-12">
             <CheckCircle className="h-10 w-10 mx-auto text-primary mb-3" />
             <p className="font-heading text-lg text-foreground">
@@ -863,35 +906,13 @@ export default function TournamentHub() {
                     : 'Próxima rodada gerada automaticamente.'}
             </p>
           </div>
-        ) : null}
-
-        {/* Waiting queue */}
-        {waitingMatches.length > 0 && (
-          <div className="space-y-2">
-            <p className="font-heading text-[10px] tracking-[0.2em] uppercase" style={{ color: 'rgba(255,255,255,.55)' }}>
-              Aguardando arena ({waitingMatches.length} partida{waitingMatches.length > 1 ? 's' : ''})
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-              {waitingMatches.map(m => {
-                const p1 = getPlayer(m.player1Id);
-                const p2 = getPlayer(m.player2Id);
-                if (!p1 || !p2) return null;
-                return (
-                  <div key={m.id} className="dark-panel p-2.5 flex items-center gap-2 text-xs">
-                    <Avatar className="h-6 w-6 border border-primary/30">
-                      {p1.avatar.startsWith('http') || p1.avatar.startsWith('data:') ? <AvatarImage src={p1.avatar} /> : <AvatarFallback className="bg-muted text-[8px]">{p1.avatar}</AvatarFallback>}
-                    </Avatar>
-                    <span className="text-muted-foreground font-heading italic">VS</span>
-                    <Avatar className="h-6 w-6 border border-secondary/30">
-                      {p2.avatar.startsWith('http') || p2.avatar.startsWith('data:') ? <AvatarImage src={p2.avatar} /> : <AvatarFallback className="bg-muted text-[8px]">{p2.avatar}</AvatarFallback>}
-                    </Avatar>
-                    <span className="ml-auto font-heading text-[10px] text-muted-foreground truncate">{p1.nickname || p1.name.split(' ')[0]} x {p2.nickname || p2.name.split(' ')[0]}</span>
-                  </div>
-                );
-              })}
-            </div>
+        ) : currentArenaMatch?.result ? (
+          <div className="glass-panel text-center py-8">
+            <CheckCircle className="h-8 w-8 mx-auto text-primary/60 mb-2" />
+            <p className="font-heading text-sm text-foreground">Esta arena já finalizou</p>
+            <p className="text-xs text-muted-foreground mt-1">Selecione outra arena em andamento acima</p>
           </div>
-        )}
+        ) : null}
 
         {/* Completed matches */}
         {completedMatches.length > 0 && (
