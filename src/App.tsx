@@ -82,6 +82,7 @@ const ProtectedLayout = () => {
               </Suspense>
             </main>
           </div>
+          <BottomNav />
         </div>
       </LigaProvider>
     </ProtectedRoute>
