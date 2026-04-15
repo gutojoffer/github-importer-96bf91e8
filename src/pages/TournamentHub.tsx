@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tournament, Player, FinishType, FINISH_POINTS, DEFAULT_AVATARS, ScoreAction, EliminationSize } from '@/types/tournament';
-import { suggestRounds, generateFirstRound, generateSwissRound, getSwissStandings, generateEliminationBracket, generateNextEliminationRound, promoteWaitingMatches } from '@/lib/matchmaking';
+import { suggestRounds, generateFirstRound, generateSwissRound, getSwissStandings, generateEliminationBracket, generateNextEliminationRound } from '@/lib/matchmaking';
 import { saveActiveTournament, saveTournaments } from '@/lib/storage';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import { useTournamentStore } from '@/stores/useTournamentStore';
