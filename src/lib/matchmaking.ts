@@ -1,4 +1,4 @@
-import { Match, Tournament, TournamentRound, EliminationSize, MatchStatus } from '@/types/tournament';
+import { Match, Tournament, TournamentRound, EliminationSize } from '@/types/tournament';
 
 export function suggestRounds(playerCount: number): number {
   if (playerCount <= 1) return 0;
@@ -14,6 +14,7 @@ function createMatch(p1: string, p2: string, arenaIndex: number, roundIndex: num
     roundIndex,
     player1Points: 0,
     player2Points: 0,
+    matchStatus: 'active',
   };
 }
 
@@ -27,25 +28,9 @@ function createByeMatch(playerId: string, roundIndex: number): Match {
     player1Points: 0,
     player2Points: 0,
     isBye: true,
+    matchStatus: 'completed',
     result: { winnerId: playerId, finishType: 'spin' },
   };
-}
-
-/** Assign matchStatus to matches: first `arenaCount` non-bye matches are 'active', rest are 'waiting' */
-function assignMatchStatuses(matches: Match[], arenaCount: number): void {
-  let activeCount = 0;
-  for (const m of matches) {
-    if (m.isBye) {
-      m.matchStatus = 'completed';
-      continue;
-    }
-    if (activeCount < arenaCount) {
-      m.matchStatus = 'active';
-      activeCount++;
-    } else {
-      m.matchStatus = 'waiting';
-    }
-  }
 }
 
 export function generateFirstRound(playerIds: string[], arenaCount: number): TournamentRound {
@@ -60,10 +45,10 @@ export function generateFirstRound(playerIds: string[], arenaCount: number): Tou
   }
 
   for (let i = 0; i < shuffled.length - 1; i += 2) {
-    matches.push(createMatch(shuffled[i], shuffled[i + 1], Math.floor(i / 2) % arenaCount, 0));
+    const arenaIdx = Math.floor(i / 2) % arenaCount;
+    matches.push(createMatch(shuffled[i], shuffled[i + 1], arenaIdx, 0));
   }
 
-  assignMatchStatuses(matches, arenaCount);
   return { index: 0, matches, completed: false, byePlayerId };
 }
 
@@ -114,6 +99,7 @@ export function generateSwissRound(tournament: Tournament): TournamentRound | nu
   }
 
   const paired = new Set<string>();
+  let nonByeCount = 0;
 
   for (let i = 0; i < sorted.length; i++) {
     if (paired.has(sorted[i])) continue;
@@ -121,7 +107,8 @@ export function generateSwissRound(tournament: Tournament): TournamentRound | nu
       if (paired.has(sorted[j])) continue;
       const pairKey = [sorted[i], sorted[j]].sort().join('-');
       if (!playedPairs.has(pairKey)) {
-        matches.push(createMatch(sorted[i], sorted[j], matches.filter(m => !m.isBye).length % tournament.arenaCount, roundIndex));
+        matches.push(createMatch(sorted[i], sorted[j], nonByeCount % tournament.arenaCount, roundIndex));
+        nonByeCount++;
         paired.add(sorted[i]);
         paired.add(sorted[j]);
         break;
@@ -130,7 +117,8 @@ export function generateSwissRound(tournament: Tournament): TournamentRound | nu
     if (!paired.has(sorted[i])) {
       for (let j = i + 1; j < sorted.length; j++) {
         if (!paired.has(sorted[j])) {
-          matches.push(createMatch(sorted[i], sorted[j], matches.filter(m => !m.isBye).length % tournament.arenaCount, roundIndex));
+          matches.push(createMatch(sorted[i], sorted[j], nonByeCount % tournament.arenaCount, roundIndex));
+          nonByeCount++;
           paired.add(sorted[i]);
           paired.add(sorted[j]);
           break;
@@ -139,7 +127,6 @@ export function generateSwissRound(tournament: Tournament): TournamentRound | nu
     }
   }
 
-  assignMatchStatuses(matches, tournament.arenaCount);
   return { index: roundIndex, matches, completed: false, byePlayerId };
 }
 
@@ -175,47 +162,37 @@ export function generateEliminationBracket(qualifiedIds: string[], arenaCount: n
   const size = qualifiedIds.length;
   if (size < 2) return [];
 
-  // Seeded pairing: 1 vs N, 2 vs N-1, etc.
   const seeded = [...qualifiedIds];
   const totalRoundsNeeded = Math.ceil(Math.log2(size));
-  const rounds: TournamentRound[] = [];
 
-  // Generate first round of elimination
-  const firstRoundMatches: Match[] = [];
-  const paired: string[] = [];
-
-  // If not a perfect power of 2, some players get byes
   const perfectSize = Math.pow(2, totalRoundsNeeded);
   const byeCount = perfectSize - size;
 
-  // Top seeds get byes
   const byePlayers = seeded.slice(0, byeCount);
   const matchPlayers = seeded.slice(byeCount);
 
-  // Pair remaining: top seed vs bottom seed
+  const firstRoundMatches: Match[] = [];
+  let nonByeIdx = 0;
+
   for (let i = 0; i < matchPlayers.length / 2; i++) {
     const p1 = matchPlayers[i];
     const p2 = matchPlayers[matchPlayers.length - 1 - i];
-    firstRoundMatches.push(createMatch(p1, p2, i % arenaCount, 0));
+    firstRoundMatches.push(createMatch(p1, p2, nonByeIdx % arenaCount, 0));
+    nonByeIdx++;
   }
 
-  // Add bye matches for top seeds
   for (const byePlayer of byePlayers) {
     firstRoundMatches.push(createByeMatch(byePlayer, 0));
   }
 
   const roundLabels = getRoundLabels(totalRoundsNeeded);
 
-  assignMatchStatuses(firstRoundMatches, arenaCount);
-
-  rounds.push({
+  return [{
     index: 0,
     matches: firstRoundMatches,
     completed: false,
     label: roundLabels[0],
-  });
-
-  return rounds;
+  }];
 }
 
 /** Generate next elimination round from winners of current round */
@@ -232,18 +209,17 @@ export function generateNextEliminationRound(
   if (winners.length < 2) return null;
 
   const matches: Match[] = [];
+  let nonByeIdx = 0;
   for (let i = 0; i < winners.length; i += 2) {
     if (i + 1 < winners.length) {
-      matches.push(createMatch(winners[i], winners[i + 1], Math.floor(i / 2) % arenaCount, roundIndex));
+      matches.push(createMatch(winners[i], winners[i + 1], nonByeIdx % arenaCount, roundIndex));
+      nonByeIdx++;
     } else {
-      // Odd number (shouldn't happen in proper bracket) - bye
       matches.push(createByeMatch(winners[i], roundIndex));
     }
   }
 
   const roundLabels = getRoundLabels(totalEliminationRounds);
-
-  assignMatchStatuses(matches, arenaCount);
 
   return {
     index: roundIndex,
@@ -251,18 +227,6 @@ export function generateNextEliminationRound(
     completed: false,
     label: roundLabels[roundIndex] || `Rodada ${roundIndex + 1}`,
   };
-}
-
-/** Promote waiting matches to active after a match completes */
-export function promoteWaitingMatches(round: TournamentRound, arenaCount: number): void {
-  const activeCount = round.matches.filter(m => m.matchStatus === 'active').length;
-  const slotsAvailable = arenaCount - activeCount;
-  if (slotsAvailable <= 0) return;
-
-  const waiting = round.matches.filter(m => m.matchStatus === 'waiting');
-  for (let i = 0; i < Math.min(slotsAvailable, waiting.length); i++) {
-    waiting[i].matchStatus = 'active';
-  }
 }
 
 function getRoundLabels(totalRounds: number): string[] {
