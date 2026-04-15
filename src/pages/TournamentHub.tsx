@@ -280,6 +280,7 @@ export default function TournamentHub() {
     match.matchStatus = 'completed';
 
     // All matches are active simultaneously — no queue promotion needed
+    const winner = getPlayer(matchWinnerId);
     if (winner) { setVictoryWinner(winner); setVictoryFinish(pendingResult.finishType); }
     setTimeout(() => { setVictoryWinner(null); setVictoryFinish(undefined); setVsKey(k => k + 1); }, 3500);
 
