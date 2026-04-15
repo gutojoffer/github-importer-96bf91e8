@@ -126,6 +126,7 @@ export function AppTopbar() {
           )}
         </span>
       </div>
+      )}
 
       {/* Right — User pill only */}
       <div className="flex items-center">
