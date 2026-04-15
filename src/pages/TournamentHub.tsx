@@ -94,6 +94,7 @@ export default function TournamentHub() {
   const [victoryFinish, setVictoryFinish] = useState<string | undefined>();
   const [vsKey, setVsKey] = useState(0);
   const [finishOverlay, setFinishOverlay] = useState<FinishType | null>(null);
+  const [selectedArena, setSelectedArena] = useState(0);
 
   // Elimination transition
   const [showEliminationTransition, setShowEliminationTransition] = useState(false);
