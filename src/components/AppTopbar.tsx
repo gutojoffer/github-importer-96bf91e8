@@ -67,7 +67,7 @@ export function AppTopbar() {
         height: 56,
         background: '#080c18',
         borderBottom: '1px solid rgba(255,255,255,.06)',
-        padding: '0 24px',
+        padding: isMobile ? '0 16px' : '0 24px',
         gap: 16,
       }}
     >
