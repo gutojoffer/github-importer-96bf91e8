@@ -71,22 +71,30 @@ export function AppTopbar() {
         gap: 16,
       }}
     >
-      {/* Left — Breadcrumb */}
-      <nav className="flex items-center gap-1.5 flex-1 min-w-0" style={{ fontSize: 13 }}>
-        <LayoutGrid size={14} style={{ color: '#374151' }} className="shrink-0 mr-0.5" />
-        {breadcrumbs.map((bc, i) => (
-          <span key={bc.path} className="flex items-center gap-1.5 min-w-0">
-            {i > 0 && <span style={{ color: '#374151' }} className="text-xs">/</span>}
-            {bc.active ? (
-              <span className="font-body font-semibold truncate" style={{ color: '#F1F5F9' }}>{bc.label}</span>
-            ) : (
-              <Link to={bc.path} className="font-body truncate transition-colors duration-150 hover:text-[#E2E8F0]" style={{ color: '#4B5563' }}>
-                {bc.label}
-              </Link>
-            )}
+      {/* Left — Breadcrumb (hidden on mobile) / Logo on mobile */}
+      {isMobile ? (
+        <div className="flex items-center gap-2 flex-1">
+          <span className="font-heading font-bold text-white leading-tight" style={{ fontSize: 16, letterSpacing: 0.5 }}>
+            BLADE<span style={{ color: '#60A5FA' }}>X</span>
           </span>
-        ))}
-      </nav>
+        </div>
+      ) : (
+        <nav className="flex items-center gap-1.5 flex-1 min-w-0" style={{ fontSize: 13 }}>
+          <LayoutGrid size={14} style={{ color: '#374151' }} className="shrink-0 mr-0.5" />
+          {breadcrumbs.map((bc, i) => (
+            <span key={bc.path} className="flex items-center gap-1.5 min-w-0">
+              {i > 0 && <span style={{ color: '#374151' }} className="text-xs">/</span>}
+              {bc.active ? (
+                <span className="font-body font-semibold truncate" style={{ color: '#F1F5F9' }}>{bc.label}</span>
+              ) : (
+                <Link to={bc.path} className="font-body truncate transition-colors duration-150 hover:text-[#E2E8F0]" style={{ color: '#4B5563' }}>
+                  {bc.label}
+                </Link>
+              )}
+            </span>
+          ))}
+        </nav>
+      )}
 
       {/* Center — Liga identity */}
       <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 pointer-events-none">
