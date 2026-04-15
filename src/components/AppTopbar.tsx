@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useState, useRef, useEffect } from 'react';
 import { Settings, LogOut, ChevronDown, LayoutGrid } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const BREADCRUMB_MAP: Record<string, string> = {
   '/home': 'Home',
