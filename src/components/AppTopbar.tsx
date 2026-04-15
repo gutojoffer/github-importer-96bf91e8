@@ -134,7 +134,14 @@ export function AppTopbar() {
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="flex items-center gap-2 transition-all duration-150"
-            style={{
+            style={isMobile ? {
+              padding: 4,
+              background: 'transparent',
+              border: 'none',
+              borderRadius: '50%',
+              width: 36,
+              height: 36,
+            } : {
               padding: '5px 10px 5px 5px',
               background: 'rgba(255,255,255,.05)',
               border: '1px solid rgba(255,255,255,.09)',
@@ -142,34 +149,42 @@ export function AppTopbar() {
               maxWidth: 200,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,.09)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,.16)';
+              if (!isMobile) {
+                e.currentTarget.style.background = 'rgba(255,255,255,.09)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,.16)';
+              }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,.05)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,.09)';
+              if (!isMobile) {
+                e.currentTarget.style.background = 'rgba(255,255,255,.05)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,.09)';
+              }
             }}
           >
             {logoUrl ? (
-              <img src={logoUrl} alt={nomeLiga} className="shrink-0 rounded-full object-cover" style={{ width: 28, height: 28 }} />
+              <img src={logoUrl} alt={nomeLiga} className="shrink-0 rounded-full object-cover" style={{ width: isMobile ? 32 : 28, height: isMobile ? 32 : 28 }} />
             ) : (
               <div
                 className="shrink-0 rounded-full flex items-center justify-center"
-                style={{ width: 28, height: 28, background: 'linear-gradient(135deg, #1e3a8a, #7c3aed)' }}
+                style={{ width: isMobile ? 32 : 28, height: isMobile ? 32 : 28, background: 'linear-gradient(135deg, #1e3a8a, #7c3aed)' }}
               >
                 <span className="font-heading font-bold text-white leading-none select-none" style={{ fontSize: 11 }}>{initials}</span>
               </div>
             )}
-            <div className="flex flex-col text-left overflow-hidden">
-              <span
-                className="font-semibold"
-                style={{ fontSize: 12, color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}
-              >
-                {nomeLiga || 'Liga'}
-              </span>
-              <span style={{ fontSize: 10, color: '#64748B' }}>{isAdmin ? 'Administrador' : 'Organizador'}</span>
-            </div>
-            <ChevronDown size={12} style={{ color: '#4B5563' }} className="shrink-0" />
+            {!isMobile && (
+              <>
+                <div className="flex flex-col text-left overflow-hidden">
+                  <span
+                    className="font-semibold"
+                    style={{ fontSize: 12, color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}
+                  >
+                    {nomeLiga || 'Liga'}
+                  </span>
+                  <span style={{ fontSize: 10, color: '#64748B' }}>{isAdmin ? 'Administrador' : 'Organizador'}</span>
+                </div>
+                <ChevronDown size={12} style={{ color: '#4B5563' }} className="shrink-0" />
+              </>
+            )}
           </button>
 
           {dropdownOpen && (
