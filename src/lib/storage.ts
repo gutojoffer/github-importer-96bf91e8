@@ -149,7 +149,7 @@ export async function awardXP(standings: TournamentStanding[]) {
 
   const existingMap = new Map((existingStats || []).map(s => [s.player_id, s]));
 
-  const updates: Promise<any>[] = [];
+  const updates: PromiseLike<any>[] = [];
   const inserts: any[] = [];
 
   for (const s of standings) {
@@ -177,8 +177,8 @@ export async function awardXP(standings: TournamentStanding[]) {
     }
   }
 
-  const ops: Promise<any>[] = [...updates];
-  if (inserts.length) ops.push(supabase.from('player_stats').insert(inserts).then());
+  const ops: PromiseLike<any>[] = [...updates];
+  if (inserts.length) ops.push(supabase.from('player_stats').insert(inserts));
   await Promise.all(ops);
 }
 
