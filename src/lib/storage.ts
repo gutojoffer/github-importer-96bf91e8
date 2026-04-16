@@ -124,32 +124,46 @@ function getTimeKeys(d: Date) {
 export async function awardXP(standings: TournamentStanding[]) {
   const ligaId = await getLigaId();
   const players = await getPlayers();
-  for (const s of standings) {
-    const p = players.find(pl => pl.id === s.playerId);
-    if (p) {
-      p.xp = (p.xp || 0) + s.xpAwarded;
-      await supabase.from('players').update({ xp: p.xp }).eq('id', p.id);
-    }
-  }
 
+  // Batch XP updates in parallel
+  const xpUpdates = standings
+    .map(s => {
+      const p = players.find(pl => pl.id === s.playerId);
+      if (!p) return null;
+      p.xp = (p.xp || 0) + s.xpAwarded;
+      return supabase.from('players').update({ xp: p.xp }).eq('id', p.id).then();
+    })
+    .filter(Boolean);
+  await Promise.all(xpUpdates);
+
+  // Batch stats: fetch all existing stats in one query
   const now = new Date();
   const { weekKey, monthKey } = getTimeKeys(now);
-  for (const s of standings) {
-    const { data: existing } = await supabase
-      .from('player_stats')
-      .select('id, points, wins, losses')
-      .eq('player_id', s.playerId)
-      .eq('week_key', weekKey)
-      .maybeSingle();
+  const playerIds = standings.map(s => s.playerId);
 
+  const { data: existingStats } = await supabase
+    .from('player_stats')
+    .select('id, player_id, points, wins, losses')
+    .in('player_id', playerIds)
+    .eq('week_key', weekKey);
+
+  const existingMap = new Map((existingStats || []).map(s => [s.player_id, s]));
+
+  const updates: PromiseLike<any>[] = [];
+  const inserts: any[] = [];
+
+  for (const s of standings) {
+    const existing = existingMap.get(s.playerId);
     if (existing) {
-      await supabase.from('player_stats').update({
-        points: existing.points + s.rankingPoints,
-        wins: existing.wins + s.wins,
-        losses: existing.losses + s.losses,
-      }).eq('id', existing.id);
+      updates.push(
+        supabase.from('player_stats').update({
+          points: existing.points + s.rankingPoints,
+          wins: existing.wins + s.wins,
+          losses: existing.losses + s.losses,
+        }).eq('id', existing.id).then()
+      );
     } else {
-      await supabase.from('player_stats').insert({
+      inserts.push({
         player_id: s.playerId,
         wins: s.wins,
         losses: s.losses,
@@ -162,6 +176,10 @@ export async function awardXP(standings: TournamentStanding[]) {
       });
     }
   }
+
+  const ops: PromiseLike<any>[] = [...updates];
+  if (inserts.length) ops.push(supabase.from('player_stats').insert(inserts));
+  await Promise.all(ops);
 }
 
 // ──────────── Tournaments ────────────

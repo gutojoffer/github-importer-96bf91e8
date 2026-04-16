@@ -471,10 +471,12 @@ export default function TournamentHub() {
     if (!standings) return;
     setView('list');
     setConfirmEndTournament(false);
-    usePlayerStore.setState({ loaded: false });
-    await usePlayerStore.getState().load();
     toast.success('🏆 Torneio encerrado!');
-    navigate(`/history/${tournamentId}`);
+    // Navigate immediately with standings data — don't wait for player reload
+    navigate(`/history/${tournamentId}`, { state: { resultados: standings } });
+    // Reload players in background for XP updates
+    usePlayerStore.setState({ loaded: false });
+    usePlayerStore.getState().load();
   }, [endTournament, navigate, activeTournament?.id]);
 
   // ─── Cancel Tournament ───
