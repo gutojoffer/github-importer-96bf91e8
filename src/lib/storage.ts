@@ -131,7 +131,7 @@ export async function awardXP(standings: TournamentStanding[]) {
       const p = players.find(pl => pl.id === s.playerId);
       if (!p) return null;
       p.xp = (p.xp || 0) + s.xpAwarded;
-      return supabase.from('players').update({ xp: p.xp }).eq('id', p.id);
+      return supabase.from('players').update({ xp: p.xp }).eq('id', p.id).then();
     })
     .filter(Boolean);
   await Promise.all(xpUpdates);
@@ -160,7 +160,7 @@ export async function awardXP(standings: TournamentStanding[]) {
           points: existing.points + s.rankingPoints,
           wins: existing.wins + s.wins,
           losses: existing.losses + s.losses,
-        }).eq('id', existing.id)
+        }).eq('id', existing.id).then()
       );
     } else {
       inserts.push({
@@ -178,7 +178,7 @@ export async function awardXP(standings: TournamentStanding[]) {
   }
 
   const ops: Promise<any>[] = [...updates];
-  if (inserts.length) ops.push(supabase.from('player_stats').insert(inserts));
+  if (inserts.length) ops.push(supabase.from('player_stats').insert(inserts).then());
   await Promise.all(ops);
 }
 
