@@ -836,6 +836,8 @@ export default function TournamentHub() {
                 player1Points={currentArenaMatch.player1Points}
                 player2Points={currentArenaMatch.player2Points}
                 pointsToWin={activeTournament.pointsToWin}
+                player1Streak={getPlayerStreak(activeTournament, currentArenaMatch.player1Id)}
+                player2Streak={getPlayerStreak(activeTournament, currentArenaMatch.player2Id)}
               />
               <div
                 className="grid gap-3 px-3 py-4"
