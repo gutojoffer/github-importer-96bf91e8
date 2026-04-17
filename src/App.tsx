@@ -13,6 +13,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LigaProvider } from "@/contexts/LigaContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
+import AccountRouter from "@/components/AccountRouter";
 import SkeletonBox from "@/components/SkeletonBox";
 import { usePlayerStore } from "@/stores/usePlayerStore";
 import { useTournamentStore } from "@/stores/useTournamentStore";
@@ -25,6 +26,8 @@ import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import LandingPage from "@/pages/LandingPage";
 import SetupAdmin from "@/pages/SetupAdmin";
+import BladerOnboarding from "@/pages/BladerOnboarding";
+import BladerHome from "@/pages/blader/BladerHome";
 import NotFound from "./pages/NotFound";
 
 // Lazy-loaded routes
