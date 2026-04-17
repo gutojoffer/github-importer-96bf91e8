@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Tournament, Player, FinishType, FINISH_POINTS, DEFAULT_AVATARS, ScoreAction, EliminationSize } from '@/types/tournament';
 import { suggestRounds, generateFirstRound, generateSwissRound, getSwissStandings, generateEliminationBracket, generateNextEliminationRound } from '@/lib/matchmaking';
 import { saveActiveTournament, saveTournaments } from '@/lib/storage';
+import { getPlayerStreak } from '@/lib/streak';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import { useTournamentStore } from '@/stores/useTournamentStore';
 import PlayerCard from '@/components/PlayerCard';
@@ -835,6 +836,8 @@ export default function TournamentHub() {
                 player1Points={currentArenaMatch.player1Points}
                 player2Points={currentArenaMatch.player2Points}
                 pointsToWin={activeTournament.pointsToWin}
+                player1Streak={getPlayerStreak(activeTournament, currentArenaMatch.player1Id)}
+                player2Streak={getPlayerStreak(activeTournament, currentArenaMatch.player2Id)}
               />
               <div
                 className="grid gap-3 px-3 py-4"
