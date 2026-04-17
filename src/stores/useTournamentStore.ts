@@ -64,12 +64,14 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     if (!activeTournament) return null;
     const standings = calculateStandings(activeTournament);
     const completed: Tournament = { ...activeTournament, status: 'completed', finalStandings: standings };
+    // Update local state immediately for instant UI
     set(s => ({
       activeTournament: null,
       tournaments: [completed, ...s.tournaments.filter(t => t.id !== completed.id)],
     }));
-    await saveCompletedTournament(completed);
-    await awardXP(standings);
+    // Persist in background — do NOT block navigation to podium
+    saveCompletedTournament(completed).catch(console.error);
+    awardXP(standings).catch(console.error);
     return standings;
   },
 
