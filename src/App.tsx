@@ -65,29 +65,31 @@ const ProtectedLayout = () => {
 
   return (
     <ProtectedRoute>
-      <LigaProvider>
-        <div className="min-h-screen flex w-full">
-          <AppSidebar />
-          <div className="flex-1 flex flex-col min-w-0">
-            <AppTopbar />
-            <main className="flex-1 overflow-auto pb-[72px] md:pb-0">
-              <Suspense fallback={<LazyFallback />}>
-                <Routes>
-                  <Route path="/home" element={<Index />} />
-                  <Route path="/tournament" element={<TournamentHub />} />
-                  <Route path="/players" element={<PlayerManager />} />
-                  <Route path="/history" element={<TournamentHistory />} />
-                  <Route path="/history/:id" element={<TournamentPodium />} />
-                  <Route path="/rankings" element={<Leaderboard />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </main>
+      <AccountRouter>
+        <LigaProvider>
+          <div className="min-h-screen flex w-full">
+            <AppSidebar />
+            <div className="flex-1 flex flex-col min-w-0">
+              <AppTopbar />
+              <main className="flex-1 overflow-auto pb-[72px] md:pb-0">
+                <Suspense fallback={<LazyFallback />}>
+                  <Routes>
+                    <Route path="/home" element={<Index />} />
+                    <Route path="/tournament" element={<TournamentHub />} />
+                    <Route path="/players" element={<PlayerManager />} />
+                    <Route path="/history" element={<TournamentHistory />} />
+                    <Route path="/history/:id" element={<TournamentPodium />} />
+                    <Route path="/rankings" element={<Leaderboard />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </main>
+            </div>
+            <BottomNav />
           </div>
-          <BottomNav />
-        </div>
-      </LigaProvider>
+        </LigaProvider>
+      </AccountRouter>
     </ProtectedRoute>
   );
 };
