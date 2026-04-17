@@ -136,6 +136,12 @@ const App = () => (
                 </SidebarProvider>
               </AdminRoute>
             } />
+            <Route path="/onboarding" element={
+              <ProtectedRoute><BladerOnboarding /></ProtectedRoute>
+            } />
+            <Route path="/blader/home" element={
+              <ProtectedRoute><BladerHome /></ProtectedRoute>
+            } />
             <Route path="*" element={<ProtectedLayout />} />
           </Routes>
         </AuthProvider>
