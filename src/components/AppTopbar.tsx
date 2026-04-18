@@ -2,8 +2,10 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useLiga } from '@/contexts/LigaContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useActiveMode } from '@/contexts/ActiveModeContext';
 import { useState, useRef, useEffect } from 'react';
-import { Settings, LogOut, ChevronDown, LayoutGrid } from 'lucide-react';
+import { Settings, LogOut, ChevronDown, LayoutGrid, Repeat } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const BREADCRUMB_MAP: Record<string, string> = {
