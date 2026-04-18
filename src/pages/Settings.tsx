@@ -14,6 +14,11 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Settings() {
   const { nomeLiga, descricao, cidade, endereco, logoUrl, updateLiga, uploadLogo, removeLogo } = useLiga();
+  const { profile, loading: profileLoading } = useUserProfile();
+  const { user } = useAuth();
+  const { setMode } = useActiveMode();
+  const navigate = useNavigate();
+  const [activatingBlader, setActivatingBlader] = useState(false);
 
   // Liga data form
   const [formNome, setFormNome] = useState('');
