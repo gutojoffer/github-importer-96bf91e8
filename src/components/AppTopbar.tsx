@@ -23,9 +23,21 @@ export function AppTopbar() {
   const { nomeLiga, logoUrl } = useLiga();
   const { signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
+  const { profile } = useUserProfile();
+  const { mode, setMode } = useActiveMode();
   const isMobile = useIsMobile();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const hasDual = profile?.hasDualProfile ?? false;
+  const currentMode: 'organizador' | 'blader' = mode ?? (profile?.tipoConta ?? 'organizador');
+
+  const handleSwitchMode = () => {
+    const target: 'organizador' | 'blader' = currentMode === 'organizador' ? 'blader' : 'organizador';
+    setMode(target);
+    setDropdownOpen(false);
+    navigate(target === 'organizador' ? '/home' : '/blader/home');
+  };
 
   const initials = (nomeLiga || 'BX').slice(0, 2).toUpperCase();
 
