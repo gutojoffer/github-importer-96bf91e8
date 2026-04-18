@@ -28,8 +28,11 @@ import ResetPassword from "@/pages/ResetPassword";
 import LandingPage from "@/pages/LandingPage";
 import SetupAdmin from "@/pages/SetupAdmin";
 import BladerOnboarding from "@/pages/BladerOnboarding";
-import BladerHome from "@/pages/blader/BladerHome";
+import BladerLayout from "@/components/blader/BladerLayout";
 import SelectMode from "@/pages/SelectMode";
+
+const BladerHome = lazy(() => import("@/pages/blader/BladerHome"));
+const BladerTournaments = lazy(() => import("@/pages/blader/BladerTournaments"));
 import NotFound from "./pages/NotFound";
 
 // Lazy-loaded routes
@@ -143,8 +146,16 @@ const App = () => (
               <Route path="/onboarding" element={
                 <ProtectedRoute><BladerOnboarding /></ProtectedRoute>
               } />
-              <Route path="/blader/home" element={
-                <ProtectedRoute><BladerHome /></ProtectedRoute>
+              <Route path="/blader/*" element={
+                <BladerLayout>
+                  <Suspense fallback={<LazyFallback />}>
+                    <Routes>
+                      <Route path="/home" element={<BladerHome />} />
+                      <Route path="/tournaments" element={<BladerTournaments />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Suspense>
+                </BladerLayout>
               } />
               <Route path="*" element={<ProtectedLayout />} />
             </Routes>
