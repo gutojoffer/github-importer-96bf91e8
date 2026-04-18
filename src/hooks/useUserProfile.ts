@@ -12,11 +12,15 @@ export interface BladerProfile {
   avatarUrl: string | null;
   bio: string | null;
   isComplete: boolean;
+  /** Se a conta tem o perfil de Blader habilitado (mesmo sendo Organizador). */
+  temPerfilBlader: boolean;
+  /** True quando a conta tem AMBOS os perfis disponíveis. */
+  hasDualProfile: boolean;
 }
 
 /**
- * Lê o perfil do usuário logado e retorna seu tipo + se está completo.
- * Para Bladers, "completo" exige nome e cidade.
+ * Lê o perfil do usuário logado. Para Bladers, "completo" exige nome e cidade.
+ * Organizadores podem opcionalmente ativar o perfil de Blader.
  */
 export function useUserProfile() {
   const { user, loading: authLoading } = useAuth();
@@ -31,7 +35,7 @@ export function useUserProfile() {
     (async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('tipo_conta, nome_liga, cidade, beyblade_favorita, avatar_url, bio')
+        .select('tipo_conta, nome_liga, cidade, beyblade_favorita, avatar_url, bio, tem_perfil_blader')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -42,11 +46,14 @@ export function useUserProfile() {
           tipoConta: 'organizador',
           nome: null, cidade: null, beybladeFavorita: null, avatarUrl: null, bio: null,
           isComplete: false,
+          temPerfilBlader: false,
+          hasDualProfile: false,
         });
       } else {
         const tipoConta = (data.tipo_conta as TipoConta) || 'organizador';
         const nome = data.nome_liga;
         const cidade = data.cidade;
+        const temPerfilBlader = !!data.tem_perfil_blader;
         const isComplete = tipoConta === 'organizador'
           ? !!nome
           : !!(nome && cidade);
@@ -58,6 +65,8 @@ export function useUserProfile() {
           avatarUrl: data.avatar_url,
           bio: data.bio,
           isComplete,
+          temPerfilBlader,
+          hasDualProfile: tipoConta === 'organizador' && temPerfilBlader,
         });
       }
       setLoading(false);
