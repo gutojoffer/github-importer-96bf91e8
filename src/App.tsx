@@ -146,8 +146,16 @@ const App = () => (
               <Route path="/onboarding" element={
                 <ProtectedRoute><BladerOnboarding /></ProtectedRoute>
               } />
-              <Route path="/blader/home" element={
-                <ProtectedRoute><BladerHome /></ProtectedRoute>
+              <Route path="/blader/*" element={
+                <BladerLayout>
+                  <Suspense fallback={<LazyFallback />}>
+                    <Routes>
+                      <Route path="/home" element={<BladerHome />} />
+                      <Route path="/tournaments" element={<BladerTournaments />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Suspense>
+                </BladerLayout>
               } />
               <Route path="*" element={<ProtectedLayout />} />
             </Routes>
