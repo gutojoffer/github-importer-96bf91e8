@@ -213,6 +213,18 @@ export function AppTopbar() {
                 boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
               }}
             >
+              {hasDual && (
+                <button
+                  onClick={handleSwitchMode}
+                  className="flex items-center gap-2.5 w-full rounded-lg transition-all duration-150 font-body"
+                  style={{ padding: '8px 10px', fontSize: 13, color: '#9CA3AF' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(37,99,235,.08)'; e.currentTarget.style.color = '#60A5FA'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#9CA3AF'; }}
+                >
+                  <Repeat size={14} strokeWidth={1.4} />
+                  Entrar como {currentMode === 'organizador' ? 'Blader' : 'Organizador'}
+                </button>
+              )}
               <button
                 onClick={() => { setDropdownOpen(false); navigate('/settings'); }}
                 className="flex items-center gap-2.5 w-full rounded-lg transition-all duration-150 font-body"
