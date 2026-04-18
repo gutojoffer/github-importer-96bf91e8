@@ -1,11 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Settings as SettingsIcon, Upload, Trash2, ImageIcon, Save, Building, MapPin, FileText } from 'lucide-react';
+import { Settings as SettingsIcon, Upload, Trash2, ImageIcon, Save, Building, MapPin, FileText, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useLiga } from '@/contexts/LigaContext';
 import LigaLogo from '@/components/LigaLogo';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useActiveMode } from '@/contexts/ActiveModeContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function Settings() {
   const { nomeLiga, descricao, cidade, endereco, logoUrl, updateLiga, uploadLogo, removeLogo } = useLiga();
