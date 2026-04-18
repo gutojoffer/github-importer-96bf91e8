@@ -64,7 +64,12 @@ export default function Register() {
     setLoading(false);
 
     if (error) {
-      setError(error.message);
+      const msg = error.message.toLowerCase();
+      if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) {
+        setError('Este email já está cadastrado. Faça login e ative o perfil de Blader nas Configurações.');
+      } else {
+        setError(error.message);
+      }
     } else {
       toast.success('Conta criada! Verifique seu email para confirmar.');
       navigate('/login');

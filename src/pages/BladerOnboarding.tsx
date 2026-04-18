@@ -70,9 +70,9 @@ export default function BladerOnboarding() {
     setUploading(false);
   };
 
-  const saveStep = async (patch: Record<string, any>) => {
+  const saveStep = async (patch: Record<string, unknown>) => {
     if (!user) return false;
-    const { error } = await supabase.from('profiles').update(patch).eq('id', user.id);
+    const { error } = await supabase.from('profiles').update(patch as never).eq('id', user.id);
     if (error) { toast.error('Erro ao salvar: ' + error.message); return false; }
     return true;
   };

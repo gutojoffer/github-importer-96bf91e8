@@ -151,6 +151,7 @@ export type Database = {
           id: string
           logo_url: string | null
           nome_liga: string | null
+          tem_perfil_blader: boolean
           tipo_conta: string
           updated_at: string | null
         }
@@ -165,6 +166,7 @@ export type Database = {
           id: string
           logo_url?: string | null
           nome_liga?: string | null
+          tem_perfil_blader?: boolean
           tipo_conta?: string
           updated_at?: string | null
         }
@@ -179,6 +181,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           nome_liga?: string | null
+          tem_perfil_blader?: boolean
           tipo_conta?: string
           updated_at?: string | null
         }

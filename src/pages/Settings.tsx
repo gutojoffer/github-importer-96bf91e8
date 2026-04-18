@@ -1,14 +1,24 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Settings as SettingsIcon, Upload, Trash2, ImageIcon, Save, Building, MapPin, FileText } from 'lucide-react';
+import { Settings as SettingsIcon, Upload, Trash2, ImageIcon, Save, Building, MapPin, FileText, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useLiga } from '@/contexts/LigaContext';
 import LigaLogo from '@/components/LigaLogo';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useActiveMode } from '@/contexts/ActiveModeContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function Settings() {
   const { nomeLiga, descricao, cidade, endereco, logoUrl, updateLiga, uploadLogo, removeLogo } = useLiga();
+  const { profile, loading: profileLoading } = useUserProfile();
+  const { user } = useAuth();
+  const { setMode } = useActiveMode();
+  const navigate = useNavigate();
+  const [activatingBlader, setActivatingBlader] = useState(false);
 
   // Liga data form
   const [formNome, setFormNome] = useState('');
@@ -94,11 +104,62 @@ export default function Settings() {
 
   const displayLogo = logoPreview || logoUrl;
 
+  const handleActivateBlader = async () => {
+    if (!user) return;
+    setActivatingBlader(true);
+    const { error } = await supabase
+      .from('profiles')
+      .update({ tem_perfil_blader: true } as never)
+      .eq('id', user.id);
+    setActivatingBlader(false);
+    if (error) { toast.error('Erro ao ativar perfil de Blader.'); return; }
+    toast.success('Perfil de Blader ativado!');
+    setMode('blader');
+    if (!profile?.cidade) navigate('/onboarding'); else navigate('/blader/home');
+  };
+
   return (
     <div className="p-5 max-w-4xl mx-auto space-y-6 relative">
       <h1 className="font-heading text-3xl font-bold tracking-wider text-foreground italic neon-line-blurple pl-3 flex items-center gap-2">
         <SettingsIcon className="h-7 w-7 text-primary" /> CONFIGURAÇÕES
       </h1>
+
+      {/* Section: Perfil de Blader (apenas para organizadores) */}
+      {!profileLoading && profile?.tipoConta === 'organizador' && (
+        <div className="glass-panel p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-gold" />
+            <h2 className="font-heading text-lg font-bold tracking-wider text-gold">PERFIL DE BLADER</h2>
+          </div>
+          {profile.temPerfilBlader ? (
+            <>
+              <p className="text-sm text-muted-foreground font-body">
+                Você já tem um perfil de Blader ativo. Use o menu do topo para trocar entre Organizador e Blader.
+              </p>
+              <Button
+                onClick={() => { setMode('blader'); navigate(profile.cidade ? '/blader/home' : '/onboarding'); }}
+                className="font-heading tracking-wider gap-2 bg-gold text-background hover:bg-gold/90"
+              >
+                <Zap className="h-4 w-4" /> Entrar como Blader
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground font-body">
+                Quer participar de torneios e acompanhar seu desempenho como Blader? Ative seu perfil — você poderá alternar entre Organizador e Blader a qualquer momento.
+              </p>
+              <Button
+                onClick={handleActivateBlader}
+                disabled={activatingBlader}
+                className="font-heading tracking-wider gap-2 bg-gold text-background hover:bg-gold/90"
+              >
+                {activatingBlader ? <div className="h-4 w-4 border-2 border-background border-t-transparent rounded-full animate-spin" /> : <Zap className="h-4 w-4" />}
+                Ativar perfil de Blader
+              </Button>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Section: Dados da Liga */}
       <div className="glass-panel p-5 space-y-5">

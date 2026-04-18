@@ -10,6 +10,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AppTopbar } from "@/components/AppTopbar";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ActiveModeProvider } from "@/contexts/ActiveModeContext";
 import { LigaProvider } from "@/contexts/LigaContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
@@ -28,6 +29,7 @@ import LandingPage from "@/pages/LandingPage";
 import SetupAdmin from "@/pages/SetupAdmin";
 import BladerOnboarding from "@/pages/BladerOnboarding";
 import BladerHome from "@/pages/blader/BladerHome";
+import SelectMode from "@/pages/SelectMode";
 import NotFound from "./pages/NotFound";
 
 // Lazy-loaded routes
@@ -101,49 +103,52 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/cadastro" element={<Register />} />
-            <Route path="/setup-admin" element={<SetupAdmin />} />
-            <Route path="/recuperar-senha" element={<ForgotPassword />} />
-            <Route path="/nova-senha" element={<ResetPassword />} />
-            <Route path="/signup/:tournamentId" element={<Suspense fallback={<LazyFallback />}><TournamentSignup /></Suspense>} />
-            <Route path="/admin/*" element={
-              <AdminRoute>
-                <SidebarProvider>
-                  <div className="min-h-screen flex w-full">
-                    <AdminSidebar />
-                    <div className="flex-1 flex flex-col min-w-0">
-                      <header className="h-14 flex items-center sticky top-0 z-50" style={{ background: '#0a0d18', borderBottom: '1px solid rgba(255,255,255,.06)', padding: '0 24px' }}>
-                        <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
-                        <div className="h-5 w-px mx-3" style={{ background: 'rgba(255,255,255,.08)' }} />
-                        <span className="font-heading text-sm font-bold text-foreground">Admin Panel</span>
-                      </header>
-                      <main className="flex-1 overflow-auto">
-                        <Suspense fallback={<LazyFallback />}>
-                          <Routes>
-                            <Route path="/" element={<AdminDashboard />} />
-                            <Route path="/beyblades" element={<AdminBeyblades />} />
-                            <Route path="/release-notes" element={<AdminReleaseNotes />} />
-                            <Route path="/ligas" element={<AdminLigas />} />
-                            <Route path="/config" element={<AdminConfig />} />
-                          </Routes>
-                        </Suspense>
-                      </main>
+          <ActiveModeProvider>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/cadastro" element={<Register />} />
+              <Route path="/setup-admin" element={<SetupAdmin />} />
+              <Route path="/recuperar-senha" element={<ForgotPassword />} />
+              <Route path="/nova-senha" element={<ResetPassword />} />
+              <Route path="/select-mode" element={<ProtectedRoute><SelectMode /></ProtectedRoute>} />
+              <Route path="/signup/:tournamentId" element={<Suspense fallback={<LazyFallback />}><TournamentSignup /></Suspense>} />
+              <Route path="/admin/*" element={
+                <AdminRoute>
+                  <SidebarProvider>
+                    <div className="min-h-screen flex w-full">
+                      <AdminSidebar />
+                      <div className="flex-1 flex flex-col min-w-0">
+                        <header className="h-14 flex items-center sticky top-0 z-50" style={{ background: '#0a0d18', borderBottom: '1px solid rgba(255,255,255,.06)', padding: '0 24px' }}>
+                          <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
+                          <div className="h-5 w-px mx-3" style={{ background: 'rgba(255,255,255,.08)' }} />
+                          <span className="font-heading text-sm font-bold text-foreground">Admin Panel</span>
+                        </header>
+                        <main className="flex-1 overflow-auto">
+                          <Suspense fallback={<LazyFallback />}>
+                            <Routes>
+                              <Route path="/" element={<AdminDashboard />} />
+                              <Route path="/beyblades" element={<AdminBeyblades />} />
+                              <Route path="/release-notes" element={<AdminReleaseNotes />} />
+                              <Route path="/ligas" element={<AdminLigas />} />
+                              <Route path="/config" element={<AdminConfig />} />
+                            </Routes>
+                          </Suspense>
+                        </main>
+                      </div>
                     </div>
-                  </div>
-                </SidebarProvider>
-              </AdminRoute>
-            } />
-            <Route path="/onboarding" element={
-              <ProtectedRoute><BladerOnboarding /></ProtectedRoute>
-            } />
-            <Route path="/blader/home" element={
-              <ProtectedRoute><BladerHome /></ProtectedRoute>
-            } />
-            <Route path="*" element={<ProtectedLayout />} />
-          </Routes>
+                  </SidebarProvider>
+                </AdminRoute>
+              } />
+              <Route path="/onboarding" element={
+                <ProtectedRoute><BladerOnboarding /></ProtectedRoute>
+              } />
+              <Route path="/blader/home" element={
+                <ProtectedRoute><BladerHome /></ProtectedRoute>
+              } />
+              <Route path="*" element={<ProtectedLayout />} />
+            </Routes>
+          </ActiveModeProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

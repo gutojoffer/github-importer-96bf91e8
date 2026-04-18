@@ -1,18 +1,15 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useActiveMode } from '@/contexts/ActiveModeContext';
 
 /**
- * Roteia o usuário pós-login conforme seu tipo de conta:
- * - Blader sem perfil completo → /onboarding
- * - Blader com perfil completo → /blader/home
- * - Organizador → segue para a rota original (children)
- *
- * Use como wrapper das rotas do organizador.
+ * Roteia o usuário pós-login conforme seu tipo de conta + modo ativo.
  */
 export default function AccountRouter({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useUserProfile();
+  const { mode } = useActiveMode();
   const location = useLocation();
 
   if (authLoading || profileLoading) {
@@ -27,14 +24,24 @@ export default function AccountRouter({ children }: { children: React.ReactNode 
   }
 
   if (!user) return <Navigate to="/login" replace />;
+  if (!profile) return <>{children}</>;
 
-  if (profile?.tipoConta === 'blader') {
-    if (!profile.isComplete && location.pathname !== '/onboarding') {
-      return <Navigate to="/onboarding" replace />;
-    }
-    if (profile.isComplete && !location.pathname.startsWith('/blader')) {
-      return <Navigate to="/blader/home" replace />;
-    }
+  // Blader puro precisa completar perfil
+  if (profile.tipoConta === 'blader' && !profile.isComplete && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  // Conta com 2 perfis e sem modo escolhido
+  if (profile.hasDualProfile && !mode) {
+    return <Navigate to="/select-mode" replace />;
+  }
+
+  const effectiveMode = mode ?? profile.tipoConta;
+  if (effectiveMode === 'blader' && profile.isComplete && !location.pathname.startsWith('/blader')) {
+    return <Navigate to="/blader/home" replace />;
+  }
+  if (effectiveMode === 'organizador' && location.pathname.startsWith('/blader')) {
+    return <Navigate to="/home" replace />;
   }
 
   return <>{children}</>;

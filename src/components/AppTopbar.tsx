@@ -2,8 +2,10 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useLiga } from '@/contexts/LigaContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useActiveMode } from '@/contexts/ActiveModeContext';
 import { useState, useRef, useEffect } from 'react';
-import { Settings, LogOut, ChevronDown, LayoutGrid } from 'lucide-react';
+import { Settings, LogOut, ChevronDown, LayoutGrid, Repeat } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const BREADCRUMB_MAP: Record<string, string> = {
@@ -21,9 +23,21 @@ export function AppTopbar() {
   const { nomeLiga, logoUrl } = useLiga();
   const { signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
+  const { profile } = useUserProfile();
+  const { mode, setMode } = useActiveMode();
   const isMobile = useIsMobile();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const hasDual = profile?.hasDualProfile ?? false;
+  const currentMode: 'organizador' | 'blader' = mode ?? (profile?.tipoConta ?? 'organizador');
+
+  const handleSwitchMode = () => {
+    const target: 'organizador' | 'blader' = currentMode === 'organizador' ? 'blader' : 'organizador';
+    setMode(target);
+    setDropdownOpen(false);
+    navigate(target === 'organizador' ? '/home' : '/blader/home');
+  };
 
   const initials = (nomeLiga || 'BX').slice(0, 2).toUpperCase();
 
@@ -199,6 +213,18 @@ export function AppTopbar() {
                 boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
               }}
             >
+              {hasDual && (
+                <button
+                  onClick={handleSwitchMode}
+                  className="flex items-center gap-2.5 w-full rounded-lg transition-all duration-150 font-body"
+                  style={{ padding: '8px 10px', fontSize: 13, color: '#9CA3AF' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(37,99,235,.08)'; e.currentTarget.style.color = '#60A5FA'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#9CA3AF'; }}
+                >
+                  <Repeat size={14} strokeWidth={1.4} />
+                  Entrar como {currentMode === 'organizador' ? 'Blader' : 'Organizador'}
+                </button>
+              )}
               <button
                 onClick={() => { setDropdownOpen(false); navigate('/settings'); }}
                 className="flex items-center gap-2.5 w-full rounded-lg transition-all duration-150 font-body"
