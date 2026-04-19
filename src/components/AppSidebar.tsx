@@ -25,6 +25,7 @@ export function AppSidebar() {
   const { nomeLiga, logoUrl } = useLiga();
   const { signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
+  const { profile } = useUserProfile();
 
   const { data: activeTournaments } = useQuery({
     queryKey: ['active-tournament-count'],
