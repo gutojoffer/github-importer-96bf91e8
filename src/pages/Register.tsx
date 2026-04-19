@@ -77,7 +77,7 @@ export default function Register() {
     if (error) {
       const msg = error.message.toLowerCase();
       if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) {
-        setError('Este email já está cadastrado. Faça login e ative o perfil de Blader nas Configurações.');
+        setError('Este email já está cadastrado. Faça login e crie o segundo perfil pelo menu do topo.');
       } else {
         setError(error.message);
       }
