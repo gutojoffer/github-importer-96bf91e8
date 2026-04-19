@@ -30,6 +30,8 @@ import SetupAdmin from "@/pages/SetupAdmin";
 import BladerOnboarding from "@/pages/BladerOnboarding";
 import BladerLayout from "@/components/blader/BladerLayout";
 import SelectMode from "@/pages/SelectMode";
+import CriarPerfilBlader from "@/pages/CriarPerfilBlader";
+import CriarPerfilOrganizador from "@/pages/CriarPerfilOrganizador";
 
 const BladerHome = lazy(() => import("@/pages/blader/BladerHome"));
 const BladerTournaments = lazy(() => import("@/pages/blader/BladerTournaments"));
@@ -146,6 +148,12 @@ const App = () => (
               } />
               <Route path="/onboarding" element={
                 <ProtectedRoute><BladerOnboarding /></ProtectedRoute>
+              } />
+              <Route path="/criar-perfil-blader" element={
+                <ProtectedRoute><CriarPerfilBlader /></ProtectedRoute>
+              } />
+              <Route path="/criar-perfil-organizador" element={
+                <ProtectedRoute><CriarPerfilOrganizador /></ProtectedRoute>
               } />
               <Route path="/blader/*" element={
                 <BladerLayout>

@@ -2,9 +2,10 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useLiga } from '@/contexts/LigaContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { Home, Trophy, Clock, Star, Users, Settings, LogOut, ChevronRight, Shield } from 'lucide-react';
+import { Home, Trophy, Clock, Star, Users, Settings, LogOut, ChevronRight, Shield, ChevronRight as ChevronRightIcon } from 'lucide-react';
 
 const NAV_ITEMS = [
   { title: 'Home', url: '/home', icon: Home },
@@ -24,6 +25,7 @@ export function AppSidebar() {
   const { nomeLiga, logoUrl } = useLiga();
   const { signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
+  const { profile } = useUserProfile();
 
   const { data: activeTournaments } = useQuery({
     queryKey: ['active-tournament-count'],
@@ -225,7 +227,32 @@ export function AppSidebar() {
 
       {/* Footer */}
       <div className="shrink-0" style={{ padding: 12, borderTop: '1px solid rgba(255,255,255,.05)', marginTop: 'auto' }}>
-        {/* User card */}
+        {/* Banner: criar perfil de Blader */}
+        {profile && !profile.temPerfilBlader && (
+          <div
+            onClick={() => navigate('/criar-perfil-blader')}
+            className="cursor-pointer transition-all duration-150 mb-2"
+            style={{
+              padding: '10px 12px',
+              background: 'rgba(245,158,11,.07)',
+              border: '1px solid rgba(245,158,11,.18)',
+              borderRadius: 10,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245,158,11,.12)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(245,158,11,.07)'; }}
+          >
+            <span style={{ fontSize: 16 }}>⚡</span>
+            <div className="min-w-0 flex-1">
+              <div className="font-body" style={{ fontSize: 12, fontWeight: 600, color: '#FCD34D' }}>Criar perfil Blader</div>
+              <div className="font-body" style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>Compete nos torneios</div>
+            </div>
+            <ChevronRightIcon size={14} style={{ color: '#4B5563' }} className="shrink-0" />
+          </div>
+        )}
+
         <div
           className="flex items-center gap-2.5 cursor-pointer mb-2"
           style={{

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, UserPlus, Trophy, Zap, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
@@ -24,6 +24,17 @@ export default function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Pré-seleciona tipo via ?tipo=organizador|blader
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const t = params.get('tipo');
+    if (t === 'organizador' || t === 'blader') {
+      setTipoConta(t);
+      setStep('form');
+    }
+  }, [location.search]);
 
   const inputClass = "w-full h-10 px-3 rounded-lg bg-[hsl(var(--surface2))] border border-[rgba(255,255,255,0.07)] text-foreground text-sm font-body focus:outline-none focus:border-primary transition-colors";
 
@@ -66,7 +77,7 @@ export default function Register() {
     if (error) {
       const msg = error.message.toLowerCase();
       if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) {
-        setError('Este email já está cadastrado. Faça login e ative o perfil de Blader nas Configurações.');
+        setError('Este email já está cadastrado. Faça login e crie o segundo perfil pelo menu do topo.');
       } else {
         setError(error.message);
       }

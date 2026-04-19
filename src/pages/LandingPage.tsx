@@ -306,6 +306,96 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ════════ COMO VOCÊ QUER USAR? ════════ */}
+      <section className="py-20 border-t border-[rgba(255,255,255,0.05)] px-6 sm:px-12 lg:px-20 max-w-6xl mx-auto">
+        <div className="text-center mb-10">
+          <h2 className="font-heading text-3xl font-bold text-white">Como você quer usar o BLADEX?</h2>
+          <p className="text-sm text-muted-foreground font-body mt-2">Escolha o caminho que combina com você. Se quiser, depois pode ter os dois.</p>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-5">
+          {/* Card Organizador */}
+          <div
+            className="flex-1 transition-all duration-200 cursor-pointer group"
+            style={{
+              padding: '32px 28px',
+              background: '#111827',
+              borderRadius: 16,
+              border: '1px solid rgba(255,255,255,.07)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(37,99,235,.3)';
+              e.currentTarget.style.transform = 'translateY(-4px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,.07)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+            onClick={() => navigate('/cadastro?tipo=organizador')}
+          >
+            <div className="text-[40px] mb-3" aria-hidden>🏆</div>
+            <h3 className="font-heading font-bold text-white mb-1" style={{ fontSize: 22 }}>Sou Organizador</h3>
+            <p className="text-sm text-muted-foreground font-body mb-5">Crie sua liga, organize torneios e gerencie bladers</p>
+            <ul className="space-y-2 mb-6">
+              {['Chaveamento automático', 'Arena de batalha', 'Ranking em tempo real', 'Pódio animado'].map((f) => (
+                <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground font-body">
+                  <span style={{ color: '#60A5FA' }}>✓</span> {f}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={(e) => { e.stopPropagation(); navigate('/cadastro?tipo=organizador'); }}
+              className="w-full py-3 rounded-xl font-body font-semibold text-sm text-white transition-colors"
+              style={{ background: '#2563EB' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#1D4ED8'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#2563EB'}
+            >
+              Criar minha liga →
+            </button>
+          </div>
+
+          {/* Card Blader */}
+          <div
+            className="flex-1 transition-all duration-200 cursor-pointer group"
+            style={{
+              padding: '32px 28px',
+              background: '#111827',
+              borderRadius: 16,
+              border: '1px solid rgba(255,255,255,.07)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(245,158,11,.3)';
+              e.currentTarget.style.transform = 'translateY(-4px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,.07)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+            onClick={() => navigate('/cadastro?tipo=blader')}
+          >
+            <div className="text-[40px] mb-3" aria-hidden>⚡</div>
+            <h3 className="font-heading font-bold text-white mb-1" style={{ fontSize: 22 }}>Sou Blader</h3>
+            <p className="text-sm text-muted-foreground font-body mb-5">Participe de torneios, acompanhe seu ranking e evolua como jogador</p>
+            <ul className="space-y-2 mb-6">
+              {['Perfil de jogador', 'Histórico de partidas', 'Conquistas e badges', 'Inscrição em torneios'].map((f) => (
+                <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground font-body">
+                  <span style={{ color: '#FBBF24' }}>✓</span> {f}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={(e) => { e.stopPropagation(); navigate('/cadastro?tipo=blader'); }}
+              className="w-full py-3 rounded-xl font-body font-semibold text-sm transition-opacity"
+              style={{ background: 'linear-gradient(135deg, #D97706, #F59E0B)', color: '#0B0F1A' }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+            >
+              Criar meu perfil →
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* ════════ LIGAS PARCEIRAS ════════ */}
       {ligas && ligas.length > 0 && (
         <section className="py-16 border-t border-[rgba(255,255,255,0.05)]">

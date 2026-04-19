@@ -159,6 +159,31 @@ export function BladerSidebar() {
 
       {/* Footer — user card */}
       <div className="shrink-0" style={{ padding: 12, borderTop: '1px solid rgba(255,255,255,.05)', marginTop: 'auto' }}>
+        {/* Banner: criar perfil de Organizador */}
+        {profile && !profile.temPerfilOrganizador && (
+          <div
+            onClick={() => navigate('/criar-perfil-organizador')}
+            className="cursor-pointer transition-all duration-150 mb-2"
+            style={{
+              padding: '10px 12px',
+              background: 'rgba(37,99,235,.07)',
+              border: '1px solid rgba(37,99,235,.18)',
+              borderRadius: 10,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(37,99,235,.12)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(37,99,235,.07)'; }}
+          >
+            <span style={{ fontSize: 16 }}>🏆</span>
+            <div className="min-w-0 flex-1">
+              <div className="font-body" style={{ fontSize: 12, fontWeight: 600, color: '#60A5FA' }}>Criar perfil Organizador</div>
+              <div className="font-body" style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>Crie e gerencie ligas</div>
+            </div>
+            <ChevronRight size={14} style={{ color: '#4B5563' }} className="shrink-0" />
+          </div>
+        )}
         <div
           className="flex items-center gap-2.5 cursor-pointer mb-2"
           style={{
