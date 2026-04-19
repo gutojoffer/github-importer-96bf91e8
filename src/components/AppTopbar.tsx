@@ -209,7 +209,7 @@ export function AppTopbar() {
                 border: '1px solid rgba(255,255,255,.12)',
                 borderRadius: 10,
                 padding: 6,
-                minWidth: 160,
+                minWidth: 240,
                 boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
               }}
             >
@@ -224,6 +224,54 @@ export function AppTopbar() {
                   <Repeat size={14} strokeWidth={1.4} />
                   Entrar como {currentMode === 'organizador' ? 'Blader' : 'Organizador'}
                 </button>
+              )}
+
+              {/* CTA: criar segundo perfil */}
+              {!profile?.temPerfilBlader && currentMode === 'organizador' && (
+                <>
+                  <div style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 4px' }} />
+                  <div
+                    onClick={() => { setDropdownOpen(false); navigate('/criar-perfil-blader'); }}
+                    className="flex items-center gap-2.5 cursor-pointer transition-all duration-150"
+                    style={{
+                      padding: '10px 12px', borderRadius: 10, margin: '2px 2px',
+                      background: 'rgba(245,158,11,.08)',
+                      border: '1px solid rgba(245,158,11,.15)',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245,158,11,.14)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(245,158,11,.08)'; }}
+                  >
+                    <span style={{ fontSize: 18 }}>⚡</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-body" style={{ fontSize: 13, fontWeight: 600, color: '#FCD34D' }}>Criar perfil de Blader</div>
+                      <div className="font-body" style={{ fontSize: 11, color: 'rgba(255,255,255,.4)' }}>Participe de torneios também</div>
+                    </div>
+                  </div>
+                  <div style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 4px' }} />
+                </>
+              )}
+              {!profile?.temPerfilOrganizador && currentMode === 'blader' && (
+                <>
+                  <div style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 4px' }} />
+                  <div
+                    onClick={() => { setDropdownOpen(false); navigate('/criar-perfil-organizador'); }}
+                    className="flex items-center gap-2.5 cursor-pointer transition-all duration-150"
+                    style={{
+                      padding: '10px 12px', borderRadius: 10, margin: '2px 2px',
+                      background: 'rgba(37,99,235,.08)',
+                      border: '1px solid rgba(37,99,235,.15)',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(37,99,235,.14)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(37,99,235,.08)'; }}
+                  >
+                    <span style={{ fontSize: 18 }}>🏆</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-body" style={{ fontSize: 13, fontWeight: 600, color: '#60A5FA' }}>Criar perfil de Organizador</div>
+                      <div className="font-body" style={{ fontSize: 11, color: 'rgba(255,255,255,.4)' }}>Crie e gerencie suas ligas</div>
+                    </div>
+                  </div>
+                  <div style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 4px' }} />
+                </>
               )}
               <button
                 onClick={() => { setDropdownOpen(false); navigate('/settings'); }}
