@@ -3,6 +3,7 @@ import { Tournament, TournamentRound, Player } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Crown, Swords } from 'lucide-react';
 import StreakFrame from '@/components/StreakFrame';
+import BladerLink from '@/components/BladerLink';
 
 interface EliminationBracketProps {
   rounds: TournamentRound[];
@@ -38,20 +39,22 @@ function EliminationBracketView({ rounds, getPlayer, currentRound, champion }: E
               CAMPEÃO
             </div>
             <div className="flex flex-col items-center gap-2 py-4">
-              <StreakFrame streak={0} size={64} rankPosition={1}>
-                <Avatar className="h-16 w-16 border-2 border-accent">
-                  {(() => {
-                    const p = getPlayer(champion);
-                    if (!p) return <AvatarFallback className="bg-muted">?</AvatarFallback>;
-                    return p.avatar.startsWith('http') || p.avatar.startsWith('data:')
-                      ? <AvatarImage src={p.avatar} />
-                      : <AvatarFallback className="bg-muted text-2xl">{p.avatar}</AvatarFallback>;
-                  })()}
-                </Avatar>
-              </StreakFrame>
-              <span className="font-heading text-sm font-bold text-accent italic">
-                {getPlayer(champion)?.nickname || getPlayer(champion)?.name || '?'}
-              </span>
+              <BladerLink name={getPlayer(champion)?.name || ''} className="flex flex-col items-center gap-2 hover:opacity-90 transition-opacity">
+                <StreakFrame streak={0} size={64} rankPosition={1}>
+                  <Avatar className="h-16 w-16 border-2 border-accent">
+                    {(() => {
+                      const p = getPlayer(champion);
+                      if (!p) return <AvatarFallback className="bg-muted">?</AvatarFallback>;
+                      return p.avatar.startsWith('http') || p.avatar.startsWith('data:')
+                        ? <AvatarImage src={p.avatar} />
+                        : <AvatarFallback className="bg-muted text-2xl">{p.avatar}</AvatarFallback>;
+                    })()}
+                  </Avatar>
+                </StreakFrame>
+                <span className="font-heading text-sm font-bold text-accent italic">
+                  {getPlayer(champion)?.nickname || getPlayer(champion)?.name || '?'}
+                </span>
+              </BladerLink>
             </div>
           </div>
         )}
