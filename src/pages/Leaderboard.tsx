@@ -5,6 +5,7 @@ import { getAllStats } from '@/lib/storage';
 import { getEloFromXP, ELO_TIERS, PlayerStats } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import EloBadge from '@/components/EloBadge';
+import BladerLink from '@/components/BladerLink';
 import { Crown, Shield, Trophy, Swords, Medal } from 'lucide-react';
 
 interface RankingEntry {
@@ -144,7 +145,7 @@ export default function Rankings() {
                   <span className={`font-heading text-xl font-bold text-center italic ${i < 3 ? positionColors[i] : 'text-muted-foreground/50'}`}>
                     {i === 0 ? <Crown className="h-5 w-5 inline text-gold" /> : `#${i + 1}`}
                   </span>
-                  <div className="flex items-center gap-3 min-w-0">
+                  <BladerLink name={entry.name} className="flex items-center gap-3 min-w-0 hover:opacity-80 transition-opacity">
                     <Avatar className="h-10 w-10 border-2 shrink-0" style={{ borderColor: `hsl(${elo.tier.color} / 0.5)` }}>
                       {entry.avatar.startsWith('http') || entry.avatar.startsWith('data:') ? <AvatarImage src={entry.avatar} alt={entry.name} /> : <AvatarFallback className="bg-muted text-lg">{entry.avatar}</AvatarFallback>}
                     </Avatar>
@@ -152,7 +153,7 @@ export default function Rankings() {
                       <p className="font-heading font-bold truncate text-foreground">{entry.name}</p>
                       {entry.nickname && <p className="text-[10px] text-muted-foreground">@{entry.nickname.replace(/^@/,'')}</p>}
                     </div>
-                  </div>
+                  </BladerLink>
                   <span className="font-heading text-lg font-bold text-primary text-right">{entry.totalPoints}</span>
                   <span className="font-heading text-sm text-foreground text-right">{entry.totalWins}</span>
                   <span className="font-heading text-sm text-muted-foreground text-right">{entry.tournamentsPlayed}</span>
@@ -164,16 +165,18 @@ export default function Rankings() {
                   <span className={`font-heading text-xl font-bold w-8 text-center italic ${i < 3 ? positionColors[i] : 'text-muted-foreground/50'}`}>
                     {i === 0 ? <Crown className="h-5 w-5 inline text-gold" /> : `#${i + 1}`}
                   </span>
-                  <Avatar className="h-10 w-10 border-2 shrink-0" style={{ borderColor: `hsl(${elo.tier.color} / 0.5)` }}>
-                    {entry.avatar.startsWith('http') || entry.avatar.startsWith('data:') ? <AvatarImage src={entry.avatar} alt={entry.name} /> : <AvatarFallback className="bg-muted text-lg">{entry.avatar}</AvatarFallback>}
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-heading font-bold truncate text-foreground">{entry.name}</p>
-                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground mt-0.5">
-                      <span className="flex items-center gap-0.5"><Trophy className="h-3 w-3" />{entry.totalWins}W</span>
-                      <span className="flex items-center gap-0.5"><Medal className="h-3 w-3" />{entry.tournamentsPlayed}T</span>
+                  <BladerLink name={entry.name} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
+                    <Avatar className="h-10 w-10 border-2 shrink-0" style={{ borderColor: `hsl(${elo.tier.color} / 0.5)` }}>
+                      {entry.avatar.startsWith('http') || entry.avatar.startsWith('data:') ? <AvatarImage src={entry.avatar} alt={entry.name} /> : <AvatarFallback className="bg-muted text-lg">{entry.avatar}</AvatarFallback>}
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-heading font-bold truncate text-foreground">{entry.name}</p>
+                      <div className="flex items-center gap-3 text-[10px] text-muted-foreground mt-0.5">
+                        <span className="flex items-center gap-0.5"><Trophy className="h-3 w-3" />{entry.totalWins}W</span>
+                        <span className="flex items-center gap-0.5"><Medal className="h-3 w-3" />{entry.tournamentsPlayed}T</span>
+                      </div>
                     </div>
-                  </div>
+                  </BladerLink>
                   <div className="text-right shrink-0">
                     <span className="font-heading text-lg font-bold text-primary">{entry.totalPoints}</span>
                     <div className="mt-0.5"><EloBadge xp={entry.xp} size="sm" /></div>
