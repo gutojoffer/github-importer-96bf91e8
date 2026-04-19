@@ -33,6 +33,7 @@ import SelectMode from "@/pages/SelectMode";
 
 const BladerHome = lazy(() => import("@/pages/blader/BladerHome"));
 const BladerTournaments = lazy(() => import("@/pages/blader/BladerTournaments"));
+const BladerProfile = lazy(() => import("@/pages/blader/BladerProfile"));
 import NotFound from "./pages/NotFound";
 
 // Lazy-loaded routes
@@ -152,6 +153,9 @@ const App = () => (
                     <Routes>
                       <Route path="/home" element={<BladerHome />} />
                       <Route path="/tournaments" element={<BladerTournaments />} />
+                      <Route path="/profile" element={<BladerProfile />} />
+                      <Route path="/profile/:userId" element={<BladerProfile />} />
+                      <Route path="/profile/by-name/:name" element={<BladerProfile />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
