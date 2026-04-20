@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Settings as SettingsIcon, Upload, Trash2, ImageIcon, Save, Building, MapPin, FileText, Zap } from 'lucide-react';
+import { Settings as SettingsIcon, Upload, Trash2, ImageIcon, Save, Building, MapPin, FileText, Zap, Palette, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useLiga } from '@/contexts/LigaContext';
@@ -11,6 +11,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveMode } from '@/contexts/ActiveModeContext';
 import { useNavigate } from 'react-router-dom';
+import { BLADER_COLOR_KEYS, BLADER_COLORS, getBladerGradient, type BladerColorKey } from '@/lib/bladerColors';
+import BladerAvatar from '@/components/BladerAvatar';
 
 export default function Settings() {
   const { nomeLiga, descricao, cidade, endereco, logoUrl, updateLiga, uploadLogo, removeLogo } = useLiga();
@@ -19,6 +21,33 @@ export default function Settings() {
   const { setMode } = useActiveMode();
   const navigate = useNavigate();
   const [activatingBlader, setActivatingBlader] = useState(false);
+  const [savingColor, setSavingColor] = useState<BladerColorKey | null>(null);
+  const [localColor, setLocalColor] = useState<BladerColorKey>('blue');
+
+  // Sync local color with loaded profile
+  useEffect(() => {
+    if (profile?.corPerfil && BLADER_COLOR_KEYS.includes(profile.corPerfil as BladerColorKey)) {
+      setLocalColor(profile.corPerfil as BladerColorKey);
+    }
+  }, [profile?.corPerfil]);
+
+  const handleSelectColor = async (key: BladerColorKey) => {
+    if (!user || key === localColor) return;
+    setSavingColor(key);
+    setLocalColor(key); // optimistic
+    const { error } = await supabase
+      .from('profiles')
+      .update({ cor_perfil: key } as never)
+      .eq('id', user.id);
+    setSavingColor(null);
+    if (error) {
+      toast.error('Não foi possível salvar a cor.');
+      setLocalColor((profile?.corPerfil as BladerColorKey) || 'blue');
+      return;
+    }
+    toast.success('Cor do perfil atualizada!');
+    // Force refresh of useUserProfile next time it mounts; here we just trust the optimistic update.
+  };
 
   // Liga data form
   const [formNome, setFormNome] = useState('');
