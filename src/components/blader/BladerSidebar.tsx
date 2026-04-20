@@ -187,7 +187,7 @@ export function BladerSidebar() {
         <div
           className="flex items-center gap-2.5 cursor-pointer mb-2"
           style={{
-            background: 'linear-gradient(135deg, rgba(245,158,11,.08), rgba(239,68,68,.06))',
+            background: `linear-gradient(135deg, ${getBladerPalette(profile?.corPerfil).from}22, ${getBladerPalette(profile?.corPerfil).to}11)`,
             border: '1px solid rgba(255,255,255,.08)',
             borderRadius: 12,
             padding: 12,
@@ -196,20 +196,20 @@ export function BladerSidebar() {
           onClick={() => navigate('/blader/profile')}
         >
           <div className="relative shrink-0" style={{ width: 38, height: 38 }}>
-            {profile?.avatarUrl ? (
-              <img src={profile.avatarUrl} alt={profile.nome || 'Blader'} className="w-full h-full rounded-full object-cover" style={{ border: '2px solid rgba(245,158,11,.5)' }} />
-            ) : (
-              <div className="w-full h-full rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #B45309, #EF4444)', border: '2px solid rgba(245,158,11,.5)' }}>
-                <span className="font-heading font-bold text-white leading-none select-none" style={{ fontSize: 14 }}>{initials}</span>
-              </div>
-            )}
-            <div className="absolute bottom-0 right-0" style={{ width: 8, height: 8, borderRadius: '50%', background: '#F59E0B', border: '2px solid #080c18' }} />
+            <BladerAvatar
+              url={profile?.avatarUrl}
+              name={profile?.nome}
+              colorKey={profile?.corPerfil}
+              size={38}
+              borderWidth={2}
+            />
+            <div className="absolute bottom-0 right-0" style={{ width: 8, height: 8, borderRadius: '50%', background: getBladerPalette(profile?.corPerfil).accent, border: '2px solid #080c18' }} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-heading font-bold truncate" style={{ fontSize: 13, color: '#E2E8F0' }}>
               {profile?.nome || 'Blader'}
             </p>
-            <p style={{ fontSize: 11, color: '#FBBF24' }}>⚡ Blader</p>
+            <p style={{ fontSize: 11, color: getBladerPalette(profile?.corPerfil).accent }}>⚡ Blader</p>
           </div>
           <ChevronRight size={14} style={{ color: '#374151' }} className="shrink-0 ml-auto" />
         </div>
