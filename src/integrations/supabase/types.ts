@@ -145,9 +145,11 @@ export type Database = {
           beyblade_favorita: string | null
           bio: string | null
           cidade: string | null
+          cor_perfil: string
           created_at: string | null
           descricao: string | null
           endereco: string | null
+          estado: string | null
           id: string
           logo_url: string | null
           nome_liga: string | null
@@ -161,9 +163,11 @@ export type Database = {
           beyblade_favorita?: string | null
           bio?: string | null
           cidade?: string | null
+          cor_perfil?: string
           created_at?: string | null
           descricao?: string | null
           endereco?: string | null
+          estado?: string | null
           id: string
           logo_url?: string | null
           nome_liga?: string | null
@@ -177,9 +181,11 @@ export type Database = {
           beyblade_favorita?: string | null
           bio?: string | null
           cidade?: string | null
+          cor_perfil?: string
           created_at?: string | null
           descricao?: string | null
           endereco?: string | null
+          estado?: string | null
           id?: string
           logo_url?: string | null
           nome_liga?: string | null
