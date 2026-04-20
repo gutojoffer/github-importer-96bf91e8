@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Trophy, Zap, Flame, Target, MapPin, Calendar, ArrowRight } from 'lucide-react';
+import BladerAvatar from '@/components/BladerAvatar';
+import { getBladerPalette } from '@/lib/bladerColors';
 
 interface TournamentRow {
   id: string;
@@ -76,7 +78,7 @@ export default function BladerHome() {
   // Meus torneios recentes
   const myRecent = myTournaments.slice(0, 3);
 
-  const initials = (profile?.nome || 'BL').slice(0, 2).toUpperCase();
+  const palette = getBladerPalette(profile?.corPerfil);
 
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
@@ -84,27 +86,17 @@ export default function BladerHome() {
       <div
         className="rounded-2xl p-5 md:p-6 flex items-center gap-4 md:gap-5"
         style={{
-          background: 'linear-gradient(135deg, #1a1208 0%, #111827 60%)',
-          border: '1px solid rgba(245,158,11,.15)',
+          background: `linear-gradient(135deg, ${palette.from}22 0%, #111827 60%)`,
+          border: `1px solid ${palette.border}`,
         }}
       >
-        <div className="shrink-0">
-          {profile?.avatarUrl ? (
-            <img
-              src={profile.avatarUrl}
-              alt={profile.nome || 'Blader'}
-              className="rounded-full object-cover"
-              style={{ width: 64, height: 64, border: '2px solid rgba(245,158,11,.5)' }}
-            />
-          ) : (
-            <div
-              className="rounded-full flex items-center justify-center"
-              style={{ width: 64, height: 64, background: 'linear-gradient(135deg, #B45309, #EF4444)', border: '2px solid rgba(245,158,11,.5)' }}
-            >
-              <span className="font-heading font-bold text-white" style={{ fontSize: 22 }}>{initials}</span>
-            </div>
-          )}
-        </div>
+        <BladerAvatar
+          url={profile?.avatarUrl}
+          name={profile?.nome}
+          colorKey={profile?.corPerfil}
+          size={64}
+          borderWidth={2}
+        />
         <div className="flex-1 min-w-0">
           <h1 className="font-heading font-bold text-foreground" style={{ fontSize: 20, lineHeight: 1.2 }}>
             Olá, {profile?.nome || 'Blader'}!
@@ -116,7 +108,7 @@ export default function BladerHome() {
               </span>
             )}
             {profile?.beybladeFavorita && (
-              <span className="text-xs font-body" style={{ color: '#FBBF24' }}>
+              <span className="text-xs font-body" style={{ color: palette.accent }}>
                 ⚡ {profile.beybladeFavorita}
               </span>
             )}
@@ -126,7 +118,7 @@ export default function BladerHome() {
           )}
         </div>
         <div className="hidden md:flex flex-col items-end shrink-0">
-          <span className="font-heading font-bold" style={{ fontSize: 28, color: '#FBBF24' }}>
+          <span className="font-heading font-bold" style={{ fontSize: 28, color: palette.accent }}>
             {myTournaments.length}
           </span>
           <span className="font-body uppercase" style={{ fontSize: 9, letterSpacing: 1.5, color: '#9CA3AF' }}>
@@ -137,10 +129,10 @@ export default function BladerHome() {
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-3">
-        <StatCard icon={<Trophy size={16} />} label="Torneios" value={myTournaments.length} color="#60A5FA" />
-        <StatCard icon={<Zap size={16} />} label="Vitórias" value={totalWins} color="#10B981" />
-        <StatCard icon={<Flame size={16} />} label="Melhor coloc." value={bestPlace} color="#F59E0B" />
-        <StatCard icon={<Target size={16} />} label="Winrate" value={`${winrate}%`} color="#A78BFA" />
+        <StatCard icon={<Trophy size={16} />} label="Torneios" value={myTournaments.length} color={palette.accent} />
+        <StatCard icon={<Zap size={16} />} label="Vitórias" value={totalWins} color={palette.accent} />
+        <StatCard icon={<Flame size={16} />} label="Melhor coloc." value={bestPlace} color={palette.accent} />
+        <StatCard icon={<Target size={16} />} label="Winrate" value={`${winrate}%`} color={palette.accent} />
       </div>
 
       {/* Próximos torneios */}

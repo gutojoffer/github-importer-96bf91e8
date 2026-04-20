@@ -11,6 +11,10 @@ export interface BladerProfile {
   beybladeFavorita: string | null;
   avatarUrl: string | null;
   bio: string | null;
+  /** Cor escolhida para personalização (key da paleta BLADER_COLORS). */
+  corPerfil: string;
+  /** UF do estado (BR), opcional. */
+  estado: string | null;
   isComplete: boolean;
   /** Se a conta tem o perfil de Blader habilitado. */
   temPerfilBlader: boolean;
@@ -36,7 +40,7 @@ export function useUserProfile() {
     (async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('tipo_conta, nome_liga, cidade, beyblade_favorita, avatar_url, bio, tem_perfil_blader, tem_perfil_organizador')
+        .select('tipo_conta, nome_liga, cidade, beyblade_favorita, avatar_url, bio, tem_perfil_blader, tem_perfil_organizador, cor_perfil, estado')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -46,6 +50,7 @@ export function useUserProfile() {
         setProfile({
           tipoConta: 'organizador',
           nome: null, cidade: null, beybladeFavorita: null, avatarUrl: null, bio: null,
+          corPerfil: 'blue', estado: null,
           isComplete: false,
           temPerfilBlader: false,
           temPerfilOrganizador: false,
@@ -56,7 +61,6 @@ export function useUserProfile() {
         const nome = data.nome_liga;
         const cidade = data.cidade;
         const temPerfilBlader = !!data.tem_perfil_blader;
-        // Backward-compat: se for organizador ou já tiver nome_liga, considera org=true
         const temPerfilOrganizador = !!(data as { tem_perfil_organizador?: boolean }).tem_perfil_organizador
           || tipoConta === 'organizador';
         const isComplete = tipoConta === 'organizador'
@@ -69,6 +73,8 @@ export function useUserProfile() {
           beybladeFavorita: data.beyblade_favorita,
           avatarUrl: data.avatar_url,
           bio: data.bio,
+          corPerfil: (data as { cor_perfil?: string }).cor_perfil || 'blue',
+          estado: (data as { estado?: string | null }).estado ?? null,
           isComplete,
           temPerfilBlader,
           temPerfilOrganizador,

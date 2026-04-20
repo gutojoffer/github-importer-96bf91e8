@@ -7,6 +7,7 @@ import { useActiveMode } from '@/contexts/ActiveModeContext';
 import { useState, useRef, useEffect } from 'react';
 import { Settings, LogOut, ChevronDown, LayoutGrid, Repeat } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import BladerAvatar from '@/components/BladerAvatar';
 
 const BREADCRUMB_MAP: Record<string, string> = {
   '/home': 'Home',
@@ -175,7 +176,23 @@ export function AppTopbar() {
               }
             }}
           >
-            {logoUrl ? (
+            {currentMode === 'blader' && profile?.avatarUrl ? (
+              <BladerAvatar
+                url={profile.avatarUrl}
+                name={profile.nome}
+                colorKey={profile.corPerfil}
+                size={isMobile ? 32 : 28}
+                borderWidth={1}
+              />
+            ) : currentMode === 'blader' ? (
+              <BladerAvatar
+                url={null}
+                name={profile?.nome}
+                colorKey={profile?.corPerfil}
+                size={isMobile ? 32 : 28}
+                borderWidth={1}
+              />
+            ) : logoUrl ? (
               <img src={logoUrl} alt={nomeLiga} className="shrink-0 rounded-full object-cover" style={{ width: isMobile ? 32 : 28, height: isMobile ? 32 : 28 }} />
             ) : (
               <div
@@ -192,9 +209,11 @@ export function AppTopbar() {
                     className="font-semibold"
                     style={{ fontSize: 12, color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}
                   >
-                    {nomeLiga || 'Liga'}
+                    {currentMode === 'blader' ? (profile?.nome || 'Blader') : (nomeLiga || 'Liga')}
                   </span>
-                  <span style={{ fontSize: 10, color: '#64748B' }}>{isAdmin ? 'Administrador' : 'Organizador'}</span>
+                  <span style={{ fontSize: 10, color: '#64748B' }}>
+                    {currentMode === 'blader' ? '⚡ Blader' : (isAdmin ? 'Administrador' : 'Organizador')}
+                  </span>
                 </div>
                 <ChevronDown size={12} style={{ color: '#4B5563' }} className="shrink-0" />
               </>
