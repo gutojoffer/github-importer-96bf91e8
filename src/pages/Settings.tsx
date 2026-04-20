@@ -190,7 +190,77 @@ export default function Settings() {
         </div>
       )}
 
-      {/* Section: Dados da Liga */}
+      {/* Section: Aparência do perfil de Blader (apenas se tem perfil de Blader) */}
+      {!profileLoading && profile?.temPerfilBlader && (
+        <div className="glass-panel p-5 space-y-4">
+          <div className="flex items-center gap-2">
+            <Palette className="h-5 w-5" style={{ color: BLADER_COLORS[localColor].accent }} />
+            <h2 className="font-heading text-lg font-bold tracking-wider" style={{ color: BLADER_COLORS[localColor].accent }}>
+              APARÊNCIA DO PERFIL
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground font-body">
+            Escolha a cor que representa o seu perfil de Blader. Ela aparece no header, na borda da sua foto, nos stats e badges.
+          </p>
+
+          {/* Preview */}
+          <div
+            className="rounded-xl p-4 flex items-center gap-3"
+            style={{ background: `linear-gradient(135deg, ${BLADER_COLORS[localColor].from}, ${BLADER_COLORS[localColor].to})`, border: `1px solid ${BLADER_COLORS[localColor].border}` }}
+          >
+            <BladerAvatar
+              url={profile.avatarUrl}
+              name={profile.nome}
+              colorKey={localColor}
+              size={56}
+              borderWidth={3}
+              style={{ borderColor: 'rgba(255,255,255,.7)' }}
+            />
+            <div className="flex-1 min-w-0">
+              <p className="font-heading font-bold text-white" style={{ fontSize: 16, textShadow: '0 1px 4px rgba(0,0,0,.3)' }}>
+                {profile.nome || 'Seu nome'}
+              </p>
+              <p className="font-body text-white/85" style={{ fontSize: 12 }}>
+                Cor selecionada: <span className="font-bold">{BLADER_COLORS[localColor].label}</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Grid de 8 cores */}
+          <div className="grid grid-cols-8 gap-2 sm:gap-3">
+            {BLADER_COLOR_KEYS.map((key) => {
+              const palette = BLADER_COLORS[key];
+              const selected = localColor === key;
+              const saving = savingColor === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => handleSelectColor(key)}
+                  disabled={!!savingColor}
+                  aria-label={`Cor ${palette.label}`}
+                  className="relative rounded-full transition-transform duration-150 disabled:opacity-60 active:scale-95"
+                  style={{
+                    width: 40,
+                    height: 40,
+                    background: getBladerGradient(key),
+                    border: selected ? '2px solid #fff' : '2px solid rgba(255,255,255,.08)',
+                    boxShadow: selected ? `0 0 0 2px ${palette.accent}, 0 4px 12px ${palette.accent}50` : 'none',
+                    cursor: savingColor ? 'wait' : 'pointer',
+                    minWidth: 44,
+                    minHeight: 44,
+                  }}
+                >
+                  {selected && !saving && <Check size={18} className="text-white absolute inset-0 m-auto" strokeWidth={3} />}
+                  {saving && (
+                    <div className="absolute inset-0 m-auto h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="glass-panel p-5 space-y-5">
         <div className="flex items-center gap-2">
           <Building className="h-5 w-5 text-primary" />
