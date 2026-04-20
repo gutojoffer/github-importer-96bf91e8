@@ -3,6 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useActiveMode } from '@/contexts/ActiveModeContext';
 import { Home, Trophy, Clock, Star, User, Settings, LogOut, ChevronRight, Repeat } from 'lucide-react';
+import BladerAvatar from '@/components/BladerAvatar';
+import { getBladerPalette } from '@/lib/bladerColors';
 
 const NAV_ITEMS = [
   { title: 'Home', url: '/blader/home', icon: Home },
