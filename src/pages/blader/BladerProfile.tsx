@@ -12,10 +12,14 @@ import { getBladerHeaderGradient, getBladerPalette } from '@/lib/bladerColors';
 interface ProfileRow {
   id: string;
   nome_liga: string | null;
+  nome_blader: string | null;
   cidade: string | null;
+  cidade_blader: string | null;
   beyblade_favorita: string | null;
   avatar_url: string | null;
+  avatar_blader_url: string | null;
   bio: string | null;
+  bio_blader: string | null;
   tipo_conta: string;
   tem_perfil_blader: boolean;
   cor_perfil?: string | null;
@@ -31,7 +35,7 @@ interface TournamentRow {
   rounds: unknown;
 }
 
-const SELECT_COLS = 'id, nome_liga, cidade, beyblade_favorita, avatar_url, bio, tipo_conta, tem_perfil_blader, cor_perfil';
+const SELECT_COLS = 'id, nome_liga, nome_blader, cidade, cidade_blader, beyblade_favorita, avatar_url, avatar_blader_url, bio, bio_blader, tipo_conta, tem_perfil_blader, cor_perfil';
 
 export default function BladerProfile() {
   const { userId, name: nameParam } = useParams();
@@ -52,7 +56,12 @@ export default function BladerProfile() {
         return data as ProfileRow | null;
       }
       if (targetName) {
-        const { data } = await supabase.from('profiles').select(SELECT_COLS).eq('nome_liga', targetName).maybeSingle();
+        // Search by blader name first, then by liga name
+        let { data } = await supabase.from('profiles').select(SELECT_COLS).eq('nome_blader', targetName).maybeSingle();
+        if (!data) {
+          const res = await supabase.from('profiles').select(SELECT_COLS).eq('nome_liga', targetName).maybeSingle();
+          data = res.data;
+        }
         return data as ProfileRow | null;
       }
       return null;
@@ -60,7 +69,7 @@ export default function BladerProfile() {
     enabled: !!(targetUserId || targetName),
   });
 
-  const correlationName = targetProfile?.nome_liga || targetName || ownProfile?.nome || null;
+  const correlationName = targetProfile?.nome_blader || targetProfile?.nome_liga || targetName || ownProfile?.nomeBlader || ownProfile?.nome || null;
 
   const { data: playerIds = [] } = useQuery({
     queryKey: ['blader-profile-player-ids', correlationName],
@@ -145,11 +154,11 @@ export default function BladerProfile() {
   const earned = achievements.filter(a => a.earned);
   const locked = achievements.filter(a => !a.earned);
 
-  const displayName = targetProfile?.nome_liga || correlationName || 'Blader';
-  const displayCidade = targetProfile?.cidade;
+  const displayName = targetProfile?.nome_blader || targetProfile?.nome_liga || correlationName || 'Blader';
+  const displayCidade = targetProfile?.cidade_blader || targetProfile?.cidade;
   const displayBey = targetProfile?.beyblade_favorita;
-  const displayAvatar = targetProfile?.avatar_url;
-  const displayBio = targetProfile?.bio;
+  const displayAvatar = targetProfile?.avatar_blader_url || targetProfile?.avatar_url;
+  const displayBio = targetProfile?.bio_blader || targetProfile?.bio;
   const colorKey = targetProfile?.cor_perfil || (isOwn ? ownProfile?.corPerfil : 'blue') || 'blue';
   const palette = getBladerPalette(colorKey);
 
