@@ -3,17 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveMode } from '@/contexts/ActiveModeContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { toast } from 'sonner';
 import { Camera, Check, ArrowRight, ArrowLeft, Sparkles, Info } from 'lucide-react';
 
 const STEPS = ['Identidade', 'Seu Beyblade', 'Tudo pronto'] as const;
 
-/**
- * Permite que um Organizador (já logado) crie seu perfil de Blader,
- * sem novo cadastro de email/senha.
- */
 export default function CriarPerfilBlader() {
   const { user, loading: authLoading } = useAuth();
+  const { profile, loading: profileLoading } = useUserProfile();
   const { setMode } = useActiveMode();
   const navigate = useNavigate();
 
@@ -27,21 +25,18 @@ export default function CriarPerfilBlader() {
   const [beybladeFavorita, setBeybladeFavorita] = useState('');
   const [bio, setBio] = useState('');
 
+  // Guard: redirect if blader profile already exists
   useEffect(() => {
-    if (!user) return;
-    (async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('cidade, tem_perfil_blader')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (data?.tem_perfil_blader) {
-        navigate('/blader/home', { replace: true });
-        return;
-      }
-      if (data?.cidade) setCidade(data.cidade);
-    })();
-  }, [user, navigate]);
+    if (profileLoading || authLoading) return;
+    if (!user) { navigate('/login', { replace: true }); return; }
+    if (profile?.temPerfilBlader && profile?.nomeBlader) {
+      setMode('blader');
+      navigate('/blader/home', { replace: true });
+      return;
+    }
+    // Pre-fill cidade from org profile if available
+    if (profile?.cidade && !cidade) setCidade(profile.cidade);
+  }, [profile, profileLoading, authLoading, user]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!user || !e.target.files?.[0]) return;
@@ -68,20 +63,33 @@ export default function CriarPerfilBlader() {
       }
       setStep(1);
     } else if (step === 1) {
-      // Salva tudo no perfil + marca tem_perfil_blader = true
+      // Save blader data to SEPARATE columns
       const { error } = await supabase.from('profiles').update({
-        nome_liga: nomeBlader.trim(), // reusa coluna nome_liga p/ blader
-        cidade: cidade.trim(),
-        avatar_url: avatarUrl || null,
+        nome_blader: nomeBlader.trim(),
+        cidade_blader: cidade.trim(),
+        avatar_blader_url: avatarUrl || null,
         beyblade_favorita: beybladeFavorita.trim() || null,
-        bio: bio.trim() || null,
+        bio_blader: bio.trim() || null,
         tem_perfil_blader: true,
-      }).eq('id', user.id);
+      } as never).eq('id', user.id);
+
       if (error) { toast.error('Erro ao salvar: ' + error.message); setLoading(false); return; }
+
+      // Verify
+      const { data: check } = await supabase
+        .from('profiles')
+        .select('tem_perfil_blader, nome_blader')
+        .eq('id', user.id)
+        .single();
+
+      if (!(check as any)?.tem_perfil_blader) {
+        toast.error('Dados não foram salvos. Tente novamente.');
+        setLoading(false); return;
+      }
+
       toast.success('Perfil de Blader criado com sucesso!');
       setStep(2);
     } else {
-      // Step 2 — botão default vai pro perfil blader
       setMode('blader');
       navigate('/blader/home', { replace: true });
     }
@@ -93,7 +101,7 @@ export default function CriarPerfilBlader() {
     navigate('/home', { replace: true });
   };
 
-  if (authLoading || !user) {
+  if (authLoading || profileLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#060912' }}>
         <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -153,7 +161,6 @@ export default function CriarPerfilBlader() {
           </p>
         </div>
 
-        {/* Step 0 */}
         {step === 0 && (
           <div className="space-y-4">
             <div className="flex flex-col items-center gap-2">
@@ -202,7 +209,6 @@ export default function CriarPerfilBlader() {
           </div>
         )}
 
-        {/* Step 1 */}
         {step === 1 && (
           <div className="space-y-4">
             <div className="space-y-1.5">
@@ -231,7 +237,6 @@ export default function CriarPerfilBlader() {
           </div>
         )}
 
-        {/* Step 2 — Resumo + escolha */}
         {step === 2 && (
           <div className="space-y-4">
             <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)' }}>
@@ -257,7 +262,6 @@ export default function CriarPerfilBlader() {
           </div>
         )}
 
-        {/* Navigation */}
         {step < 2 ? (
           <div className="flex gap-3 pt-2">
             {step > 0 && (

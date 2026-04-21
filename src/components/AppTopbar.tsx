@@ -33,6 +33,9 @@ export function AppTopbar() {
   const hasDual = profile?.hasDualProfile ?? false;
   const currentMode: 'organizador' | 'blader' = mode ?? (profile?.tipoConta ?? 'organizador');
 
+  const bladerName = profile?.nomeBlader || profile?.nome || 'Blader';
+  const bladerAvatar = profile?.avatarBladerUrl || profile?.avatarUrl || null;
+
   const handleSwitchMode = () => {
     const target: 'organizador' | 'blader' = currentMode === 'organizador' ? 'blader' : 'organizador';
     setMode(target);
@@ -52,7 +55,6 @@ export function AppTopbar() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [dropdownOpen]);
 
-  // Build breadcrumbs
   const pathParts = location.pathname.split('/').filter(Boolean);
   const breadcrumbs: { label: string; path: string; active: boolean }[] = [];
   let accumulated = '';
@@ -60,33 +62,23 @@ export function AppTopbar() {
     accumulated += `/${part}`;
     const mapped = BREADCRUMB_MAP[accumulated];
     const isLast = i === pathParts.length - 1;
-    if (mapped) {
-      breadcrumbs.push({ label: mapped, path: accumulated, active: isLast });
-    } else if (i > 0 && pathParts[i - 1] === 'history') {
-      breadcrumbs.push({ label: 'Resultado', path: accumulated, active: isLast });
-    }
+    if (mapped) breadcrumbs.push({ label: mapped, path: accumulated, active: isLast });
+    else if (i > 0 && pathParts[i - 1] === 'history') breadcrumbs.push({ label: 'Resultado', path: accumulated, active: isLast });
   });
-  if (breadcrumbs.length === 0) {
-    breadcrumbs.push({ label: 'Home', path: '/home', active: true });
-  }
+  if (breadcrumbs.length === 0) breadcrumbs.push({ label: 'Home', path: '/home', active: true });
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
   };
 
+  const displayName = currentMode === 'blader' ? bladerName : (nomeLiga || 'Liga');
+
   return (
     <header
       className="relative flex items-center shrink-0 sticky top-0 z-50"
-      style={{
-        height: 56,
-        background: '#080c18',
-        borderBottom: '1px solid rgba(255,255,255,.06)',
-        padding: isMobile ? '0 16px' : '0 24px',
-        gap: 16,
-      }}
+      style={{ height: 56, background: '#080c18', borderBottom: '1px solid rgba(255,255,255,.06)', padding: isMobile ? '0 16px' : '0 24px', gap: 16 }}
     >
-      {/* Left — Breadcrumb (hidden on mobile) / Logo on mobile */}
       {isMobile ? (
         <div className="flex items-center gap-2 flex-1">
           <span className="font-heading font-bold text-white leading-tight" style={{ fontSize: 16, letterSpacing: 0.5 }}>
@@ -102,114 +94,53 @@ export function AppTopbar() {
               {bc.active ? (
                 <span className="font-body font-semibold truncate" style={{ color: '#F1F5F9' }}>{bc.label}</span>
               ) : (
-                <Link to={bc.path} className="font-body truncate transition-colors duration-150 hover:text-[#E2E8F0]" style={{ color: '#4B5563' }}>
-                  {bc.label}
-                </Link>
+                <Link to={bc.path} className="font-body truncate transition-colors duration-150 hover:text-[#E2E8F0]" style={{ color: '#4B5563' }}>{bc.label}</Link>
               )}
             </span>
           ))}
         </nav>
       )}
 
-      {/* Center — Liga identity (hidden on mobile) */}
       {!isMobile && (
-      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 pointer-events-none">
-        {logoUrl ? (
-          <img
-            src={logoUrl}
-            alt={nomeLiga}
-            className="shrink-0 object-cover"
-            style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid rgba(37,99,235,.3)' }}
-          />
-        ) : (
-          <div
-            className="flex items-center justify-center shrink-0"
-            style={{
-              width: 28, height: 28, borderRadius: 8,
-              background: 'linear-gradient(135deg, #1e3a8a, #2563EB)',
-              border: '1px solid rgba(37,99,235,.3)',
-            }}
-          >
-            <span className="font-heading font-bold text-white leading-none select-none" style={{ fontSize: 11 }}>BX</span>
-          </div>
-        )}
-        <span className="font-heading font-bold leading-none" style={{ fontSize: 14, letterSpacing: 0.3 }}>
-          {nomeLiga ? (
-            <span className="text-white">{nomeLiga}</span>
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 pointer-events-none">
+          {logoUrl ? (
+            <img src={logoUrl} alt={nomeLiga} className="shrink-0 object-cover" style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid rgba(37,99,235,.3)' }} />
           ) : (
-            <span className="text-white">BLADE<span style={{ color: '#60A5FA' }}>X</span></span>
+            <div className="flex items-center justify-center shrink-0" style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, #1e3a8a, #2563EB)', border: '1px solid rgba(37,99,235,.3)' }}>
+              <span className="font-heading font-bold text-white leading-none select-none" style={{ fontSize: 11 }}>BX</span>
+            </div>
           )}
-        </span>
-      </div>
+          <span className="font-heading font-bold leading-none" style={{ fontSize: 14, letterSpacing: 0.3 }}>
+            {nomeLiga ? <span className="text-white">{nomeLiga}</span> : <span className="text-white">BLADE<span style={{ color: '#60A5FA' }}>X</span></span>}
+          </span>
+        </div>
       )}
 
-      {/* Right — User pill only */}
       <div className="flex items-center">
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="flex items-center gap-2 transition-all duration-150"
-            style={isMobile ? {
-              padding: 4,
-              background: 'transparent',
-              border: 'none',
-              borderRadius: '50%',
-              width: 36,
-              height: 36,
-            } : {
-              padding: '5px 10px 5px 5px',
-              background: 'rgba(255,255,255,.05)',
-              border: '1px solid rgba(255,255,255,.09)',
-              borderRadius: 20,
-              maxWidth: 200,
+            style={isMobile ? { padding: 4, background: 'transparent', border: 'none', borderRadius: '50%', width: 36, height: 36 } : {
+              padding: '5px 10px 5px 5px', background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.09)', borderRadius: 20, maxWidth: 200,
             }}
-            onMouseEnter={(e) => {
-              if (!isMobile) {
-                e.currentTarget.style.background = 'rgba(255,255,255,.09)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,.16)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isMobile) {
-                e.currentTarget.style.background = 'rgba(255,255,255,.05)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,.09)';
-              }
-            }}
+            onMouseEnter={(e) => { if (!isMobile) { e.currentTarget.style.background = 'rgba(255,255,255,.09)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.16)'; } }}
+            onMouseLeave={(e) => { if (!isMobile) { e.currentTarget.style.background = 'rgba(255,255,255,.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.09)'; } }}
           >
-            {currentMode === 'blader' && profile?.avatarUrl ? (
-              <BladerAvatar
-                url={profile.avatarUrl}
-                name={profile.nome}
-                colorKey={profile.corPerfil}
-                size={isMobile ? 32 : 28}
-                borderWidth={1}
-              />
-            ) : currentMode === 'blader' ? (
-              <BladerAvatar
-                url={null}
-                name={profile?.nome}
-                colorKey={profile?.corPerfil}
-                size={isMobile ? 32 : 28}
-                borderWidth={1}
-              />
+            {currentMode === 'blader' ? (
+              <BladerAvatar url={bladerAvatar} name={bladerName} colorKey={profile?.corPerfil} size={isMobile ? 32 : 28} borderWidth={1} />
             ) : logoUrl ? (
               <img src={logoUrl} alt={nomeLiga} className="shrink-0 rounded-full object-cover" style={{ width: isMobile ? 32 : 28, height: isMobile ? 32 : 28 }} />
             ) : (
-              <div
-                className="shrink-0 rounded-full flex items-center justify-center"
-                style={{ width: isMobile ? 32 : 28, height: isMobile ? 32 : 28, background: 'linear-gradient(135deg, #1e3a8a, #7c3aed)' }}
-              >
+              <div className="shrink-0 rounded-full flex items-center justify-center" style={{ width: isMobile ? 32 : 28, height: isMobile ? 32 : 28, background: 'linear-gradient(135deg, #1e3a8a, #7c3aed)' }}>
                 <span className="font-heading font-bold text-white leading-none select-none" style={{ fontSize: 11 }}>{initials}</span>
               </div>
             )}
             {!isMobile && (
               <>
                 <div className="flex flex-col text-left overflow-hidden">
-                  <span
-                    className="font-semibold"
-                    style={{ fontSize: 12, color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}
-                  >
-                    {currentMode === 'blader' ? (profile?.nome || 'Blader') : (nomeLiga || 'Liga')}
+                  <span className="font-semibold" style={{ fontSize: 12, color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}>
+                    {displayName}
                   </span>
                   <span style={{ fontSize: 10, color: '#64748B' }}>
                     {currentMode === 'blader' ? '⚡ Blader' : (isAdmin ? 'Administrador' : 'Organizador')}
@@ -223,14 +154,7 @@ export function AppTopbar() {
           {dropdownOpen && (
             <div
               className="absolute right-0 mt-2 z-50"
-              style={{
-                background: '#141928',
-                border: '1px solid rgba(255,255,255,.12)',
-                borderRadius: 10,
-                padding: 6,
-                minWidth: 240,
-                boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-              }}
+              style={{ background: '#141928', border: '1px solid rgba(255,255,255,.12)', borderRadius: 10, padding: 6, minWidth: 240, boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
             >
               {hasDual && (
                 <button
@@ -245,18 +169,13 @@ export function AppTopbar() {
                 </button>
               )}
 
-              {/* CTA: criar segundo perfil */}
               {!profile?.temPerfilBlader && currentMode === 'organizador' && (
                 <>
                   <div style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 4px' }} />
                   <div
                     onClick={() => { setDropdownOpen(false); navigate('/criar-perfil-blader'); }}
                     className="flex items-center gap-2.5 cursor-pointer transition-all duration-150"
-                    style={{
-                      padding: '10px 12px', borderRadius: 10, margin: '2px 2px',
-                      background: 'rgba(245,158,11,.08)',
-                      border: '1px solid rgba(245,158,11,.15)',
-                    }}
+                    style={{ padding: '10px 12px', borderRadius: 10, margin: '2px 2px', background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.15)' }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245,158,11,.14)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(245,158,11,.08)'; }}
                   >
@@ -275,11 +194,7 @@ export function AppTopbar() {
                   <div
                     onClick={() => { setDropdownOpen(false); navigate('/criar-perfil-organizador'); }}
                     className="flex items-center gap-2.5 cursor-pointer transition-all duration-150"
-                    style={{
-                      padding: '10px 12px', borderRadius: 10, margin: '2px 2px',
-                      background: 'rgba(37,99,235,.08)',
-                      border: '1px solid rgba(37,99,235,.15)',
-                    }}
+                    style={{ padding: '10px 12px', borderRadius: 10, margin: '2px 2px', background: 'rgba(37,99,235,.08)', border: '1px solid rgba(37,99,235,.15)' }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(37,99,235,.14)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(37,99,235,.08)'; }}
                   >
@@ -293,7 +208,7 @@ export function AppTopbar() {
                 </>
               )}
               <button
-                onClick={() => { setDropdownOpen(false); navigate('/settings'); }}
+                onClick={() => { setDropdownOpen(false); navigate(currentMode === 'blader' ? '/blader/settings' : '/settings'); }}
                 className="flex items-center gap-2.5 w-full rounded-lg transition-all duration-150 font-body"
                 style={{ padding: '8px 10px', fontSize: 13, color: '#9CA3AF' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,.06)'; e.currentTarget.style.color = '#E2E8F0'; }}
