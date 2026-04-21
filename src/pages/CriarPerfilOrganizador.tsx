@@ -32,17 +32,19 @@ export default function CriarPerfilOrganizador() {
     (async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('cidade, tem_perfil_organizador')
+        .select('cidade, tem_perfil_organizador, nome_liga')
         .eq('id', user.id)
         .maybeSingle();
-      const dataAny = data as { cidade?: string; tem_perfil_organizador?: boolean } | null;
-      if (dataAny?.tem_perfil_organizador) {
+      const dataAny = data as { cidade?: string; tem_perfil_organizador?: boolean; nome_liga?: string } | null;
+      // Guard: if org profile already exists, redirect
+      if (dataAny?.tem_perfil_organizador && dataAny?.nome_liga) {
+        setMode('organizador');
         navigate('/home', { replace: true });
         return;
       }
       if (dataAny?.cidade) setCidadeLiga(dataAny.cidade);
     })();
-  }, [user, navigate]);
+  }, [user, navigate, setMode]);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!user || !e.target.files?.[0]) return;

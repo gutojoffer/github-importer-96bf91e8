@@ -27,7 +27,7 @@ export default function AccountRouter({ children }: { children: React.ReactNode 
   if (!profile) return <>{children}</>;
 
   // Blader puro precisa completar perfil
-  if (profile.tipoConta === 'blader' && !profile.isComplete && location.pathname !== '/onboarding') {
+  if (profile.tipoConta === 'blader' && !profile.nomeBlader && !profile.isComplete && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
 

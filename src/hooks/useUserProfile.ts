@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -6,21 +6,30 @@ export type TipoConta = 'organizador' | 'blader';
 
 export interface BladerProfile {
   tipoConta: TipoConta;
+  /** Nome da liga (organizador) */
   nome: string | null;
+  /** Nome do blader */
+  nomeBlader: string | null;
   cidade: string | null;
+  /** Cidade específica do blader (se diferente) */
+  cidadeBlader: string | null;
   beybladeFavorita: string | null;
+  /** Avatar da liga/organizador */
   avatarUrl: string | null;
+  /** Avatar específico do blader */
+  avatarBladerUrl: string | null;
   bio: string | null;
-  /** Cor escolhida para personalização (key da paleta BLADER_COLORS). */
+  /** Bio específica do blader */
+  bioBlader: string | null;
   corPerfil: string;
-  /** UF do estado (BR), opcional. */
   estado: string | null;
+  /** Estado específico do blader */
+  estadoBlader: string | null;
+  /** Logo da liga */
+  logoUrl: string | null;
   isComplete: boolean;
-  /** Se a conta tem o perfil de Blader habilitado. */
   temPerfilBlader: boolean;
-  /** Se a conta tem o perfil de Organizador habilitado. */
   temPerfilOrganizador: boolean;
-  /** True quando a conta tem AMBOS os perfis disponíveis. */
   hasDualProfile: boolean;
 }
 
@@ -31,6 +40,9 @@ export function useUserProfile() {
   const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<BladerProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refresh = useCallback(() => setRefreshKey(k => k + 1), []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -40,7 +52,7 @@ export function useUserProfile() {
     (async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('tipo_conta, nome_liga, cidade, beyblade_favorita, avatar_url, bio, tem_perfil_blader, tem_perfil_organizador, cor_perfil, estado')
+        .select('tipo_conta, nome_liga, cidade, beyblade_favorita, avatar_url, bio, tem_perfil_blader, tem_perfil_organizador, cor_perfil, estado, logo_url, nome_blader, avatar_blader_url, cidade_blader, estado_blader, bio_blader')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -49,32 +61,41 @@ export function useUserProfile() {
       if (!data) {
         setProfile({
           tipoConta: 'organizador',
-          nome: null, cidade: null, beybladeFavorita: null, avatarUrl: null, bio: null,
-          corPerfil: 'blue', estado: null,
+          nome: null, nomeBlader: null,
+          cidade: null, cidadeBlader: null,
+          beybladeFavorita: null,
+          avatarUrl: null, avatarBladerUrl: null,
+          bio: null, bioBlader: null,
+          corPerfil: 'blue', estado: null, estadoBlader: null,
+          logoUrl: null,
           isComplete: false,
           temPerfilBlader: false,
           temPerfilOrganizador: false,
           hasDualProfile: false,
         });
       } else {
-        const tipoConta = (data.tipo_conta as TipoConta) || 'organizador';
-        const nome = data.nome_liga;
-        const cidade = data.cidade;
-        const temPerfilBlader = !!data.tem_perfil_blader;
-        const temPerfilOrganizador = !!(data as { tem_perfil_organizador?: boolean }).tem_perfil_organizador
-          || tipoConta === 'organizador';
+        const d = data as any;
+        const tipoConta = (d.tipo_conta as TipoConta) || 'organizador';
+        const temPerfilBlader = !!d.tem_perfil_blader;
+        const temPerfilOrganizador = !!d.tem_perfil_organizador || tipoConta === 'organizador';
         const isComplete = tipoConta === 'organizador'
-          ? !!nome
-          : !!(nome && cidade);
+          ? !!d.nome_liga
+          : !!(d.nome_blader && (d.cidade_blader || d.cidade));
         setProfile({
           tipoConta,
-          nome,
-          cidade,
-          beybladeFavorita: data.beyblade_favorita,
-          avatarUrl: data.avatar_url,
-          bio: data.bio,
-          corPerfil: (data as { cor_perfil?: string }).cor_perfil || 'blue',
-          estado: (data as { estado?: string | null }).estado ?? null,
+          nome: d.nome_liga,
+          nomeBlader: d.nome_blader || null,
+          cidade: d.cidade,
+          cidadeBlader: d.cidade_blader || null,
+          beybladeFavorita: d.beyblade_favorita,
+          avatarUrl: d.avatar_url,
+          avatarBladerUrl: d.avatar_blader_url || null,
+          bio: d.bio,
+          bioBlader: d.bio_blader || null,
+          corPerfil: d.cor_perfil || 'blue',
+          estado: d.estado ?? null,
+          estadoBlader: d.estado_blader || null,
+          logoUrl: d.logo_url || null,
           isComplete,
           temPerfilBlader,
           temPerfilOrganizador,
@@ -85,7 +106,7 @@ export function useUserProfile() {
     })();
 
     return () => { cancelled = true; };
-  }, [user, authLoading]);
+  }, [user, authLoading, refreshKey]);
 
-  return { profile, loading: authLoading || loading };
+  return { profile, loading: authLoading || loading, refresh };
 }

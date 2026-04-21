@@ -141,17 +141,22 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_blader_url: string | null
           avatar_url: string | null
           beyblade_favorita: string | null
           bio: string | null
+          bio_blader: string | null
           cidade: string | null
+          cidade_blader: string | null
           cor_perfil: string
           created_at: string | null
           descricao: string | null
           endereco: string | null
           estado: string | null
+          estado_blader: string | null
           id: string
           logo_url: string | null
+          nome_blader: string | null
           nome_liga: string | null
           tem_perfil_blader: boolean
           tem_perfil_organizador: boolean
@@ -159,17 +164,22 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          avatar_blader_url?: string | null
           avatar_url?: string | null
           beyblade_favorita?: string | null
           bio?: string | null
+          bio_blader?: string | null
           cidade?: string | null
+          cidade_blader?: string | null
           cor_perfil?: string
           created_at?: string | null
           descricao?: string | null
           endereco?: string | null
           estado?: string | null
+          estado_blader?: string | null
           id: string
           logo_url?: string | null
+          nome_blader?: string | null
           nome_liga?: string | null
           tem_perfil_blader?: boolean
           tem_perfil_organizador?: boolean
@@ -177,17 +187,22 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          avatar_blader_url?: string | null
           avatar_url?: string | null
           beyblade_favorita?: string | null
           bio?: string | null
+          bio_blader?: string | null
           cidade?: string | null
+          cidade_blader?: string | null
           cor_perfil?: string
           created_at?: string | null
           descricao?: string | null
           endereco?: string | null
           estado?: string | null
+          estado_blader?: string | null
           id?: string
           logo_url?: string | null
+          nome_blader?: string | null
           nome_liga?: string | null
           tem_perfil_blader?: boolean
           tem_perfil_organizador?: boolean
