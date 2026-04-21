@@ -164,6 +164,7 @@ const App = () => (
                       <Route path="/profile" element={<BladerProfile />} />
                       <Route path="/profile/:userId" element={<BladerProfile />} />
                       <Route path="/profile/by-name/:name" element={<BladerProfile />} />
+                      <Route path="/settings" element={<Settings />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
