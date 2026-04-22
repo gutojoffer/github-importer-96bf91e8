@@ -76,8 +76,8 @@ export function useUserProfile() {
       } else {
         const d = data as any;
         const tipoConta = (d.tipo_conta as TipoConta) || 'organizador';
-        const temPerfilBlader = !!d.tem_perfil_blader;
-        const temPerfilOrganizador = !!d.tem_perfil_organizador || tipoConta === 'organizador';
+        const temPerfilBlader = !!(d.tem_perfil_blader && d.nome_blader);
+        const temPerfilOrganizador = !!(d.nome_liga || d.tem_perfil_organizador || tipoConta === 'organizador');
         const isComplete = tipoConta === 'organizador'
           ? !!d.nome_liga
           : !!(d.nome_blader && (d.cidade_blader || d.cidade));

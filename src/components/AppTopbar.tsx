@@ -25,25 +25,28 @@ export function AppTopbar() {
   const { signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { profile } = useUserProfile();
-  const { mode, setMode } = useActiveMode();
+  const { mode, perfis, setMode } = useActiveMode();
   const isMobile = useIsMobile();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const hasDual = profile?.hasDualProfile ?? false;
+  const hasDual = perfis.temBlader && perfis.temOrganizador;
   const currentMode: 'organizador' | 'blader' = mode ?? (profile?.tipoConta ?? 'organizador');
 
   const bladerName = profile?.nomeBlader || profile?.nome || 'Blader';
   const bladerAvatar = profile?.avatarBladerUrl || profile?.avatarUrl || null;
+  const organizerName = perfis.dadosOrganizador?.nomeLiga || nomeLiga || 'Liga';
+  const organizerLogo = perfis.dadosOrganizador?.logo || logoUrl || null;
 
   const handleSwitchMode = () => {
     const target: 'organizador' | 'blader' = currentMode === 'organizador' ? 'blader' : 'organizador';
+    if ((target === 'blader' && !perfis.temBlader) || (target === 'organizador' && !perfis.temOrganizador)) return;
     setMode(target);
     setDropdownOpen(false);
     navigate(target === 'organizador' ? '/home' : '/blader/home');
   };
 
-  const initials = (nomeLiga || 'BX').slice(0, 2).toUpperCase();
+  const initials = organizerName.slice(0, 2).toUpperCase();
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -72,7 +75,7 @@ export function AppTopbar() {
     navigate('/');
   };
 
-  const displayName = currentMode === 'blader' ? bladerName : (nomeLiga || 'Liga');
+  const displayName = currentMode === 'blader' ? bladerName : organizerName;
 
   return (
     <header
@@ -103,15 +106,15 @@ export function AppTopbar() {
 
       {!isMobile && (
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 pointer-events-none">
-          {logoUrl ? (
-            <img src={logoUrl} alt={nomeLiga} className="shrink-0 object-cover" style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid rgba(37,99,235,.3)' }} />
+          {organizerLogo ? (
+            <img src={organizerLogo} alt={organizerName} className="shrink-0 object-cover" style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid rgba(37,99,235,.3)' }} />
           ) : (
             <div className="flex items-center justify-center shrink-0" style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, #1e3a8a, #2563EB)', border: '1px solid rgba(37,99,235,.3)' }}>
               <span className="font-heading font-bold text-white leading-none select-none" style={{ fontSize: 11 }}>BX</span>
             </div>
           )}
           <span className="font-heading font-bold leading-none" style={{ fontSize: 14, letterSpacing: 0.3 }}>
-            {nomeLiga ? <span className="text-white">{nomeLiga}</span> : <span className="text-white">BLADE<span style={{ color: '#60A5FA' }}>X</span></span>}
+            {perfis.temOrganizador ? <span className="text-white">{organizerName}</span> : <span className="text-white">BLADE<span style={{ color: '#60A5FA' }}>X</span></span>}
           </span>
         </div>
       )}
@@ -129,8 +132,8 @@ export function AppTopbar() {
           >
             {currentMode === 'blader' ? (
               <BladerAvatar url={bladerAvatar} name={bladerName} colorKey={profile?.corPerfil} size={isMobile ? 32 : 28} borderWidth={1} />
-            ) : logoUrl ? (
-              <img src={logoUrl} alt={nomeLiga} className="shrink-0 rounded-full object-cover" style={{ width: isMobile ? 32 : 28, height: isMobile ? 32 : 28 }} />
+            ) : organizerLogo ? (
+              <img src={organizerLogo} alt={organizerName} className="shrink-0 rounded-full object-cover" style={{ width: isMobile ? 32 : 28, height: isMobile ? 32 : 28 }} />
             ) : (
               <div className="shrink-0 rounded-full flex items-center justify-center" style={{ width: isMobile ? 32 : 28, height: isMobile ? 32 : 28, background: 'linear-gradient(135deg, #1e3a8a, #7c3aed)' }}>
                 <span className="font-heading font-bold text-white leading-none select-none" style={{ fontSize: 11 }}>{initials}</span>
@@ -169,7 +172,7 @@ export function AppTopbar() {
                 </button>
               )}
 
-              {!profile?.temPerfilBlader && currentMode === 'organizador' && (
+              {!perfis.temBlader && currentMode === 'organizador' && (
                 <>
                   <div style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 4px' }} />
                   <div
@@ -188,7 +191,7 @@ export function AppTopbar() {
                   <div style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 4px' }} />
                 </>
               )}
-              {!profile?.temPerfilOrganizador && currentMode === 'blader' && (
+              {!perfis.temOrganizador && currentMode === 'blader' && (
                 <>
                   <div style={{ height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 4px' }} />
                   <div

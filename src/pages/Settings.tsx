@@ -18,7 +18,7 @@ export default function Settings() {
   const { nomeLiga, descricao, cidade, endereco, logoUrl, updateLiga, uploadLogo, removeLogo } = useLiga();
   const { profile, loading: profileLoading, refresh: refreshProfile } = useUserProfile();
   const { user } = useAuth();
-  const { mode, setMode } = useActiveMode();
+  const { mode, perfis, refreshProfiles, setMode } = useActiveMode();
   const navigate = useNavigate();
 
   // Determine which mode we're in
@@ -82,6 +82,7 @@ export default function Settings() {
     } as never).eq('id', user.id);
     setSavingBlader(false);
     if (error) { toast.error('Erro ao salvar'); return; }
+    await refreshProfiles();
     toast.success('Perfil de Blader atualizado!');
     refreshProfile();
   };
@@ -98,6 +99,7 @@ export default function Settings() {
     const { data } = supabase.storage.from('blader-avatars').getPublicUrl(path);
     await supabase.from('profiles').update({ avatar_blader_url: data.publicUrl } as never).eq('id', user.id);
     setBladerAvatarUploading(false);
+    await refreshProfiles();
     toast.success('Foto atualizada!');
     refreshProfile();
   };
@@ -109,6 +111,7 @@ export default function Settings() {
     const { error } = await supabase.from('profiles').update({ cor_perfil: key } as never).eq('id', user.id);
     setSavingColor(null);
     if (error) { toast.error('Erro ao salvar cor.'); setLocalColor((profile?.corPerfil as BladerColorKey) || 'blue'); return; }
+    await refreshProfiles();
     toast.success('Cor atualizada!');
   };
 
@@ -158,7 +161,7 @@ export default function Settings() {
       </h1>
 
       {/* ===== BLADER MODE SECTIONS ===== */}
-      {isBladerMode && profile?.temPerfilBlader && (
+      {isBladerMode && perfis.temBlader && (
         <>
           {/* Blader data */}
           <div className="glass-panel p-5 space-y-4">
@@ -268,7 +271,7 @@ export default function Settings() {
           </div>
 
           {/* Manage org profile from blader mode */}
-          {!profile.temPerfilOrganizador && (
+          {!perfis.temOrganizador && (
             <div className="glass-panel p-5 space-y-3">
               <div className="flex items-center gap-2">
                 <Building className="h-5 w-5 text-primary" />
@@ -280,7 +283,7 @@ export default function Settings() {
               </Button>
             </div>
           )}
-          {profile.temPerfilOrganizador && (
+          {perfis.temOrganizador && (
             <div className="glass-panel p-5 space-y-3">
               <div className="flex items-center gap-2">
                 <Building className="h-5 w-5 text-primary" />
@@ -305,7 +308,7 @@ export default function Settings() {
                 <Zap className="h-5 w-5 text-gold" />
                 <h2 className="font-heading text-lg font-bold tracking-wider text-gold">PERFIL DE BLADER</h2>
               </div>
-              {profile?.temPerfilBlader ? (
+              {perfis.temBlader ? (
                 <>
                   <p className="text-sm text-muted-foreground font-body">
                     Você tem um perfil de Blader ativo ({profile.nomeBlader || 'sem nome'}). Troque de modo para editar.

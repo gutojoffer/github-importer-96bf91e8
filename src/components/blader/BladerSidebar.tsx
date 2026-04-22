@@ -23,7 +23,7 @@ export function BladerSidebar() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { profile } = useUserProfile();
-  const { setMode } = useActiveMode();
+  const { perfis, setMode } = useActiveMode();
 
   const bladerName = profile?.nomeBlader || profile?.nome || 'Blader';
   const bladerAvatar = profile?.avatarBladerUrl || profile?.avatarUrl || null;
@@ -36,7 +36,7 @@ export function BladerSidebar() {
   };
 
   const handleOrgCardClick = () => {
-    if (profile?.temPerfilOrganizador && profile?.nome) {
+    if (perfis.temOrganizador) {
       setMode('organizador');
       navigate('/home');
     } else {
@@ -127,11 +127,11 @@ export function BladerSidebar() {
       {/* Footer */}
       <div className="shrink-0" style={{ padding: 12, borderTop: '1px solid rgba(255,255,255,.05)', marginTop: 'auto' }}>
         {/* Org card: switch or create */}
-        {profile && (
+        {!perfis.loading && (
           <div
             onClick={handleOrgCardClick}
             className="cursor-pointer transition-all duration-150 mb-2"
-            style={profile.temPerfilOrganizador && profile.nome ? {
+            style={perfis.temOrganizador ? {
               display: 'flex', alignItems: 'center', gap: 10,
               padding: '11px 13px',
               background: 'linear-gradient(135deg, rgba(37,99,235,.08), rgba(124,58,237,.06))',
@@ -144,23 +144,23 @@ export function BladerSidebar() {
               border: '1px dashed rgba(37,99,235,.2)',
               borderRadius: 12,
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = profile.temPerfilOrganizador && profile.nome ? 'linear-gradient(135deg, rgba(37,99,235,.14), rgba(124,58,237,.1))' : 'rgba(37,99,235,.12)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = profile.temPerfilOrganizador && profile.nome ? 'linear-gradient(135deg, rgba(37,99,235,.08), rgba(124,58,237,.06))' : 'rgba(37,99,235,.06)'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = perfis.temOrganizador ? 'linear-gradient(135deg, rgba(37,99,235,.14), rgba(124,58,237,.1))' : 'rgba(37,99,235,.12)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = perfis.temOrganizador ? 'linear-gradient(135deg, rgba(37,99,235,.08), rgba(124,58,237,.06))' : 'rgba(37,99,235,.06)'; }}
           >
-            {profile.temPerfilOrganizador && profile.nome ? (
+            {perfis.temOrganizador && perfis.dadosOrganizador ? (
               <>
                 <div className="relative shrink-0">
-                  {profile.logoUrl ? (
-                    <img src={profile.logoUrl} alt={profile.nome} className="rounded-full object-cover" style={{ width: 36, height: 36, border: '2px solid rgba(37,99,235,.5)' }} />
+                  {perfis.dadosOrganizador.logo ? (
+                    <img src={perfis.dadosOrganizador.logo} alt={perfis.dadosOrganizador.nomeLiga || 'Minha Liga'} className="rounded-full object-cover" style={{ width: 36, height: 36, border: '2px solid rgba(37,99,235,.5)' }} />
                   ) : (
                     <div className="rounded-full flex items-center justify-center" style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #1e3a8a, #7c3aed)', border: '2px solid rgba(37,99,235,.5)' }}>
-                      <span className="font-heading font-bold text-white leading-none select-none" style={{ fontSize: 14 }}>{(profile.nome || 'BX').slice(0, 2).toUpperCase()}</span>
+                      <span className="font-heading font-bold text-white leading-none select-none" style={{ fontSize: 14 }}>{(perfis.dadosOrganizador.nomeLiga || 'BX').slice(0, 2).toUpperCase()}</span>
                     </div>
                   )}
                   <div className="absolute -bottom-0.5 -right-0.5" style={{ width: 14, height: 14, borderRadius: '50%', background: '#2563EB', border: '2px solid #080c18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8 }}>🏆</div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-body truncate" style={{ fontSize: 13, fontWeight: 600, color: '#60A5FA' }}>{profile.nome}</div>
+                  <div className="font-body truncate" style={{ fontSize: 13, fontWeight: 600, color: '#60A5FA' }}>{perfis.dadosOrganizador.nomeLiga || 'Minha Liga'}</div>
                   <div className="font-body" style={{ fontSize: 11, color: 'rgba(255,255,255,.4)' }}>🏆 Trocar para Organizador</div>
                 </div>
               </>
