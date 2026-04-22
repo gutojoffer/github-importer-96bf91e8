@@ -33,8 +33,9 @@ export function AppTopbar() {
   const hasDual = perfis.temBlader && perfis.temOrganizador;
   const currentMode: 'organizador' | 'blader' = mode ?? (profile?.tipoConta ?? 'organizador');
 
-  const bladerName = profile?.nomeBlader || profile?.nome || 'Blader';
-  const bladerAvatar = profile?.avatarBladerUrl || profile?.avatarUrl || null;
+  const bladerName = perfis.dadosBlader?.nome || profile?.nomeBlader || 'Blader';
+  const bladerAvatar = perfis.dadosBlader?.avatar || profile?.avatarBladerUrl || null;
+  const bladerColor = perfis.dadosBlader?.corPerfil || profile?.corPerfil;
   const organizerName = perfis.dadosOrganizador?.nomeLiga || nomeLiga || 'Liga';
   const organizerLogo = perfis.dadosOrganizador?.logo || logoUrl || null;
 
@@ -131,7 +132,7 @@ export function AppTopbar() {
             onMouseLeave={(e) => { if (!isMobile) { e.currentTarget.style.background = 'rgba(255,255,255,.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.09)'; } }}
           >
             {currentMode === 'blader' ? (
-              <BladerAvatar url={bladerAvatar} name={bladerName} colorKey={profile?.corPerfil} size={isMobile ? 32 : 28} borderWidth={1} />
+              <BladerAvatar url={bladerAvatar} name={bladerName} colorKey={bladerColor} size={isMobile ? 32 : 28} borderWidth={1} />
             ) : organizerLogo ? (
               <img src={organizerLogo} alt={organizerName} className="shrink-0 rounded-full object-cover" style={{ width: isMobile ? 32 : 28, height: isMobile ? 32 : 28 }} />
             ) : (
