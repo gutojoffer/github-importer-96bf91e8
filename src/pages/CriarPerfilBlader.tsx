@@ -18,6 +18,7 @@ export default function CriarPerfilBlader() {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
 
   const [avatarUrl, setAvatarUrl] = useState<string>('');
   const [nomeBlader, setNomeBlader] = useState('');
@@ -55,6 +56,7 @@ export default function CriarPerfilBlader() {
   const handleNext = async () => {
     if (!user) return;
     setLoading(true);
+    setErro(null);
 
     if (step === 0) {
       if (!nomeBlader.trim() || !cidade.trim()) {
@@ -63,32 +65,58 @@ export default function CriarPerfilBlader() {
       }
       setStep(1);
     } else if (step === 1) {
-      // Save blader data to SEPARATE columns
-      const { error } = await supabase.from('profiles').update({
-        nome_blader: nomeBlader.trim(),
-        cidade_blader: cidade.trim(),
-        avatar_blader_url: avatarUrl || null,
-        beyblade_favorita: beybladeFavorita.trim() || null,
-        bio_blader: bio.trim() || null,
-        tem_perfil_blader: true,
-      } as never).eq('id', user.id);
+      try {
+        const dadosParaSalvar: Record<string, unknown> = {
+          tem_perfil_blader: true,
+          nome_blader: nomeBlader.trim(),
+          cidade_blader: cidade.trim(),
+          avatar_blader_url: avatarUrl || null,
+          beyblade_favorita: beybladeFavorita.trim() || null,
+          bio_blader: bio.trim() || null,
+        };
 
-      if (error) { toast.error('Erro ao salvar: ' + error.message); setLoading(false); return; }
+        console.log('Salvando dados blader:', dadosParaSalvar, 'User:', user.id);
 
-      // Verify
-      const { data: check } = await supabase
-        .from('profiles')
-        .select('tem_perfil_blader, nome_blader')
-        .eq('id', user.id)
-        .single();
+        // Try update first
+        let { data, error } = await supabase
+          .from('profiles')
+          .update(dadosParaSalvar as any)
+          .eq('id', user.id)
+          .select();
 
-      if (!(check as any)?.tem_perfil_blader) {
-        toast.error('Dados não foram salvos. Tente novamente.');
-        setLoading(false); return;
+        console.log('Resultado UPDATE:', { data, error });
+
+        // Fallback to upsert if update returned no rows
+        if (!error && (!data || data.length === 0)) {
+          console.warn('UPDATE retornou 0 rows, tentando upsert');
+          const { data: upsertData, error: upsertError } = await supabase
+            .from('profiles')
+            .upsert({ id: user.id, ...dadosParaSalvar } as any, { onConflict: 'id' })
+            .select();
+          data = upsertData;
+          error = upsertError;
+          console.log('Resultado UPSERT:', { data: upsertData, error: upsertError });
+        }
+
+        if (error) {
+          console.error('Erro Supabase:', error);
+          setErro(`Erro ao salvar: ${error.message}`);
+          setLoading(false);
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          setErro('Perfil não encontrado. Contate o suporte.');
+          setLoading(false);
+          return;
+        }
+
+        toast.success('Perfil de Blader criado com sucesso!');
+        setStep(2);
+      } catch (err: any) {
+        console.error('Erro inesperado:', err);
+        setErro('Erro inesperado. Tente novamente.');
       }
-
-      toast.success('Perfil de Blader criado com sucesso!');
-      setStep(2);
     } else {
       setMode('blader');
       navigate('/blader/home', { replace: true });
