@@ -12,7 +12,7 @@ const STEPS = ['Identidade', 'Seu Beyblade', 'Tudo pronto'] as const;
 export default function CriarPerfilBlader() {
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useUserProfile();
-  const { setMode } = useActiveMode();
+  const { setMode, refreshProfiles } = useActiveMode();
   const navigate = useNavigate();
 
   const [step, setStep] = useState(0);
@@ -111,6 +111,7 @@ export default function CriarPerfilBlader() {
           return;
         }
 
+        await refreshProfiles();
         toast.success('Perfil de Blader criado com sucesso!');
         setStep(2);
       } catch (err: any) {
