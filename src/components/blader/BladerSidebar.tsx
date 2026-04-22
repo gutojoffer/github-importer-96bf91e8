@@ -27,6 +27,7 @@ export function BladerSidebar() {
 
   const bladerName = perfis.dadosBlader?.nome || profile?.nomeBlader || 'Blader';
   const bladerAvatar = perfis.dadosBlader?.avatar || profile?.avatarBladerUrl || null;
+  const bladerColor = perfis.dadosBlader?.corPerfil || profile?.corPerfil;
 
   const isActive = (url: string) => location.pathname === url || location.pathname.startsWith(url + '/');
 
@@ -181,7 +182,7 @@ export function BladerSidebar() {
         <div
           className="flex items-center gap-2.5 cursor-pointer mb-2"
           style={{
-            background: `linear-gradient(135deg, ${getBladerPalette(profile?.corPerfil).from}22, ${getBladerPalette(profile?.corPerfil).to}11)`,
+            background: `linear-gradient(135deg, ${getBladerPalette(bladerColor).from}22, ${getBladerPalette(bladerColor).to}11)`,
             border: '1px solid rgba(255,255,255,.08)',
             borderRadius: 12, padding: 12, transition: 'all .2s',
           }}
@@ -191,15 +192,15 @@ export function BladerSidebar() {
             <BladerAvatar
               url={bladerAvatar}
               name={bladerName}
-              colorKey={profile?.corPerfil}
+              colorKey={bladerColor}
               size={38}
               borderWidth={2}
             />
-            <div className="absolute bottom-0 right-0" style={{ width: 8, height: 8, borderRadius: '50%', background: getBladerPalette(profile?.corPerfil).accent, border: '2px solid #080c18' }} />
+            <div className="absolute bottom-0 right-0" style={{ width: 8, height: 8, borderRadius: '50%', background: getBladerPalette(bladerColor).accent, border: '2px solid #080c18' }} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-heading font-bold truncate" style={{ fontSize: 13, color: '#E2E8F0' }}>{bladerName}</p>
-            <p style={{ fontSize: 11, color: getBladerPalette(profile?.corPerfil).accent }}>⚡ Blader</p>
+            <p style={{ fontSize: 11, color: getBladerPalette(bladerColor).accent }}>⚡ Blader</p>
           </div>
           <ChevronRight size={14} style={{ color: '#374151' }} className="shrink-0 ml-auto" />
         </div>
