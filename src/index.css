@@ -483,3 +483,16 @@
 }
 .streak-upgrade { animation: streak-upgrade .7s ease-out both !important; }
 .streak-break { animation: streak-break .5s ease-out both !important; }
+
+@keyframes glow-c {
+  0%,100% { filter: drop-shadow(0 0 6px rgba(0,220,255,.4)); }
+  50%      { filter: drop-shadow(0 0 14px rgba(0,220,255,.65)); }
+}
+@keyframes glow-p {
+  0%,100% { filter: drop-shadow(0 0 6px rgba(255,0,180,.4)); }
+  50%      { filter: drop-shadow(0 0 14px rgba(255,0,180,.65)); }
+}
+@keyframes card-float {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-7px); }
+}
