@@ -161,7 +161,7 @@ export default function Settings() {
       </h1>
 
       {/* ===== BLADER MODE SECTIONS ===== */}
-      {isBladerMode && perfis.temBlader && (
+      {isBladerMode && perfis.temBlader && profile && (
         <>
           {/* Blader data */}
           <div className="glass-panel p-5 space-y-4">
@@ -311,7 +311,7 @@ export default function Settings() {
               {perfis.temBlader ? (
                 <>
                   <p className="text-sm text-muted-foreground font-body">
-                    Você tem um perfil de Blader ativo ({profile.nomeBlader || 'sem nome'}). Troque de modo para editar.
+                    Você tem um perfil de Blader ativo ({profile?.nomeBlader || 'sem nome'}). Troque de modo para editar.
                   </p>
                   <Button onClick={() => { setMode('blader'); navigate('/blader/home'); }} className="font-heading tracking-wider gap-2 bg-gold text-background hover:bg-gold/90">
                     <Zap className="h-4 w-4" /> Entrar como Blader
