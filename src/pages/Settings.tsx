@@ -112,6 +112,7 @@ export default function Settings() {
     setSavingColor(null);
     if (error) { toast.error('Erro ao salvar cor.'); setLocalColor((profile?.corPerfil as BladerColorKey) || 'blue'); return; }
     await refreshProfiles();
+    refreshProfile();
     toast.success('Cor atualizada!');
   };
 
