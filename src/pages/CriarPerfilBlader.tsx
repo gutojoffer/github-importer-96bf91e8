@@ -265,6 +265,13 @@ export default function CriarPerfilBlader() {
           </div>
         )}
 
+        {erro && (
+          <div className="flex items-center gap-2 p-3 rounded-xl text-xs font-body" style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.3)', color: '#F87171' }}>
+            <span>⚠️</span>
+            {erro}
+          </div>
+        )}
+
         {step === 2 && (
           <div className="space-y-4">
             <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)' }}>
