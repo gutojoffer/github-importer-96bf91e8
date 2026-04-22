@@ -25,8 +25,8 @@ export function BladerSidebar() {
   const { profile } = useUserProfile();
   const { perfis, setMode } = useActiveMode();
 
-  const bladerName = profile?.nomeBlader || profile?.nome || 'Blader';
-  const bladerAvatar = profile?.avatarBladerUrl || profile?.avatarUrl || null;
+  const bladerName = perfis.dadosBlader?.nome || profile?.nomeBlader || 'Blader';
+  const bladerAvatar = perfis.dadosBlader?.avatar || profile?.avatarBladerUrl || null;
 
   const isActive = (url: string) => location.pathname === url || location.pathname.startsWith(url + '/');
 
