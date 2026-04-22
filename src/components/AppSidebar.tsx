@@ -2,7 +2,6 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useLiga } from '@/contexts/LigaContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
-import { useUserProfile } from '@/hooks/useUserProfile';
 import { useActiveMode } from '@/contexts/ActiveModeContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -27,8 +26,7 @@ export function AppSidebar() {
   const { nomeLiga, logoUrl } = useLiga();
   const { signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
-  const { profile } = useUserProfile();
-  const { setMode } = useActiveMode();
+  const { perfis, setMode } = useActiveMode();
 
   const { data: activeTournaments } = useQuery({
     queryKey: ['active-tournament-count'],
@@ -52,7 +50,7 @@ export function AppSidebar() {
   };
 
   const handleBladerCardClick = () => {
-    if (profile?.temPerfilBlader && profile?.nomeBlader) {
+    if (perfis.temBlader) {
       // Profile exists — just switch mode
       setMode('blader');
       navigate('/blader/home');
@@ -170,11 +168,11 @@ export function AppSidebar() {
       {/* Footer */}
       <div className="shrink-0" style={{ padding: 12, borderTop: '1px solid rgba(255,255,255,.05)', marginTop: 'auto' }}>
         {/* Blader card: switch or create */}
-        {profile && (
+        {!perfis.loading && (
           <div
             onClick={handleBladerCardClick}
             className="cursor-pointer transition-all duration-150 mb-2"
-            style={profile.temPerfilBlader && profile.nomeBlader ? {
+            style={perfis.temBlader ? {
               display: 'flex', alignItems: 'center', gap: 10,
               padding: '11px 13px',
               background: 'linear-gradient(135deg, rgba(245,158,11,.08), rgba(249,115,22,.06))',
@@ -187,23 +185,23 @@ export function AppSidebar() {
               border: '1px dashed rgba(245,158,11,.2)',
               borderRadius: 12,
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = profile.temPerfilBlader ? 'linear-gradient(135deg, rgba(245,158,11,.14), rgba(249,115,22,.1))' : 'rgba(245,158,11,.12)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = profile.temPerfilBlader && profile.nomeBlader ? 'linear-gradient(135deg, rgba(245,158,11,.08), rgba(249,115,22,.06))' : 'rgba(245,158,11,.06)'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = perfis.temBlader ? 'linear-gradient(135deg, rgba(245,158,11,.14), rgba(249,115,22,.1))' : 'rgba(245,158,11,.12)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = perfis.temBlader ? 'linear-gradient(135deg, rgba(245,158,11,.08), rgba(249,115,22,.06))' : 'rgba(245,158,11,.06)'; }}
           >
-            {profile.temPerfilBlader && profile.nomeBlader ? (
+            {perfis.temBlader && perfis.dadosBlader ? (
               <>
                 <div className="relative shrink-0">
                   <BladerAvatar
-                    url={profile.avatarBladerUrl}
-                    name={profile.nomeBlader}
-                    colorKey={profile.corPerfil}
+                    url={perfis.dadosBlader.avatar}
+                    name={perfis.dadosBlader.nome}
+                    colorKey={perfis.dadosBlader.corPerfil || undefined}
                     size={36}
                     borderWidth={2}
                   />
                   <div className="absolute -bottom-0.5 -right-0.5" style={{ width: 14, height: 14, borderRadius: '50%', background: '#D97706', border: '2px solid #080c18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8 }}>⚡</div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-body truncate" style={{ fontSize: 13, fontWeight: 600, color: '#FCD34D' }}>{profile.nomeBlader}</div>
+                  <div className="font-body truncate" style={{ fontSize: 13, fontWeight: 600, color: '#FCD34D' }}>{perfis.dadosBlader.nome}</div>
                   <div className="font-body" style={{ fontSize: 11, color: 'rgba(255,255,255,.4)' }}>⚡ Trocar para Blader</div>
                 </div>
               </>
