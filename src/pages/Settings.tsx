@@ -161,7 +161,7 @@ export default function Settings() {
       </h1>
 
       {/* ===== BLADER MODE SECTIONS ===== */}
-      {isBladerMode && profile?.temPerfilBlader && (
+      {isBladerMode && perfis.temBlader && (
         <>
           {/* Blader data */}
           <div className="glass-panel p-5 space-y-4">
