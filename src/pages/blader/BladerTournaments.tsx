@@ -161,46 +161,10 @@ export default function BladerTournaments() {
           {filtered.map(t => (
             <div
               key={t.id}
-              className="rounded-xl p-4 flex items-center gap-3 relative cursor-pointer hover:bg-[rgba(255,255,255,.03)] transition-colors"
+              className="rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:bg-[rgba(255,255,255,.03)] transition-colors"
               style={{ background: '#111827', border: '1px solid rgba(255,255,255,.07)' }}
               onClick={() => setSelectedTournament(t)}
             >
-              {/* Today/Tomorrow badge */}
-              {isHoje(dateRef(t)) && (
-                <div style={{
-                  position: 'absolute', top: 10, right: 10,
-                  display: 'flex', alignItems: 'center', gap: 5,
-                  padding: '4px 10px',
-                  background: 'linear-gradient(135deg, rgba(239,68,68,.9), rgba(220,38,38,.9))',
-                  borderRadius: 20,
-                  fontFamily: 'Rajdhani, sans-serif',
-                  fontWeight: 700, fontSize: 11,
-                  color: '#fff', letterSpacing: 1,
-                  boxShadow: '0 0 12px rgba(239,68,68,.5)',
-                  animation: 'pulse 1.5s ease-in-out infinite',
-                  zIndex: 5,
-                }}>
-                  🔴 HOJE
-                </div>
-              )}
-              {isAmanha(dateRef(t)) && !isHoje(dateRef(t)) && (
-                <div style={{
-                  position: 'absolute', top: 10, right: 10,
-                  display: 'flex', alignItems: 'center', gap: 5,
-                  padding: '4px 10px',
-                  background: 'rgba(245,158,11,.15)',
-                  color: '#FCD34D',
-                  border: '1px solid rgba(245,158,11,.3)',
-                  borderRadius: 20,
-                  fontFamily: 'Rajdhani, sans-serif',
-                  fontWeight: 700, fontSize: 11,
-                  letterSpacing: 1,
-                  zIndex: 5,
-                }}>
-                  ⏰ AMANHÃ
-                </div>
-              )}
-
               {/* Logo da liga */}
               <div className="shrink-0">
                 {t.liga?.logo_url ? (
@@ -213,14 +177,32 @@ export default function BladerTournaments() {
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className="font-heading font-bold text-foreground truncate" style={{ fontSize: 14 }}>
-                  {t.name}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="font-heading font-bold text-foreground truncate" style={{ fontSize: 14 }}>
+                    {t.name}
+                  </p>
+                  {isHoje(dateRef(t)) && (
+                    <span style={{
+                      padding: '2px 8px', background: 'rgba(239,68,68,.15)',
+                      border: '1px solid rgba(239,68,68,.4)', borderRadius: 20,
+                      fontSize: 10, fontWeight: 700, color: '#F87171',
+                      letterSpacing: 1, flexShrink: 0,
+                    }}>🔴 HOJE</span>
+                  )}
+                  {isAmanha(dateRef(t)) && !isHoje(dateRef(t)) && (
+                    <span style={{
+                      padding: '2px 8px', background: 'rgba(245,158,11,.12)',
+                      border: '1px solid rgba(245,158,11,.3)', borderRadius: 20,
+                      fontSize: 10, fontWeight: 700, color: '#FCD34D',
+                      letterSpacing: 1, flexShrink: 0,
+                    }}>⏰ AMANHÃ</span>
+                  )}
+                </div>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-xs text-muted-foreground font-body">
                   {t.liga?.nome_liga && <span className="truncate">{t.liga.nome_liga}</span>}
                   {(t.local_cidade || t.liga?.cidade) && <><span>•</span><span className="flex items-center gap-1"><MapPin size={10} />{t.local_cidade || t.liga?.cidade}</span></>}
                 </div>
-                <div className="flex items-center gap-2 mt-1 text-xs font-body" style={{ color: '#64748B' }}>
+                <div className="flex items-center gap-2 mt-1 text-xs font-body" style={{ color: '#94A3B8' }}>
                   <span className="flex items-center gap-1"><Calendar size={10} />{new Date(t.horario_inicio || t.date).toLocaleDateString('pt-BR')}</span>
                   <span>•</span>
                   <span className="flex items-center gap-1"><Users size={10} />{t.player_ids.length}{t.max_players ? `/${t.max_players}` : ''}</span>

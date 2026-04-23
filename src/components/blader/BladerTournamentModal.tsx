@@ -141,27 +141,45 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
         }}
       >
         {/* Header image */}
-        <div className="relative" style={{ height: 200, overflow: 'hidden' }}>
-          {tournament.imagem_url ? (
+        {tournament.imagem_url ? (
+          <div className="relative" style={{ height: 160, overflow: 'hidden' }}>
             <img src={tournament.imagem_url} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #1e3a8a, #0d1120)' }} />
-          )}
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #0d1120, transparent 60%)' }} />
-          <h2
-            className="absolute bottom-4 left-5 right-5 font-heading font-bold text-foreground"
-            style={{ fontSize: 24, lineHeight: 1.2 }}
-          >
-            {tournament.name}
-          </h2>
-          <button
-            onClick={() => onOpenChange(false)}
-            className="absolute top-3 right-3 p-1.5 rounded-full"
-            style={{ background: 'rgba(0,0,0,.5)' }}
-          >
-            <X className="h-4 w-4 text-white" />
-          </button>
-        </div>
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #0d1120, transparent 60%)' }} />
+            <h2
+              className="absolute bottom-4 left-5 right-5 font-heading font-bold text-foreground"
+              style={{ fontSize: 24, lineHeight: 1.2 }}
+            >
+              {tournament.name}
+            </h2>
+            <button
+              onClick={() => onOpenChange(false)}
+              className="absolute top-3 right-3 p-1.5 rounded-full"
+              style={{ background: 'rgba(0,0,0,.5)' }}
+            >
+              <X className="h-4 w-4 text-white" />
+            </button>
+          </div>
+        ) : (
+          <div className="relative" style={{ height: 80, overflow: 'hidden', background: 'linear-gradient(135deg, #0a1428, #0d1f3c)' }}>
+            <div className="absolute inset-0" style={{
+              backgroundImage: 'linear-gradient(rgba(37,99,235,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,.04) 1px,transparent 1px)',
+              backgroundSize: '24px 24px',
+            }} />
+            <h2
+              className="absolute bottom-3 left-5 right-12 font-heading font-bold text-foreground"
+              style={{ fontSize: 20, lineHeight: 1.2 }}
+            >
+              {tournament.name}
+            </h2>
+            <button
+              onClick={() => onOpenChange(false)}
+              className="absolute top-3 right-3 p-1.5 rounded-full"
+              style={{ background: 'rgba(0,0,0,.3)' }}
+            >
+              <X className="h-4 w-4 text-white" />
+            </button>
+          </div>
+        )}
 
         {/* Body */}
         <div className="px-5 pb-5 space-y-4">
