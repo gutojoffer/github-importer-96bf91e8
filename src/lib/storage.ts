@@ -200,6 +200,17 @@ function tournamentFromRow(row: any): Tournament {
     createdAt: row.created_at,
     finalStandings: row.final_standings as TournamentStanding[] | undefined,
     maxPlayers: row.max_players ?? undefined,
+    localNome: row.local_nome ?? undefined,
+    localEndereco: row.local_endereco ?? undefined,
+    localCidade: row.local_cidade ?? undefined,
+    localEstado: row.local_estado ?? undefined,
+    horarioInicio: row.horario_inicio ?? undefined,
+    horarioFim: row.horario_fim ?? undefined,
+    descricao: row.descricao ?? undefined,
+    imagemUrl: row.imagem_url ?? undefined,
+    premio: row.premio ?? undefined,
+    regras: row.regras ?? undefined,
+    ligaId: row.liga_id ?? undefined,
   };
 }
 
@@ -220,6 +231,16 @@ function tournamentToRow(t: Tournament, ligaId: string) {
     final_standings: t.finalStandings as any,
     max_players: t.maxPlayers ?? null,
     liga_id: ligaId,
+    local_nome: t.localNome ?? null,
+    local_endereco: t.localEndereco ?? null,
+    local_cidade: t.localCidade ?? null,
+    local_estado: t.localEstado ?? null,
+    horario_inicio: t.horarioInicio ?? null,
+    horario_fim: t.horarioFim ?? null,
+    descricao: t.descricao ?? null,
+    imagem_url: t.imagemUrl ?? null,
+    premio: t.premio ?? null,
+    regras: t.regras ?? null,
   };
 }
 
