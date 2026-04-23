@@ -133,7 +133,7 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="p-0 overflow-hidden border-0 max-w-[480px] w-full"
+        className="p-0 overflow-hidden border-0 max-w-[480px] w-full [&>button:last-child]:hidden"
         style={{
           background: '#0d1120',
           border: '1px solid rgba(0,220,255,.15)',
