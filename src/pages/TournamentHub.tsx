@@ -1119,15 +1119,20 @@ export default function TournamentHub() {
               <Input value={enrollSearch} onChange={e => setEnrollSearch(e.target.value)} placeholder="Buscar blader..." className="pl-9 bg-muted/30 border-border h-9" />
             </div>
 
+            {/* Counter */}
+            <p className="text-[11px] text-muted-foreground font-body mb-2">
+              {allBladers.length} bladers na plataforma · {enrollModalTournament.playerIds.length + inscricoesSet.size} inscritos · {Math.max(0, (enrollModalTournament.maxPlayers || 32) - enrollModalTournament.playerIds.length)} vagas restantes
+            </p>
+
             {/* Batch select controls */}
             {(() => {
-              const unenrolledFiltered = filteredPlayers.filter(p => !enrollModalTournament.playerIds.includes(p.id));
-              const allBatchSelected = unenrolledFiltered.length > 0 && unenrolledFiltered.every(p => batchSelected.has(p.id));
+              const unenrolledFiltered = filteredPlayers.filter((p: any) => !enrollModalTournament.playerIds.includes(p.id) && !inscricoesSet.has(p.id));
+              const allBatchSelected = unenrolledFiltered.length > 0 && unenrolledFiltered.every((p: any) => batchSelected.has(p.id));
               return unenrolledFiltered.length > 0 ? (
                 <button
                   onClick={() => {
                     if (allBatchSelected) setBatchSelected(new Set());
-                    else setBatchSelected(new Set(unenrolledFiltered.map(p => p.id)));
+                    else setBatchSelected(new Set(unenrolledFiltered.map((p: any) => p.id)));
                   }}
                   className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 border border-transparent mb-1 text-left"
                 >
@@ -1140,8 +1145,8 @@ export default function TournamentHub() {
             })()}
 
             <div className="space-y-1.5 max-h-[40vh] overflow-auto">
-              {filteredPlayers.map(p => {
-                const enrolled = enrollModalTournament.playerIds.includes(p.id);
+              {filteredPlayers.map((p: any) => {
+                const enrolled = enrollModalTournament.playerIds.includes(p.id) || inscricoesSet.has(p.id);
                 const isSelected = batchSelected.has(p.id);
                 return (
                   <button key={p.id} onClick={() => {
@@ -1161,13 +1166,17 @@ export default function TournamentHub() {
                       </div>
                     )}
                     <Avatar className="h-9 w-9 border border-muted">
-                      {p.avatar.startsWith('http') || p.avatar.startsWith('data:') ? <AvatarImage src={p.avatar} /> : <AvatarFallback className="bg-muted text-sm">{p.avatar}</AvatarFallback>}
+                      {(p.avatar?.startsWith('http') || p.avatar?.startsWith('data:')) ? <AvatarImage src={p.avatar} /> : <AvatarFallback className="bg-muted text-sm">{p.avatar || '🔵'}</AvatarFallback>}
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="font-heading font-bold text-sm text-foreground truncate">{p.name}</p>
-                      {p.nickname && <p className="text-[10px] text-muted-foreground">@{p.nickname}</p>}
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                        {p.nickname && <span>@{p.nickname}</span>}
+                        {p.cidadeBlader && <span>📍 {p.cidadeBlader}</span>}
+                        {p.beybladeFavorita && <span>⚡ {p.beybladeFavorita}</span>}
+                      </div>
                     </div>
-                    <EloBadge xp={p.xp || 0} size="sm" />
+                    {!p._platform && <EloBadge xp={p.xp || 0} size="sm" />}
                     {enrolled && (
                       <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center shrink-0">
                         <Check className="h-3.5 w-3.5 text-primary-foreground" />
