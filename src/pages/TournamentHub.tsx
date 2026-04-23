@@ -144,10 +144,11 @@ export default function TournamentHub() {
 
   // ─── Create Tournament ───
   const handleCreate = useCallback(() => {
-    if (!tName.trim() || !tDate) { toast.error('Preencha nome e data!'); return; }
+    if (!tName.trim() || (!tDate && !tHorarioInicio)) { toast.error('Preencha nome e data!'); return; }
+    const dateVal = tDate || (tHorarioInicio ? tHorarioInicio.split('T')[0] : '');
     const t: Tournament = {
-      id: crypto.randomUUID(), name: tName.trim(), date: tDate,
-      registrationDeadline: tDate, playerIds: [], rounds: [],
+      id: crypto.randomUUID(), name: tName.trim(), date: dateVal,
+      registrationDeadline: dateVal, playerIds: [], rounds: [],
       currentRound: 0, arenaCount: tArenaCount, totalRounds: 3, pointsToWin: 4,
       status: 'upcoming', createdAt: new Date().toISOString(), maxPlayers: tMaxPlayers,
       eliminationSize: tEliminationSize,
