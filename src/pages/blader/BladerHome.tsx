@@ -238,38 +238,31 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label:
 function TournamentRowCard({ tournament, onSignup, isHoje: hoje, isAmanha: amanha }: { tournament: { id: string; name: string; date: string; player_ids: string[]; max_players: number | null; horario_inicio: string | null }; onSignup: () => void; isHoje: boolean; isAmanha: boolean }) {
   const isFull = tournament.max_players != null && tournament.player_ids.length >= tournament.max_players;
   return (
-    <div className="rounded-xl p-4 flex items-center gap-3 relative cursor-pointer hover:bg-[rgba(255,255,255,.03)] transition-colors" style={{ background: '#111827', border: '1px solid rgba(255,255,255,.07)' }} onClick={onSignup}>
-      {hoje && (
-        <div style={{
-          position: 'absolute', top: 10, right: 10,
-          display: 'flex', alignItems: 'center', gap: 5,
-          padding: '4px 10px',
-          background: 'linear-gradient(135deg, rgba(239,68,68,.9), rgba(220,38,38,.9))',
-          borderRadius: 20, fontFamily: 'Rajdhani, sans-serif',
-          fontWeight: 700, fontSize: 11, color: '#fff', letterSpacing: 1,
-          boxShadow: '0 0 12px rgba(239,68,68,.5)',
-          animation: 'pulse 1.5s ease-in-out infinite', zIndex: 5,
-        }}>
-          🔴 HOJE
-        </div>
-      )}
-      {amanha && !hoje && (
-        <div style={{
-          position: 'absolute', top: 10, right: 10,
-          padding: '4px 10px', background: 'rgba(245,158,11,.15)',
-          color: '#FCD34D', border: '1px solid rgba(245,158,11,.3)',
-          borderRadius: 20, fontFamily: 'Rajdhani, sans-serif',
-          fontWeight: 700, fontSize: 11, letterSpacing: 1, zIndex: 5,
-        }}>
-          ⏰ AMANHÃ
-        </div>
-      )}
+    <div className="rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:bg-[rgba(255,255,255,.03)] transition-colors" style={{ background: '#111827', border: '1px solid rgba(255,255,255,.07)' }} onClick={onSignup}>
       <div className="shrink-0 rounded-lg flex items-center justify-center" style={{ width: 44, height: 44, background: 'linear-gradient(135deg, #1e3a8a, #2563EB)' }}>
         <Trophy size={20} className="text-white" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-heading font-bold text-foreground truncate" style={{ fontSize: 14 }}>{tournament.name}</p>
-        <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground font-body">
+        <div className="flex items-center gap-2">
+          <p className="font-heading font-bold text-foreground truncate" style={{ fontSize: 14 }}>{tournament.name}</p>
+          {hoje && (
+            <span style={{
+              padding: '2px 8px', background: 'rgba(239,68,68,.15)',
+              border: '1px solid rgba(239,68,68,.4)', borderRadius: 20,
+              fontSize: 10, fontWeight: 700, color: '#F87171',
+              letterSpacing: 1, flexShrink: 0,
+            }}>🔴 HOJE</span>
+          )}
+          {amanha && !hoje && (
+            <span style={{
+              padding: '2px 8px', background: 'rgba(245,158,11,.12)',
+              border: '1px solid rgba(245,158,11,.3)', borderRadius: 20,
+              fontSize: 10, fontWeight: 700, color: '#FCD34D',
+              letterSpacing: 1, flexShrink: 0,
+            }}>⏰ AMANHÃ</span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 mt-0.5 text-xs font-body" style={{ color: '#94A3B8' }}>
           <Calendar size={11} />
           <span>{new Date(tournament.horario_inicio || tournament.date).toLocaleDateString('pt-BR')}</span>
           <span>•</span>

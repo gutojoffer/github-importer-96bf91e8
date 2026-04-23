@@ -6,13 +6,13 @@
 
 @layer base {
   :root {
-    --background: 225 30% 4%;
+    --background: 228 40% 3%;
     --foreground: 220 20% 93%;
 
-    --card: 224 28% 7%;
+    --card: 228 35% 5%;
     --card-foreground: 220 20% 93%;
 
-    --popover: 224 28% 7%;
+    --popover: 228 35% 5%;
     --popover-foreground: 220 20% 93%;
 
     --primary: 217 91% 60%;
@@ -22,7 +22,7 @@
     --secondary-foreground: 0 0% 100%;
 
     --muted: 220 14% 12%;
-    --muted-foreground: 220 10% 50%;
+    --muted-foreground: 220 10% 55%;
 
     --accent: 217 91% 60%;
     --accent-foreground: 0 0% 100%;
@@ -39,7 +39,7 @@
 
     --radius: 0.75rem;
 
-    --sidebar-background: 225 32% 6%;
+    --sidebar-background: 228 38% 4%;
     --sidebar-foreground: 220 20% 93%;
     --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -48,11 +48,11 @@
     --sidebar-border: 220 15% 10%;
     --sidebar-ring: 217 91% 60%;
 
-    --surface: 224 26% 8%;
-    --surface2: 224 22% 10%;
-    --surface3: 224 20% 13%;
-    --bg2: 225 32% 6%;
-    --bg3: 222 28% 10%;
+    --surface: 228 30% 6%;
+    --surface2: 228 26% 8%;
+    --surface3: 228 22% 11%;
+    --bg2: 228 35% 4%;
+    --bg3: 228 28% 8%;
   }
 }
 
@@ -72,18 +72,19 @@
 .surface-panel {
   background: hsl(var(--surface));
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+  border-radius: 14px;
 }
 
 .surface-card {
   background: hsl(var(--surface));
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 14px;
   transition: all 0.2s ease;
 }
 .surface-card:hover {
-  border-color: rgba(79, 142, 247, 0.15);
+  border-color: rgba(255, 255, 255, 0.14);
   background: hsl(var(--surface2));
+  transform: translateY(-2px);
 }
 
 .glass-panel {
@@ -98,6 +99,38 @@
   background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius);
+}
+
+/* ═══════ BLADEX Accent Line ═══════ */
+.bladex-accent-top {
+  position: relative;
+}
+.bladex-accent-top::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #00DCFF, #FF00B4, transparent);
+}
+
+/* ═══════ Section Title ═══════ */
+.bladex-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+.bladex-section-title::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #00DCFF, #FF00B4);
+  flex-shrink: 0;
 }
 
 /* ═══════ Accent Lines ═══════ */

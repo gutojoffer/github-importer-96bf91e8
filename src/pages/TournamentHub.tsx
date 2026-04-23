@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback, useMemo, memo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -609,12 +611,62 @@ export default function TournamentHub() {
     toast.success(`${playerName} foi dropado. Vitória(s) por W/O atribuída(s).`);
   }, [activeTournament, confirmDropPlayer, updateActive, getPlayer]);
 
+  // Fetch platform bladers (self-registered via profiles)
+  const { data: platformBladers = [] } = useQuery({
+    queryKey: ['platform-bladers-for-enroll'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, nome_blader, avatar_blader_url, cidade_blader, estado_blader, beyblade_favorita')
+        .eq('tem_perfil_blader', true)
+        .order('nome_blader', { ascending: true });
+      return (data ?? []).map((b: any) => ({
+        id: b.id,
+        name: b.nome_blader || 'Blader',
+        nickname: '',
+        avatar: b.avatar_blader_url || '🔵',
+        createdAt: '',
+        xp: 0,
+        _platform: true,
+        cidadeBlader: b.cidade_blader,
+        beybladeFavorita: b.beyblade_favorita,
+      }));
+    },
+    enabled: !!enrollModal,
+  });
+
+  // Fetch inscricoes for the current tournament
+  const { data: tournamentInscricoes = [] } = useQuery({
+    queryKey: ['tournament-inscricoes', enrollModal],
+    queryFn: async () => {
+      if (!enrollModal) return [];
+      const { data } = await supabase
+        .from('inscricoes')
+        .select('blader_id')
+        .eq('torneio_id', enrollModal);
+      return (data ?? []).map((r: any) => r.blader_id as string);
+    },
+    enabled: !!enrollModal,
+  });
+
+  const inscricoesSet = useMemo(() => new Set(tournamentInscricoes), [tournamentInscricoes]);
+
+  // Merge local players + platform bladers, deduplicate by id
+  const allBladers = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const p of players) map.set(p.id, p);
+    for (const b of platformBladers) {
+      if (!map.has(b.id)) map.set(b.id, b);
+    }
+    return Array.from(map.values());
+  }, [players, platformBladers]);
+
   const filteredPlayers = useMemo(() =>
-    players.filter(p =>
+    allBladers.filter((p: any) =>
       p.name.toLowerCase().includes(enrollSearch.toLowerCase()) ||
       (p.nickname && p.nickname.toLowerCase().includes(enrollSearch.toLowerCase()))
     )
-  , [players, enrollSearch]);
+  , [allBladers, enrollSearch]);
 
   // ─── Helpers for elimination phase ───
   const isInEliminationPhase = activeTournament?.phase === 'elimination';
@@ -1067,15 +1119,20 @@ export default function TournamentHub() {
               <Input value={enrollSearch} onChange={e => setEnrollSearch(e.target.value)} placeholder="Buscar blader..." className="pl-9 bg-muted/30 border-border h-9" />
             </div>
 
+            {/* Counter */}
+            <p className="text-[11px] text-muted-foreground font-body mb-2">
+              {allBladers.length} bladers na plataforma · {enrollModalTournament.playerIds.length + inscricoesSet.size} inscritos · {Math.max(0, (enrollModalTournament.maxPlayers || 32) - enrollModalTournament.playerIds.length)} vagas restantes
+            </p>
+
             {/* Batch select controls */}
             {(() => {
-              const unenrolledFiltered = filteredPlayers.filter(p => !enrollModalTournament.playerIds.includes(p.id));
-              const allBatchSelected = unenrolledFiltered.length > 0 && unenrolledFiltered.every(p => batchSelected.has(p.id));
+              const unenrolledFiltered = filteredPlayers.filter((p: any) => !enrollModalTournament.playerIds.includes(p.id) && !inscricoesSet.has(p.id));
+              const allBatchSelected = unenrolledFiltered.length > 0 && unenrolledFiltered.every((p: any) => batchSelected.has(p.id));
               return unenrolledFiltered.length > 0 ? (
                 <button
                   onClick={() => {
                     if (allBatchSelected) setBatchSelected(new Set());
-                    else setBatchSelected(new Set(unenrolledFiltered.map(p => p.id)));
+                    else setBatchSelected(new Set(unenrolledFiltered.map((p: any) => p.id)));
                   }}
                   className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 border border-transparent mb-1 text-left"
                 >
@@ -1088,8 +1145,8 @@ export default function TournamentHub() {
             })()}
 
             <div className="space-y-1.5 max-h-[40vh] overflow-auto">
-              {filteredPlayers.map(p => {
-                const enrolled = enrollModalTournament.playerIds.includes(p.id);
+              {filteredPlayers.map((p: any) => {
+                const enrolled = enrollModalTournament.playerIds.includes(p.id) || inscricoesSet.has(p.id);
                 const isSelected = batchSelected.has(p.id);
                 return (
                   <button key={p.id} onClick={() => {
@@ -1109,13 +1166,17 @@ export default function TournamentHub() {
                       </div>
                     )}
                     <Avatar className="h-9 w-9 border border-muted">
-                      {p.avatar.startsWith('http') || p.avatar.startsWith('data:') ? <AvatarImage src={p.avatar} /> : <AvatarFallback className="bg-muted text-sm">{p.avatar}</AvatarFallback>}
+                      {(p.avatar?.startsWith('http') || p.avatar?.startsWith('data:')) ? <AvatarImage src={p.avatar} /> : <AvatarFallback className="bg-muted text-sm">{p.avatar || '🔵'}</AvatarFallback>}
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="font-heading font-bold text-sm text-foreground truncate">{p.name}</p>
-                      {p.nickname && <p className="text-[10px] text-muted-foreground">@{p.nickname}</p>}
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                        {p.nickname && <span>@{p.nickname}</span>}
+                        {p.cidadeBlader && <span>📍 {p.cidadeBlader}</span>}
+                        {p.beybladeFavorita && <span>⚡ {p.beybladeFavorita}</span>}
+                      </div>
                     </div>
-                    <EloBadge xp={p.xp || 0} size="sm" />
+                    {!p._platform && <EloBadge xp={p.xp || 0} size="sm" />}
                     {enrolled && (
                       <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center shrink-0">
                         <Check className="h-3.5 w-3.5 text-primary-foreground" />
