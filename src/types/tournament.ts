@@ -89,6 +89,18 @@ export interface Tournament {
   currentEliminationRound?: number;
   /** IDs of players who qualified for elimination */
   eliminationPlayerIds?: string[];
+  /** New fields */
+  localNome?: string;
+  localEndereco?: string;
+  localCidade?: string;
+  localEstado?: string;
+  horarioInicio?: string;
+  horarioFim?: string;
+  descricao?: string;
+  imagemUrl?: string;
+  premio?: string;
+  regras?: string;
+  ligaId?: string;
 }
 
 export interface TournamentStanding {

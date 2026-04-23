@@ -62,6 +62,71 @@ export type Database = {
         }
         Relationships: []
       }
+      inscricoes: {
+        Row: {
+          blader_id: string
+          id: string
+          inscrito_em: string
+          posicao_final: number | null
+          status: string
+          torneio_id: string
+          xp_ganho: number
+        }
+        Insert: {
+          blader_id: string
+          id?: string
+          inscrito_em?: string
+          posicao_final?: number | null
+          status?: string
+          torneio_id: string
+          xp_ganho?: number
+        }
+        Update: {
+          blader_id?: string
+          id?: string
+          inscrito_em?: string
+          posicao_final?: number | null
+          status?: string
+          torneio_id?: string
+          xp_ganho?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inscricoes_torneio_id_fkey"
+            columns: ["torneio_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notificacoes: {
+        Row: {
+          created_at: string
+          id: string
+          lida: boolean
+          mensagem: string
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lida?: boolean
+          mensagem: string
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lida?: boolean
+          mensagem?: string
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       player_stats: {
         Row: {
           extreme_finish_wins: number
@@ -156,12 +221,17 @@ export type Database = {
           estado_blader: string | null
           id: string
           logo_url: string | null
+          melhor_posicao: number | null
+          nivel: string
           nome_blader: string | null
           nome_liga: string | null
           tem_perfil_blader: boolean
           tem_perfil_organizador: boolean
           tipo_conta: string
+          torneios_total: number
           updated_at: string | null
+          vitorias_total: number
+          xp_total: number
         }
         Insert: {
           avatar_blader_url?: string | null
@@ -179,12 +249,17 @@ export type Database = {
           estado_blader?: string | null
           id: string
           logo_url?: string | null
+          melhor_posicao?: number | null
+          nivel?: string
           nome_blader?: string | null
           nome_liga?: string | null
           tem_perfil_blader?: boolean
           tem_perfil_organizador?: boolean
           tipo_conta?: string
+          torneios_total?: number
           updated_at?: string | null
+          vitorias_total?: number
+          xp_total?: number
         }
         Update: {
           avatar_blader_url?: string | null
@@ -202,12 +277,17 @@ export type Database = {
           estado_blader?: string | null
           id?: string
           logo_url?: string | null
+          melhor_posicao?: number | null
+          nivel?: string
           nome_blader?: string | null
           nome_liga?: string | null
           tem_perfil_blader?: boolean
           tem_perfil_organizador?: boolean
           tipo_conta?: string
+          torneios_total?: number
           updated_at?: string | null
+          vitorias_total?: number
+          xp_total?: number
         }
         Relationships: []
       }
@@ -250,13 +330,23 @@ export type Database = {
           created_at: string
           current_round: number
           date: string
+          descricao: string | null
           final_standings: Json | null
+          horario_fim: string | null
+          horario_inicio: string | null
           id: string
+          imagem_url: string | null
           liga_id: string | null
+          local_cidade: string | null
+          local_endereco: string | null
+          local_estado: string | null
+          local_nome: string | null
           max_players: number | null
           name: string
           player_ids: string[]
           points_to_win: number
+          premio: string | null
+          regras: string | null
           rounds: Json
           signup_deadline: string
           status: string
@@ -267,13 +357,23 @@ export type Database = {
           created_at?: string
           current_round?: number
           date: string
+          descricao?: string | null
           final_standings?: Json | null
+          horario_fim?: string | null
+          horario_inicio?: string | null
           id?: string
+          imagem_url?: string | null
           liga_id?: string | null
+          local_cidade?: string | null
+          local_endereco?: string | null
+          local_estado?: string | null
+          local_nome?: string | null
           max_players?: number | null
           name: string
           player_ids?: string[]
           points_to_win?: number
+          premio?: string | null
+          regras?: string | null
           rounds?: Json
           signup_deadline?: string
           status?: string
@@ -284,13 +384,23 @@ export type Database = {
           created_at?: string
           current_round?: number
           date?: string
+          descricao?: string | null
           final_standings?: Json | null
+          horario_fim?: string | null
+          horario_inicio?: string | null
           id?: string
+          imagem_url?: string | null
           liga_id?: string | null
+          local_cidade?: string | null
+          local_endereco?: string | null
+          local_estado?: string | null
+          local_nome?: string | null
           max_players?: number | null
           name?: string
           player_ids?: string[]
           points_to_win?: number
+          premio?: string | null
+          regras?: string | null
           rounds?: Json
           signup_deadline?: string
           status?: string

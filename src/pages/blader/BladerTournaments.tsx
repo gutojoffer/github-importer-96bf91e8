@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUserProfile } from '@/hooks/useUserProfile';
 import { Trophy, Calendar, MapPin, Users, Filter } from 'lucide-react';
+import BladerTournamentModal from '@/components/blader/BladerTournamentModal';
 
 interface TournamentRow {
   id: string;
@@ -14,6 +13,16 @@ interface TournamentRow {
   liga_id: string | null;
   player_ids: string[];
   max_players: number | null;
+  local_nome: string | null;
+  local_endereco: string | null;
+  local_cidade: string | null;
+  local_estado: string | null;
+  horario_inicio: string | null;
+  horario_fim: string | null;
+  descricao: string | null;
+  imagem_url: string | null;
+  premio: string | null;
+  regras: string | null;
 }
 
 interface LigaRow {
@@ -25,18 +34,32 @@ interface LigaRow {
 
 type FilterMode = 'todos' | 'inscritos' | 'disponiveis';
 
+function isHoje(data: string | null) {
+  if (!data) return false;
+  const hoje = new Date();
+  const d = new Date(data);
+  return hoje.getDate() === d.getDate() && hoje.getMonth() === d.getMonth() && hoje.getFullYear() === d.getFullYear();
+}
+
+function isAmanha(data: string | null) {
+  if (!data) return false;
+  const amanha = new Date();
+  amanha.setDate(amanha.getDate() + 1);
+  const d = new Date(data);
+  return amanha.getDate() === d.getDate() && amanha.getMonth() === d.getMonth() && amanha.getFullYear() === d.getFullYear();
+}
+
 export default function BladerTournaments() {
   const { user } = useAuth();
-  const { profile } = useUserProfile();
-  const navigate = useNavigate();
   const [filter, setFilter] = useState<FilterMode>('todos');
+  const [selectedTournament, setSelectedTournament] = useState<TournamentRow | null>(null);
 
-  const { data: tournaments = [], isLoading } = useQuery({
+  const { data: tournaments = [], isLoading, refetch } = useQuery({
     queryKey: ['blader-tournaments-open'],
     queryFn: async () => {
       const { data } = await supabase
         .from('tournaments')
-        .select('id, name, date, status, liga_id, player_ids, max_players')
+        .select('id, name, date, status, liga_id, player_ids, max_players, local_nome, local_endereco, local_cidade, local_estado, horario_inicio, horario_fim, descricao, imagem_url, premio, regras')
         .eq('status', 'upcoming')
         .order('date', { ascending: true });
       return (data ?? []) as TournamentRow[];
@@ -59,19 +82,25 @@ export default function BladerTournaments() {
 
   const ligaById = new Map(ligas.map(l => [l.id, l]));
 
-  const { data: myPlayerIds = [] } = useQuery({
-    queryKey: ['blader-player-ids', user?.id, profile?.nome],
+  // Check inscricoes for current user
+  const { data: myInscricoes = [], refetch: refetchInscricoes } = useQuery({
+    queryKey: ['blader-inscricoes', user?.id],
     queryFn: async () => {
-      if (!profile?.nome) return [];
-      const { data } = await supabase.from('players').select('id').eq('name', profile.nome);
-      return (data ?? []).map(p => p.id);
+      if (!user) return [];
+      const { data } = await supabase
+        .from('inscricoes')
+        .select('torneio_id')
+        .eq('blader_id', user.id);
+      return (data ?? []).map(r => r.torneio_id);
     },
-    enabled: !!profile?.nome,
+    enabled: !!user,
   });
+
+  const myInscricoesSet = new Set(myInscricoes);
 
   const enriched = tournaments.map(t => ({
     ...t,
-    inscrito: t.player_ids.some(pid => myPlayerIds.includes(pid)),
+    inscrito: myInscricoesSet.has(t.id),
     cheio: t.max_players != null && t.player_ids.length >= t.max_players,
     liga: t.liga_id ? ligaById.get(t.liga_id) : undefined,
   }));
@@ -81,6 +110,8 @@ export default function BladerTournaments() {
     if (filter === 'disponiveis') return !t.inscrito && !t.cheio;
     return true;
   });
+
+  const dateRef = (t: TournamentRow) => t.horario_inicio || t.date;
 
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-5">
@@ -130,9 +161,46 @@ export default function BladerTournaments() {
           {filtered.map(t => (
             <div
               key={t.id}
-              className="rounded-xl p-4 flex items-center gap-3"
+              className="rounded-xl p-4 flex items-center gap-3 relative cursor-pointer hover:bg-[rgba(255,255,255,.03)] transition-colors"
               style={{ background: '#111827', border: '1px solid rgba(255,255,255,.07)' }}
+              onClick={() => setSelectedTournament(t)}
             >
+              {/* Today/Tomorrow badge */}
+              {isHoje(dateRef(t)) && (
+                <div style={{
+                  position: 'absolute', top: 10, right: 10,
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  padding: '4px 10px',
+                  background: 'linear-gradient(135deg, rgba(239,68,68,.9), rgba(220,38,38,.9))',
+                  borderRadius: 20,
+                  fontFamily: 'Rajdhani, sans-serif',
+                  fontWeight: 700, fontSize: 11,
+                  color: '#fff', letterSpacing: 1,
+                  boxShadow: '0 0 12px rgba(239,68,68,.5)',
+                  animation: 'pulse 1.5s ease-in-out infinite',
+                  zIndex: 5,
+                }}>
+                  🔴 HOJE
+                </div>
+              )}
+              {isAmanha(dateRef(t)) && !isHoje(dateRef(t)) && (
+                <div style={{
+                  position: 'absolute', top: 10, right: 10,
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  padding: '4px 10px',
+                  background: 'rgba(245,158,11,.15)',
+                  color: '#FCD34D',
+                  border: '1px solid rgba(245,158,11,.3)',
+                  borderRadius: 20,
+                  fontFamily: 'Rajdhani, sans-serif',
+                  fontWeight: 700, fontSize: 11,
+                  letterSpacing: 1,
+                  zIndex: 5,
+                }}>
+                  ⏰ AMANHÃ
+                </div>
+              )}
+
               {/* Logo da liga */}
               <div className="shrink-0">
                 {t.liga?.logo_url ? (
@@ -150,17 +218,17 @@ export default function BladerTournaments() {
                 </p>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-xs text-muted-foreground font-body">
                   {t.liga?.nome_liga && <span className="truncate">{t.liga.nome_liga}</span>}
-                  {t.liga?.cidade && <><span>•</span><span className="flex items-center gap-1"><MapPin size={10} />{t.liga.cidade}</span></>}
+                  {(t.local_cidade || t.liga?.cidade) && <><span>•</span><span className="flex items-center gap-1"><MapPin size={10} />{t.local_cidade || t.liga?.cidade}</span></>}
                 </div>
                 <div className="flex items-center gap-2 mt-1 text-xs font-body" style={{ color: '#64748B' }}>
-                  <span className="flex items-center gap-1"><Calendar size={10} />{new Date(t.date).toLocaleDateString('pt-BR')}</span>
+                  <span className="flex items-center gap-1"><Calendar size={10} />{new Date(t.horario_inicio || t.date).toLocaleDateString('pt-BR')}</span>
                   <span>•</span>
                   <span className="flex items-center gap-1"><Users size={10} />{t.player_ids.length}{t.max_players ? `/${t.max_players}` : ''}</span>
                 </div>
               </div>
 
               {/* CTA */}
-              <div className="shrink-0">
+              <div className="shrink-0" onClick={e => e.stopPropagation()}>
                 {t.inscrito ? (
                   <span
                     className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 font-body font-medium text-xs"
@@ -172,7 +240,7 @@ export default function BladerTournaments() {
                   <span className="text-xs font-body" style={{ color: '#EF4444' }}>Esgotado</span>
                 ) : (
                   <button
-                    onClick={() => navigate(`/signup/${t.id}`)}
+                    onClick={() => setSelectedTournament(t)}
                     className="rounded-lg px-3 py-1.5 font-body font-medium text-xs transition-all"
                     style={{ background: '#F59E0B', color: '#0a0d18' }}
                   >
@@ -184,6 +252,14 @@ export default function BladerTournaments() {
           ))}
         </div>
       )}
+
+      {/* Modal */}
+      <BladerTournamentModal
+        tournament={selectedTournament}
+        open={!!selectedTournament}
+        onOpenChange={(open) => { if (!open) setSelectedTournament(null); }}
+        onInscrito={() => { refetch(); refetchInscricoes(); }}
+      />
     </div>
   );
 }
