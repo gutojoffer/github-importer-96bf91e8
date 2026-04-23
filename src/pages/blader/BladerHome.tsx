@@ -3,9 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { Trophy, Zap, Flame, Target, MapPin, Calendar, ArrowRight } from 'lucide-react';
+import { Trophy, Zap, Flame, Target, MapPin, Calendar, ArrowRight, Users } from 'lucide-react';
 import BladerAvatar from '@/components/BladerAvatar';
 import { getBladerPalette } from '@/lib/bladerColors';
+import { useState } from 'react';
+import BladerTournamentModal from '@/components/blader/BladerTournamentModal';
 
 interface TournamentRow {
   id: string;
@@ -16,69 +18,102 @@ interface TournamentRow {
   player_ids: string[];
   max_players: number | null;
   final_standings: unknown;
+  local_nome: string | null;
+  local_endereco: string | null;
+  local_cidade: string | null;
+  local_estado: string | null;
+  horario_inicio: string | null;
+  horario_fim: string | null;
+  descricao: string | null;
+  imagem_url: string | null;
+  premio: string | null;
+  regras: string | null;
+}
+
+function isHoje(data: string | null) {
+  if (!data) return false;
+  const hoje = new Date();
+  const d = new Date(data);
+  return hoje.getDate() === d.getDate() && hoje.getMonth() === d.getMonth() && hoje.getFullYear() === d.getFullYear();
+}
+
+function isAmanha(data: string | null) {
+  if (!data) return false;
+  const amanha = new Date();
+  amanha.setDate(amanha.getDate() + 1);
+  const d = new Date(data);
+  return amanha.getDate() === d.getDate() && amanha.getMonth() === d.getMonth() && amanha.getFullYear() === d.getFullYear();
 }
 
 export default function BladerHome() {
   const { user } = useAuth();
   const { profile } = useUserProfile();
   const navigate = useNavigate();
+  const [selectedTournament, setSelectedTournament] = useState<TournamentRow | null>(null);
 
-  // Use blader-specific fields
   const bladerName = profile?.nomeBlader || profile?.nome || null;
   const bladerAvatar = profile?.avatarBladerUrl || profile?.avatarUrl || null;
   const bladerCity = profile?.cidadeBlader || profile?.cidade || null;
 
-  const { data: tournaments = [], isLoading } = useQuery({
+  // Blader stats from profiles
+  const { data: stats } = useQuery({
+    queryKey: ['blader-profile-stats', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('torneios_total, vitorias_total, xp_total, nivel, melhor_posicao')
+        .eq('id', user.id)
+        .single();
+      return data as { torneios_total: number; vitorias_total: number; xp_total: number; nivel: string; melhor_posicao: number | null } | null;
+    },
+    enabled: !!user,
+  });
+
+  // My inscricoes
+  const { data: myInscricoes = [], refetch: refetchInscricoes } = useQuery({
+    queryKey: ['blader-inscricoes', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from('inscricoes')
+        .select('torneio_id')
+        .eq('blader_id', user.id);
+      return (data ?? []).map(r => r.torneio_id);
+    },
+    enabled: !!user,
+  });
+
+  const myInscricoesSet = new Set(myInscricoes);
+
+  const { data: tournaments = [], isLoading, refetch } = useQuery({
     queryKey: ['blader-all-tournaments', user?.id],
     queryFn: async () => {
       const { data } = await supabase
         .from('tournaments')
-        .select('id, name, date, status, liga_id, player_ids, max_players, final_standings')
+        .select('id, name, date, status, liga_id, player_ids, max_players, final_standings, local_nome, local_endereco, local_cidade, local_estado, horario_inicio, horario_fim, descricao, imagem_url, premio, regras')
         .order('date', { ascending: false });
       return (data ?? []) as TournamentRow[];
     },
     enabled: !!user,
   });
 
-  const { data: myPlayerIds = [] } = useQuery({
-    queryKey: ['blader-player-ids', user?.id, bladerName],
-    queryFn: async () => {
-      if (!bladerName) return [];
-      const { data } = await supabase
-        .from('players')
-        .select('id')
-        .eq('name', bladerName);
-      return (data ?? []).map(p => p.id);
-    },
-    enabled: !!bladerName,
-  });
-
-  const myTournaments = tournaments.filter(t => t.player_ids.some(pid => myPlayerIds.includes(pid)));
-  const completed = myTournaments.filter(t => t.status === 'completed');
-
-  let totalWins = 0;
-  let totalLosses = 0;
-  let topPlacement = Infinity;
-  completed.forEach(t => {
-    const standings = (t.final_standings as Array<{ playerId: string; placement: number; wins: number; losses: number }> | null) || [];
-    const mine = standings.find(s => myPlayerIds.includes(s.playerId));
-    if (mine) {
-      totalWins += mine.wins || 0;
-      totalLosses += mine.losses || 0;
-      if (mine.placement < topPlacement) topPlacement = mine.placement;
-    }
-  });
-  const totalGames = totalWins + totalLosses;
-  const winrate = totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0;
-  const bestPlace = topPlacement === Infinity ? '—' : `#${topPlacement}`;
+  const torneiosTotal = stats?.torneios_total ?? 0;
+  const vitoriasTotal = stats?.vitorias_total ?? 0;
+  const bestPlace = stats?.melhor_posicao ? `#${stats.melhor_posicao}` : '—';
+  const winrate = 0; // TODO: compute from matches later
 
   const upcoming = tournaments
     .filter(t => t.status === 'upcoming')
-    .filter(t => !t.player_ids.some(pid => myPlayerIds.includes(pid)))
+    .filter(t => !myInscricoesSet.has(t.id))
     .slice(0, 5);
 
-  const myRecent = myTournaments.slice(0, 3);
+  const myRecent = tournaments
+    .filter(t => t.status === 'completed' && myInscricoesSet.has(t.id))
+    .slice(0, 3);
+
   const palette = getBladerPalette(profile?.corPerfil);
+  const dateRef = (t: TournamentRow) => t.horario_inicio || t.date;
 
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
@@ -90,13 +125,7 @@ export default function BladerHome() {
           border: `1px solid ${palette.border}`,
         }}
       >
-        <BladerAvatar
-          url={bladerAvatar}
-          name={bladerName}
-          colorKey={profile?.corPerfil}
-          size={64}
-          borderWidth={2}
-        />
+        <BladerAvatar url={bladerAvatar} name={bladerName} colorKey={profile?.corPerfil} size={64} borderWidth={2} />
         <div className="flex-1 min-w-0">
           <h1 className="font-heading font-bold text-foreground" style={{ fontSize: 20, lineHeight: 1.2 }}>
             Olá, {bladerName || 'Blader'}!
@@ -119,7 +148,7 @@ export default function BladerHome() {
         </div>
         <div className="hidden md:flex flex-col items-end shrink-0">
           <span className="font-heading font-bold" style={{ fontSize: 28, color: palette.accent }}>
-            {myTournaments.length}
+            {torneiosTotal}
           </span>
           <span className="font-body uppercase" style={{ fontSize: 9, letterSpacing: 1.5, color: '#9CA3AF' }}>
             torneios
@@ -129,10 +158,10 @@ export default function BladerHome() {
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-3">
-        <StatCard icon={<Trophy size={16} />} label="Torneios" value={myTournaments.length} color={palette.accent} />
-        <StatCard icon={<Zap size={16} />} label="Vitórias" value={totalWins} color={palette.accent} />
+        <StatCard icon={<Trophy size={16} />} label="Torneios" value={torneiosTotal} color={palette.accent} />
+        <StatCard icon={<Zap size={16} />} label="Vitórias" value={vitoriasTotal} color={palette.accent} />
         <StatCard icon={<Flame size={16} />} label="Melhor coloc." value={bestPlace} color={palette.accent} />
-        <StatCard icon={<Target size={16} />} label="Winrate" value={`${winrate}%`} color={palette.accent} />
+        <StatCard icon={<Target size={16} />} label="XP Total" value={stats?.xp_total ?? 0} color={palette.accent} />
       </div>
 
       {/* Próximos torneios */}
@@ -141,11 +170,7 @@ export default function BladerHome() {
           <h2 className="font-heading font-bold uppercase text-foreground" style={{ fontSize: 14, letterSpacing: 1.5 }}>
             Próximos torneios
           </h2>
-          <button
-            onClick={() => navigate('/blader/tournaments')}
-            className="text-xs font-body flex items-center gap-1"
-            style={{ color: '#FBBF24' }}
-          >
+          <button onClick={() => navigate('/blader/tournaments')} className="text-xs font-body flex items-center gap-1" style={{ color: '#FBBF24' }}>
             Ver todos <ArrowRight size={12} />
           </button>
         </div>
@@ -162,7 +187,9 @@ export default function BladerHome() {
               <TournamentRowCard
                 key={t.id}
                 tournament={t}
-                onSignup={() => navigate(`/signup/${t.id}`)}
+                isHoje={isHoje(dateRef(t))}
+                isAmanha={isAmanha(dateRef(t))}
+                onSignup={() => setSelectedTournament(t)}
               />
             ))}
           </div>
@@ -178,14 +205,20 @@ export default function BladerHome() {
           <EmptyState message="Você ainda não participou de nenhum torneio." />
         ) : (
           <div className="space-y-2">
-            {myRecent.map(t => {
-              const standings = (t.final_standings as Array<{ playerId: string; placement: number; wins: number; losses: number }> | null) || [];
-              const mine = standings.find(s => myPlayerIds.includes(s.playerId));
-              return <RecentTournamentCard key={t.id} tournament={t} placement={mine?.placement} wins={mine?.wins ?? 0} losses={mine?.losses ?? 0} />;
-            })}
+            {myRecent.map(t => (
+              <RecentTournamentCard key={t.id} tournament={t} />
+            ))}
           </div>
         )}
       </section>
+
+      {/* Modal */}
+      <BladerTournamentModal
+        tournament={selectedTournament}
+        open={!!selectedTournament}
+        onOpenChange={(open) => { if (!open) setSelectedTournament(null); }}
+        onInscrito={() => { refetch(); refetchInscricoes(); }}
+      />
     </div>
   );
 }
@@ -202,10 +235,35 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label:
   );
 }
 
-function TournamentRowCard({ tournament, onSignup }: { tournament: { id: string; name: string; date: string; player_ids: string[]; max_players: number | null }; onSignup: () => void }) {
+function TournamentRowCard({ tournament, onSignup, isHoje: hoje, isAmanha: amanha }: { tournament: { id: string; name: string; date: string; player_ids: string[]; max_players: number | null; horario_inicio: string | null }; onSignup: () => void; isHoje: boolean; isAmanha: boolean }) {
   const isFull = tournament.max_players != null && tournament.player_ids.length >= tournament.max_players;
   return (
-    <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: '#111827', border: '1px solid rgba(255,255,255,.07)' }}>
+    <div className="rounded-xl p-4 flex items-center gap-3 relative cursor-pointer hover:bg-[rgba(255,255,255,.03)] transition-colors" style={{ background: '#111827', border: '1px solid rgba(255,255,255,.07)' }} onClick={onSignup}>
+      {hoje && (
+        <div style={{
+          position: 'absolute', top: 10, right: 10,
+          display: 'flex', alignItems: 'center', gap: 5,
+          padding: '4px 10px',
+          background: 'linear-gradient(135deg, rgba(239,68,68,.9), rgba(220,38,38,.9))',
+          borderRadius: 20, fontFamily: 'Rajdhani, sans-serif',
+          fontWeight: 700, fontSize: 11, color: '#fff', letterSpacing: 1,
+          boxShadow: '0 0 12px rgba(239,68,68,.5)',
+          animation: 'pulse 1.5s ease-in-out infinite', zIndex: 5,
+        }}>
+          🔴 HOJE
+        </div>
+      )}
+      {amanha && !hoje && (
+        <div style={{
+          position: 'absolute', top: 10, right: 10,
+          padding: '4px 10px', background: 'rgba(245,158,11,.15)',
+          color: '#FCD34D', border: '1px solid rgba(245,158,11,.3)',
+          borderRadius: 20, fontFamily: 'Rajdhani, sans-serif',
+          fontWeight: 700, fontSize: 11, letterSpacing: 1, zIndex: 5,
+        }}>
+          ⏰ AMANHÃ
+        </div>
+      )}
       <div className="shrink-0 rounded-lg flex items-center justify-center" style={{ width: 44, height: 44, background: 'linear-gradient(135deg, #1e3a8a, #2563EB)' }}>
         <Trophy size={20} className="text-white" />
       </div>
@@ -213,7 +271,7 @@ function TournamentRowCard({ tournament, onSignup }: { tournament: { id: string;
         <p className="font-heading font-bold text-foreground truncate" style={{ fontSize: 14 }}>{tournament.name}</p>
         <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground font-body">
           <Calendar size={11} />
-          <span>{new Date(tournament.date).toLocaleDateString('pt-BR')}</span>
+          <span>{new Date(tournament.horario_inicio || tournament.date).toLocaleDateString('pt-BR')}</span>
           <span>•</span>
           <span>{tournament.player_ids.length}{tournament.max_players ? `/${tournament.max_players}` : ''} inscritos</span>
         </div>
@@ -221,7 +279,7 @@ function TournamentRowCard({ tournament, onSignup }: { tournament: { id: string;
       {isFull ? (
         <span className="text-xs font-body shrink-0" style={{ color: '#EF4444' }}>Esgotado</span>
       ) : (
-        <button onClick={onSignup} className="shrink-0 rounded-lg px-3 py-1.5 font-body font-medium text-xs transition-all" style={{ background: '#F59E0B', color: '#0a0d18' }}>
+        <button onClick={(e) => { e.stopPropagation(); onSignup(); }} className="shrink-0 rounded-lg px-3 py-1.5 font-body font-medium text-xs transition-all" style={{ background: '#F59E0B', color: '#0a0d18' }}>
           Inscrever-se
         </button>
       )}
@@ -229,21 +287,14 @@ function TournamentRowCard({ tournament, onSignup }: { tournament: { id: string;
   );
 }
 
-function RecentTournamentCard({ tournament, placement, wins, losses }: { tournament: { name: string; date: string }; placement?: number; wins: number; losses: number }) {
-  const podiumColor = placement === 1 ? '#FBBF24' : placement === 2 ? '#9CA3AF' : placement === 3 ? '#B45309' : '#60A5FA';
-  const medal = placement === 1 ? '🥇' : placement === 2 ? '🥈' : placement === 3 ? '🥉' : null;
+function RecentTournamentCard({ tournament }: { tournament: { name: string; date: string } }) {
   return (
-    <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: '#111827', border: `1px solid ${podiumColor}33`, borderLeft: `3px solid ${podiumColor}` }}>
+    <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: '#111827', border: '1px solid rgba(255,255,255,.07)' }}>
       <div className="flex-1 min-w-0">
         <p className="font-heading font-bold text-foreground truncate" style={{ fontSize: 14 }}>{tournament.name}</p>
         <div className="flex items-center gap-2 mt-0.5 text-xs font-body" style={{ color: '#9CA3AF' }}>
           <span>{new Date(tournament.date).toLocaleDateString('pt-BR')}</span>
-          <span>•</span>
-          <span>{wins}V · {losses}D</span>
         </div>
-      </div>
-      <div className="shrink-0 text-right">
-        <div className="font-heading font-bold" style={{ fontSize: 18, color: podiumColor }}>{medal} {placement ? `#${placement}` : '—'}</div>
       </div>
     </div>
   );
