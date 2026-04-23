@@ -245,7 +245,7 @@ function tournamentToRow(t: Tournament, ligaId: string) {
 }
 
 export async function getTournaments(): Promise<Tournament[]> {
-  const { data, error } = await supabase.from('tournaments').select('id, name, date, signup_deadline, player_ids, rounds, current_round, arena_count, total_rounds, points_to_win, status, created_at, final_standings, max_players').order('created_at', { ascending: false });
+  const { data, error } = await supabase.from('tournaments').select('*').order('created_at', { ascending: false });
   if (error) { console.error('getTournaments error:', error); return []; }
   return (data || []).map(tournamentFromRow);
 }
@@ -258,7 +258,7 @@ export async function saveTournaments(tournaments: Tournament[]) {
 }
 
 export async function getActiveTournament(): Promise<Tournament | null> {
-  const { data } = await supabase.from('tournaments').select('id, name, date, signup_deadline, player_ids, rounds, current_round, arena_count, total_rounds, points_to_win, status, created_at, final_standings, max_players').eq('status', 'active').limit(1).maybeSingle();
+  const { data } = await supabase.from('tournaments').select('*').eq('status', 'active').limit(1).maybeSingle();
   return data ? tournamentFromRow(data) : null;
 }
 
@@ -270,7 +270,7 @@ export async function saveActiveTournament(t: Tournament | null) {
 }
 
 export async function getCompletedTournaments(): Promise<Tournament[]> {
-  const { data, error } = await supabase.from('tournaments').select('id, name, date, signup_deadline, player_ids, rounds, current_round, arena_count, total_rounds, points_to_win, status, created_at, final_standings, max_players').eq('status', 'completed').order('created_at', { ascending: false });
+  const { data, error } = await supabase.from('tournaments').select('*').eq('status', 'completed').order('created_at', { ascending: false });
   if (error) { console.error('getCompletedTournaments error:', error); return []; }
   return (data || []).map(tournamentFromRow);
 }
