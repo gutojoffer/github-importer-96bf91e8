@@ -148,15 +148,27 @@ export default function TournamentHub() {
     const t: Tournament = {
       id: crypto.randomUUID(), name: tName.trim(), date: tDate,
       registrationDeadline: tDate, playerIds: [], rounds: [],
-      currentRound: 0, arenaCount: 2, totalRounds: 3, pointsToWin: 4,
+      currentRound: 0, arenaCount: tArenaCount, totalRounds: 3, pointsToWin: 4,
       status: 'upcoming', createdAt: new Date().toISOString(), maxPlayers: tMaxPlayers,
       eliminationSize: tEliminationSize,
+      descricao: tDescricao.trim() || undefined,
+      horarioInicio: tHorarioInicio || undefined,
+      horarioFim: tHorarioFim || undefined,
+      localNome: tLocalNome.trim() || undefined,
+      localEndereco: tLocalEndereco.trim() || undefined,
+      localCidade: tLocalCidade.trim() || undefined,
+      localEstado: tLocalEstado || undefined,
+      premio: tPremio.trim() || undefined,
+      regras: tRegras.trim() || undefined,
     };
     createTournament(t);
     setShowCreate(false);
     setTName(''); setTDate(''); setTEliminationSize(null);
+    setTDescricao(''); setTHorarioInicio(''); setTHorarioFim('');
+    setTLocalNome(''); setTLocalEndereco(''); setTLocalCidade(''); setTLocalEstado('');
+    setTPremio(''); setTRegras(''); setTArenaCount(1);
     toast.success('Torneio criado!');
-  }, [tName, tDate, tMaxPlayers, tEliminationSize, createTournament]);
+  }, [tName, tDate, tMaxPlayers, tEliminationSize, tArenaCount, tDescricao, tHorarioInicio, tHorarioFim, tLocalNome, tLocalEndereco, tLocalCidade, tLocalEstado, tPremio, tRegras, createTournament]);
 
   // ─── Edit Tournament ───
   const openEditModal = useCallback((t: Tournament) => {
