@@ -64,6 +64,16 @@ export default function TournamentHub() {
   const [tDate, setTDate] = useState('');
   const [tMaxPlayers, setTMaxPlayers] = useState(32);
   const [tEliminationSize, setTEliminationSize] = useState<EliminationSize>(null);
+  const [tDescricao, setTDescricao] = useState('');
+  const [tHorarioInicio, setTHorarioInicio] = useState('');
+  const [tHorarioFim, setTHorarioFim] = useState('');
+  const [tLocalNome, setTLocalNome] = useState('');
+  const [tLocalEndereco, setTLocalEndereco] = useState('');
+  const [tLocalCidade, setTLocalCidade] = useState('');
+  const [tLocalEstado, setTLocalEstado] = useState('');
+  const [tPremio, setTPremio] = useState('');
+  const [tRegras, setTRegras] = useState('');
+  const [tArenaCount, setTArenaCount] = useState(1);
 
   // Edit tournament
   const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
