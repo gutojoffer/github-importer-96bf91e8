@@ -611,12 +611,62 @@ export default function TournamentHub() {
     toast.success(`${playerName} foi dropado. Vitória(s) por W/O atribuída(s).`);
   }, [activeTournament, confirmDropPlayer, updateActive, getPlayer]);
 
+  // Fetch platform bladers (self-registered via profiles)
+  const { data: platformBladers = [] } = useQuery({
+    queryKey: ['platform-bladers-for-enroll'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, nome_blader, avatar_blader_url, cidade_blader, estado_blader, beyblade_favorita')
+        .eq('tem_perfil_blader', true)
+        .order('nome_blader', { ascending: true });
+      return (data ?? []).map((b: any) => ({
+        id: b.id,
+        name: b.nome_blader || 'Blader',
+        nickname: '',
+        avatar: b.avatar_blader_url || '🔵',
+        createdAt: '',
+        xp: 0,
+        _platform: true,
+        cidadeBlader: b.cidade_blader,
+        beybladeFavorita: b.beyblade_favorita,
+      }));
+    },
+    enabled: !!enrollModal,
+  });
+
+  // Fetch inscricoes for the current tournament
+  const { data: tournamentInscricoes = [] } = useQuery({
+    queryKey: ['tournament-inscricoes', enrollModal],
+    queryFn: async () => {
+      if (!enrollModal) return [];
+      const { data } = await supabase
+        .from('inscricoes')
+        .select('blader_id')
+        .eq('torneio_id', enrollModal);
+      return (data ?? []).map((r: any) => r.blader_id as string);
+    },
+    enabled: !!enrollModal,
+  });
+
+  const inscricoesSet = useMemo(() => new Set(tournamentInscricoes), [tournamentInscricoes]);
+
+  // Merge local players + platform bladers, deduplicate by id
+  const allBladers = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const p of players) map.set(p.id, p);
+    for (const b of platformBladers) {
+      if (!map.has(b.id)) map.set(b.id, b);
+    }
+    return Array.from(map.values());
+  }, [players, platformBladers]);
+
   const filteredPlayers = useMemo(() =>
-    players.filter(p =>
+    allBladers.filter((p: any) =>
       p.name.toLowerCase().includes(enrollSearch.toLowerCase()) ||
       (p.nickname && p.nickname.toLowerCase().includes(enrollSearch.toLowerCase()))
     )
-  , [players, enrollSearch]);
+  , [allBladers, enrollSearch]);
 
   // ─── Helpers for elimination phase ───
   const isInEliminationPhase = activeTournament?.phase === 'elimination';
