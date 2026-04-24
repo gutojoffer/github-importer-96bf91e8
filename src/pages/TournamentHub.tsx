@@ -1494,8 +1494,9 @@ export default function TournamentHub() {
             </div>
           ) : (
             upcomingTournaments.map((t, i) => {
-              const spotsLeft = (t.maxPlayers || 32) - t.playerIds.length;
-              const fillPercent = Math.min(100, (t.playerIds.length / (t.maxPlayers || 32)) * 100);
+              const enrolledCount = t.enrolledCount ?? t.playerIds.length;
+              const spotsLeft = (t.maxPlayers || 32) - enrolledCount;
+              const fillPercent = Math.min(100, (enrolledCount / (t.maxPlayers || 32)) * 100);
               return (
                 <div key={t.id} className="surface-card p-0 anim-fade-up overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
                   {/* Top accent */}
@@ -1523,7 +1524,7 @@ export default function TournamentHub() {
                         </span>
                         <span className="flex items-center gap-1.5">
                           <Users className="h-3.5 w-3.5" />
-                          {t.playerIds.length} / {t.maxPlayers || 32} inscritos
+                          {enrolledCount} / {t.maxPlayers || 32} inscritos
                         </span>
                       </div>
 
