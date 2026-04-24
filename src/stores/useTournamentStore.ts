@@ -3,7 +3,7 @@ import { Tournament, TournamentStanding } from '@/types/tournament';
 import {
   getTournaments, createUpcomingTournament, saveActiveTournament,
   saveCompletedTournament, deleteTournament as apiDeleteTournament,
-  calculateStandings, awardXP, saveTournaments,
+  calculateStandings, awardXP, saveTournaments, applyTournamentResults,
 } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -72,6 +72,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     // Persist in background — do NOT block navigation to podium
     saveCompletedTournament(completed).catch(console.error);
     awardXP(standings).catch(console.error);
+    applyTournamentResults(completed.id, standings).catch(console.error);
     return standings;
   },
 
@@ -133,6 +134,16 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
         table: 'tournaments',
       }, () => {
         // Re-fetch full list on any change to keep complex JSON fields in sync
+        getTournaments().then(all => {
+          const active = all.find(t => t.status === 'active') || null;
+          set({ tournaments: all, activeTournament: active });
+        });
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'inscricoes',
+      }, () => {
         getTournaments().then(all => {
           const active = all.find(t => t.status === 'active') || null;
           set({ tournaments: all, activeTournament: active });
