@@ -92,6 +92,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "inscricoes_blader_id_fkey"
+            columns: ["blader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "inscricoes_torneio_id_fkey"
             columns: ["torneio_id"]
             isOneToOne: false
