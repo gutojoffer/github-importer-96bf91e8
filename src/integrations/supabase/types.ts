@@ -431,6 +431,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_tournament_results: {
+        Args: { _standings: Json; _torneio_id: string }
+        Returns: undefined
+      }
+      calcular_nivel_blader: { Args: { _xp: number }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
