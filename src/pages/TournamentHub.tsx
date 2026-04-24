@@ -26,6 +26,7 @@ import EliminationTransition from '@/components/EliminationTransition';
 import FinishOverlay from '@/components/FinishOverlay';
 import LigaLogo from '@/components/LigaLogo';
 import EloBadge from '@/components/EloBadge';
+import BladerTournamentModal from '@/components/blader/BladerTournamentModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Plus, Play, Lightbulb, Calendar, Users, Trophy, XOctagon, Award,
@@ -79,6 +80,7 @@ export default function TournamentHub() {
 
   // Edit tournament
   const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
+  const [detailsTournament, setDetailsTournament] = useState<Tournament | null>(null);
   const [editName, setEditName] = useState('');
   const [editDate, setEditDate] = useState('');
   const [editMaxPlayers, setEditMaxPlayers] = useState(32);
@@ -138,6 +140,26 @@ export default function TournamentHub() {
   }, []);
 
   const getPlayer = useCallback((id: string) => players.find(p => p.id === id), [players]);
+  const toModalTournament = useCallback((t: Tournament) => ({
+    id: t.id,
+    name: t.name,
+    date: t.date,
+    status: t.status,
+    liga_id: t.ligaId || null,
+    player_ids: t.playerIds,
+    max_players: t.maxPlayers || null,
+    local_nome: t.localNome || null,
+    local_endereco: t.localEndereco || null,
+    local_cidade: t.localCidade || null,
+    local_estado: t.localEstado || null,
+    horario_inicio: t.horarioInicio || null,
+    horario_fim: t.horarioFim || null,
+    descricao: t.descricao || null,
+    imagem_url: t.imagemUrl || null,
+    premio: t.premio || null,
+    regras: t.regras || null,
+    arena_count: t.arenaCount,
+  }), []);
   const suggested = startingTournament ? suggestRounds(startingTournament.playerIds.length) : 3;
 
   const enrollModalTournament = useMemo(() =>
