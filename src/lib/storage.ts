@@ -182,15 +182,27 @@ export async function awardXP(standings: TournamentStanding[]) {
   await Promise.all(ops);
 }
 
+export async function applyTournamentResults(tournamentId: string, standings: TournamentStanding[]) {
+  const { error } = await (supabase as any).rpc('apply_tournament_results', {
+    _torneio_id: tournamentId,
+    _standings: standings,
+  });
+  if (error) console.error('applyTournamentResults error:', error);
+}
+
 // ──────────── Tournaments ────────────
 
 function tournamentFromRow(row: any): Tournament {
+  const inscricaoIds = Array.isArray(row.inscricoes)
+    ? row.inscricoes.map((i: any) => i.blader_id).filter(Boolean)
+    : [];
+  const playerIds = Array.from(new Set([...(row.player_ids || []), ...inscricaoIds]));
   return {
     id: row.id,
     name: row.name,
     date: row.date,
     registrationDeadline: row.signup_deadline || '',
-    playerIds: row.player_ids || [],
+    playerIds,
     rounds: (row.rounds as any[]) || [],
     currentRound: row.current_round ?? 0,
     arenaCount: row.arena_count ?? 1,
@@ -211,6 +223,7 @@ function tournamentFromRow(row: any): Tournament {
     premio: row.premio ?? undefined,
     regras: row.regras ?? undefined,
     ligaId: row.liga_id ?? undefined,
+    enrolledCount: playerIds.length,
   };
 }
 
@@ -245,7 +258,7 @@ function tournamentToRow(t: Tournament, ligaId: string) {
 }
 
 export async function getTournaments(): Promise<Tournament[]> {
-  const { data, error } = await supabase.from('tournaments').select('*').order('created_at', { ascending: false });
+  const { data, error } = await supabase.from('tournaments').select('*, inscricoes(blader_id)').order('created_at', { ascending: false });
   if (error) { console.error('getTournaments error:', error); return []; }
   return (data || []).map(tournamentFromRow);
 }

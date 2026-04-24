@@ -101,6 +101,7 @@ export interface Tournament {
   premio?: string;
   regras?: string;
   ligaId?: string;
+  enrolledCount?: number;
 }
 
 export interface TournamentStanding {
