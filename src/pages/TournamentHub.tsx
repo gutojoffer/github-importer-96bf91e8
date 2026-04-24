@@ -26,6 +26,7 @@ import EliminationTransition from '@/components/EliminationTransition';
 import FinishOverlay from '@/components/FinishOverlay';
 import LigaLogo from '@/components/LigaLogo';
 import EloBadge from '@/components/EloBadge';
+import BladerTournamentModal from '@/components/blader/BladerTournamentModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Plus, Play, Lightbulb, Calendar, Users, Trophy, XOctagon, Award,
@@ -79,6 +80,7 @@ export default function TournamentHub() {
 
   // Edit tournament
   const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
+  const [detailsTournament, setDetailsTournament] = useState<Tournament | null>(null);
   const [editName, setEditName] = useState('');
   const [editDate, setEditDate] = useState('');
   const [editMaxPlayers, setEditMaxPlayers] = useState(32);
@@ -138,6 +140,26 @@ export default function TournamentHub() {
   }, []);
 
   const getPlayer = useCallback((id: string) => players.find(p => p.id === id), [players]);
+  const toModalTournament = useCallback((t: Tournament) => ({
+    id: t.id,
+    name: t.name,
+    date: t.date,
+    status: t.status,
+    liga_id: t.ligaId || null,
+    player_ids: t.playerIds,
+    max_players: t.maxPlayers || null,
+    local_nome: t.localNome || null,
+    local_endereco: t.localEndereco || null,
+    local_cidade: t.localCidade || null,
+    local_estado: t.localEstado || null,
+    horario_inicio: t.horarioInicio || null,
+    horario_fim: t.horarioFim || null,
+    descricao: t.descricao || null,
+    imagem_url: t.imagemUrl || null,
+    premio: t.premio || null,
+    regras: t.regras || null,
+    arena_count: t.arenaCount,
+  }), []);
   const suggested = startingTournament ? suggestRounds(startingTournament.playerIds.length) : 3;
 
   const enrollModalTournament = useMemo(() =>
@@ -1221,6 +1243,17 @@ export default function TournamentHub() {
       )}
 
       {/* Page Header */}
+      {detailsTournament && (
+        <BladerTournamentModal
+          tournament={toModalTournament(detailsTournament)}
+          open={!!detailsTournament}
+          onOpenChange={(open) => { if (!open) setDetailsTournament(null); }}
+          mode="organizer"
+          onManage={(id) => { setDetailsTournament(null); setEnrollModal(id); }}
+        />
+      )}
+
+      {/* Page Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/15 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(79,142,247,0.1)]">
@@ -1498,7 +1531,7 @@ export default function TournamentHub() {
               const spotsLeft = (t.maxPlayers || 32) - enrolledCount;
               const fillPercent = Math.min(100, (enrolledCount / (t.maxPlayers || 32)) * 100);
               return (
-                <div key={t.id} className="surface-card p-0 anim-fade-up overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
+                <div key={t.id} onClick={() => setDetailsTournament(t)} className="surface-card p-0 anim-fade-up overflow-hidden cursor-pointer" style={{ animationDelay: `${i * 60}ms` }}>
                   {/* Top accent */}
                   <div className="h-[2px] w-full bg-gradient-to-r from-primary to-transparent" />
                   
@@ -1557,19 +1590,19 @@ export default function TournamentHub() {
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-2 shrink-0 pt-1">
-                      <Button size="sm" onClick={() => setEnrollModal(t.id)}
+                      <Button size="sm" onClick={(e) => { e.stopPropagation(); setEnrollModal(t.id); }}
                         className="font-heading tracking-wider gap-1.5 bg-secondary/15 text-secondary hover:bg-secondary/25 border border-secondary/25 h-9 px-3.5">
                         <UserPlus className="h-3.5 w-3.5" /> Inscrever
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => { setStartingTournament(t); setStartEliminationSize(t.eliminationSize || null); }}
+                      <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setStartingTournament(t); setStartEliminationSize(t.eliminationSize || null); }}
                         className="font-heading tracking-wider gap-1.5 border-primary/30 text-primary hover:bg-primary/10 h-9 px-3.5" disabled={t.playerIds.length < 2}>
                         <Play className="h-3.5 w-3.5" /> Iniciar
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => openEditModal(t)}
+                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); openEditModal(t); }}
                         className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted/30">
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setConfirmDeleteTournament(t.id)}
+                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setConfirmDeleteTournament(t.id); }}
                         className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>

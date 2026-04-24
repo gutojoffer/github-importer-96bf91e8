@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Trophy, Calendar, MapPin, Users, Filter } from 'lucide-react';
 import BladerTournamentModal from '@/components/blader/BladerTournamentModal';
+import { toast } from 'sonner';
 
 interface TournamentRow {
   id: string;
@@ -53,6 +54,7 @@ export default function BladerTournaments() {
   const { user } = useAuth();
   const [filter, setFilter] = useState<FilterMode>('todos');
   const [selectedTournament, setSelectedTournament] = useState<TournamentRow | null>(null);
+  const [confirmandoDesistencia, setConfirmandoDesistencia] = useState<TournamentRow | null>(null);
 
   const { data: tournaments = [], isLoading, refetch } = useQuery({
     queryKey: ['blader-tournaments-open'],
@@ -112,6 +114,16 @@ export default function BladerTournaments() {
   });
 
   const dateRef = (t: TournamentRow) => t.horario_inicio || t.date;
+
+  async function handleDesistir(torneioId: string) {
+    if (!user) return;
+    const { error } = await supabase.from('inscricoes').delete().eq('torneio_id', torneioId).eq('blader_id', user.id);
+    if (error) { toast.error('Erro ao cancelar inscrição'); return; }
+    setConfirmandoDesistencia(null);
+    toast.success('Inscrição cancelada com sucesso');
+    refetchInscricoes();
+    refetch();
+  }
 
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-5">
@@ -212,12 +224,16 @@ export default function BladerTournaments() {
               {/* CTA */}
               <div className="shrink-0" onClick={e => e.stopPropagation()}>
                 {t.inscrito ? (
-                  <span
-                    className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 font-body font-medium text-xs"
-                    style={{ background: 'rgba(16,185,129,.15)', color: '#10B981', border: '1px solid rgba(16,185,129,.3)' }}
-                  >
-                    ✓ Inscrito
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 font-body font-medium text-xs" style={{ background: 'rgba(16,185,129,.15)', color: '#10B981', border: '1px solid rgba(16,185,129,.3)' }}>
+                      ✓ Inscrito
+                    </span>
+                    {t.status === 'upcoming' && (
+                      <button onClick={() => setConfirmandoDesistencia(t)} className="rounded-lg px-3 py-1.5 font-body font-semibold text-xs transition-all" style={{ background: 'transparent', border: '1px solid rgba(239,68,68,.3)', color: '#F87171' }}>
+                        Desistir
+                      </button>
+                    )}
+                  </div>
                 ) : t.cheio ? (
                   <span className="text-xs font-body" style={{ color: '#EF4444' }}>Esgotado</span>
                 ) : (
@@ -242,6 +258,21 @@ export default function BladerTournaments() {
         onOpenChange={(open) => { if (!open) setSelectedTournament(null); }}
         onInscrito={() => { refetch(); refetchInscricoes(); }}
       />
+
+      {confirmandoDesistencia && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+          <div style={{ background: '#0d1120', border: '1px solid rgba(239,68,68,.2)', borderRadius: 16, padding: 28, maxWidth: 380, width: '100%', textAlign: 'center' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 20, color: '#fff', marginBottom: 8 }}>Desistir da inscrição?</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,.45)', marginBottom: 6 }}>{confirmandoDesistencia.name}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.3)', marginBottom: 24 }}>Você poderá se inscrever novamente se ainda houver vagas.</div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setConfirmandoDesistencia(null)} style={{ flex: 1, padding: 11, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, color: '#9CA3AF', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={() => handleDesistir(confirmandoDesistencia.id)} style={{ flex: 1, padding: 11, background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.3)', borderRadius: 10, color: '#F87171', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Confirmar desistência</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
