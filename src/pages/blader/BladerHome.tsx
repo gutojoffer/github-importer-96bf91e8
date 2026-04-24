@@ -8,6 +8,7 @@ import BladerAvatar from '@/components/BladerAvatar';
 import { getBladerPalette } from '@/lib/bladerColors';
 import { useState } from 'react';
 import BladerTournamentModal from '@/components/blader/BladerTournamentModal';
+import { toast } from 'sonner';
 
 interface TournamentRow {
   id: string;
@@ -50,6 +51,7 @@ export default function BladerHome() {
   const { profile } = useUserProfile();
   const navigate = useNavigate();
   const [selectedTournament, setSelectedTournament] = useState<TournamentRow | null>(null);
+  const [confirmandoDesistencia, setConfirmandoDesistencia] = useState<TournamentRow | null>(null);
 
   const bladerName = profile?.nomeBlader || profile?.nome || null;
   const bladerAvatar = profile?.avatarBladerUrl || profile?.avatarUrl || null;
@@ -116,7 +118,6 @@ export default function BladerHome() {
 
   const upcoming = tournaments
     .filter(t => t.status === 'upcoming')
-    .filter(t => !myInscricoesSet.has(t.id))
     .slice(0, 5);
 
   const myRecent = tournaments
@@ -125,6 +126,16 @@ export default function BladerHome() {
 
   const palette = getBladerPalette(profile?.corPerfil);
   const dateRef = (t: TournamentRow) => t.horario_inicio || t.date;
+
+  async function handleDesistir(torneioId: string) {
+    if (!user) return;
+    const { error } = await supabase.from('inscricoes').delete().eq('torneio_id', torneioId).eq('blader_id', user.id);
+    if (error) { toast.error('Erro ao cancelar inscrição'); return; }
+    setConfirmandoDesistencia(null);
+    toast.success('Inscrição cancelada com sucesso');
+    refetchInscricoes();
+    refetch();
+  }
 
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
@@ -200,7 +211,9 @@ export default function BladerHome() {
                 tournament={t}
                 isHoje={isHoje(dateRef(t))}
                 isAmanha={isAmanha(dateRef(t))}
+                inscrito={myInscricoesSet.has(t.id)}
                 onSignup={() => setSelectedTournament(t)}
+                onWithdraw={() => setConfirmandoDesistencia(t)}
               />
             ))}
           </div>
@@ -230,6 +243,21 @@ export default function BladerHome() {
         onOpenChange={(open) => { if (!open) setSelectedTournament(null); }}
         onInscrito={() => { refetch(); refetchInscricoes(); }}
       />
+
+      {confirmandoDesistencia && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+          <div style={{ background: '#0d1120', border: '1px solid rgba(239,68,68,.2)', borderRadius: 16, padding: 28, maxWidth: 380, width: '100%', textAlign: 'center' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 20, color: '#fff', marginBottom: 8 }}>Desistir da inscrição?</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,.45)', marginBottom: 6 }}>{confirmandoDesistencia.name}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.3)', marginBottom: 24 }}>Você poderá se inscrever novamente se ainda houver vagas.</div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setConfirmandoDesistencia(null)} style={{ flex: 1, padding: 11, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, color: '#9CA3AF', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={() => handleDesistir(confirmandoDesistencia.id)} style={{ flex: 1, padding: 11, background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.3)', borderRadius: 10, color: '#F87171', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Confirmar desistência</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -246,7 +274,7 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label:
   );
 }
 
-function TournamentRowCard({ tournament, onSignup, isHoje: hoje, isAmanha: amanha }: { tournament: { id: string; name: string; date: string; player_ids: string[]; max_players: number | null; horario_inicio: string | null }; onSignup: () => void; isHoje: boolean; isAmanha: boolean }) {
+function TournamentRowCard({ tournament, onSignup, onWithdraw, inscrito, isHoje: hoje, isAmanha: amanha }: { tournament: { id: string; name: string; date: string; player_ids: string[]; max_players: number | null; horario_inicio: string | null }; onSignup: () => void; onWithdraw: () => void; inscrito: boolean; isHoje: boolean; isAmanha: boolean }) {
   const isFull = tournament.max_players != null && tournament.player_ids.length >= tournament.max_players;
   return (
     <div className="rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:bg-[rgba(255,255,255,.03)] transition-colors" style={{ background: '#111827', border: '1px solid rgba(255,255,255,.07)' }} onClick={onSignup}>
@@ -280,7 +308,12 @@ function TournamentRowCard({ tournament, onSignup, isHoje: hoje, isAmanha: amanh
           <span>{tournament.player_ids.length}{tournament.max_players ? `/${tournament.max_players}` : ''} inscritos</span>
         </div>
       </div>
-      {isFull ? (
+      {inscrito ? (
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="rounded-lg px-3 py-1.5 font-body font-medium text-xs" style={{ background: 'rgba(16,185,129,.15)', color: '#10B981', border: '1px solid rgba(16,185,129,.3)' }}>✓ Inscrito</span>
+          <button onClick={(e) => { e.stopPropagation(); onWithdraw(); }} className="rounded-lg px-3 py-1.5 font-body font-semibold text-xs transition-all" style={{ background: 'transparent', border: '1px solid rgba(239,68,68,.3)', color: '#F87171' }}>Desistir</button>
+        </div>
+      ) : isFull ? (
         <span className="text-xs font-body shrink-0" style={{ color: '#EF4444' }}>Esgotado</span>
       ) : (
         <button onClick={(e) => { e.stopPropagation(); onSignup(); }} className="shrink-0 rounded-lg px-3 py-1.5 font-body font-medium text-xs transition-all" style={{ background: '#F59E0B', color: '#0a0d18' }}>
