@@ -62,10 +62,21 @@ export default function BladerHome() {
       if (!user) return null;
       const { data } = await supabase
         .from('profiles')
-        .select('torneios_total, vitorias_total, xp_total, nivel, melhor_posicao')
+        .select('torneios_total, vitorias_total, xp_total, nivel, melhor_posicao, nome_blader')
         .eq('id', user.id)
         .single();
-      return data as { torneios_total: number; vitorias_total: number; xp_total: number; nivel: string; melhor_posicao: number | null } | null;
+
+      const { count } = await (supabase as any)
+        .from('partidas')
+        .select('*', { count: 'exact', head: true })
+        .or(`blader1_id.eq.${user.id},blader2_id.eq.${user.id}`)
+        .eq('status', 'finalizado');
+
+      const totalPartidas = count ?? 0;
+      return {
+        ...(data as { torneios_total: number; vitorias_total: number; xp_total: number; nivel: string; melhor_posicao: number | null } | null),
+        winrate: totalPartidas > 0 ? Math.round((((data as any)?.vitorias_total || 0) / totalPartidas) * 100) : 0,
+      };
     },
     enabled: !!user,
   });
@@ -100,8 +111,8 @@ export default function BladerHome() {
 
   const torneiosTotal = stats?.torneios_total ?? 0;
   const vitoriasTotal = stats?.vitorias_total ?? 0;
-  const bestPlace = stats?.melhor_posicao ? `#${stats.melhor_posicao}` : '—';
-  const winrate = 0; // TODO: compute from matches later
+  const bestPlace = stats?.melhor_posicao ? `${stats.melhor_posicao}º` : '—';
+  const winrate = `${stats?.winrate ?? 0}%`;
 
   const upcoming = tournaments
     .filter(t => t.status === 'upcoming')
@@ -161,7 +172,7 @@ export default function BladerHome() {
         <StatCard icon={<Trophy size={16} />} label="Torneios" value={torneiosTotal} color={palette.accent} />
         <StatCard icon={<Zap size={16} />} label="Vitórias" value={vitoriasTotal} color={palette.accent} />
         <StatCard icon={<Flame size={16} />} label="Melhor coloc." value={bestPlace} color={palette.accent} />
-        <StatCard icon={<Target size={16} />} label="XP Total" value={stats?.xp_total ?? 0} color={palette.accent} />
+        <StatCard icon={<Target size={16} />} label="Winrate" value={winrate} color={palette.accent} />
       </div>
 
       {/* Próximos torneios */}
