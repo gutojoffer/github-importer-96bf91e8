@@ -617,8 +617,9 @@ export default function TournamentHub() {
     queryFn: async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('id, nome_blader, avatar_blader_url, cidade_blader, estado_blader, beyblade_favorita')
+        .select('id, nome_blader, avatar_blader_url, cidade_blader, estado_blader, beyblade_favorita, nome_liga, avatar_url')
         .eq('tem_perfil_blader', true)
+        .not('nome_blader', 'is', null)
         .order('nome_blader', { ascending: true });
       return (data ?? []).map((b: any) => ({
         id: b.id,
@@ -629,7 +630,10 @@ export default function TournamentHub() {
         xp: 0,
         _platform: true,
         cidadeBlader: b.cidade_blader,
+        estadoBlader: b.estado_blader,
         beybladeFavorita: b.beyblade_favorita,
+        nomeLiga: b.nome_liga,
+        avatarLiga: b.avatar_url,
       }));
     },
     enabled: !!enrollModal,
@@ -650,6 +654,9 @@ export default function TournamentHub() {
   });
 
   const inscricoesSet = useMemo(() => new Set(tournamentInscricoes), [tournamentInscricoes]);
+  const enrolledCount = enrollModalTournament
+    ? new Set([...enrollModalTournament.playerIds, ...tournamentInscricoes]).size
+    : 0;
 
   // Merge local players + platform bladers, deduplicate by id
   const allBladers = useMemo(() => {
@@ -1074,7 +1081,7 @@ export default function TournamentHub() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="text-xs text-muted-foreground font-body mb-4">{enrollModalTournament.name} — {enrollModalTournament.playerIds.length} inscritos</p>
+              <p className="text-xs text-muted-foreground font-body mb-4">{enrollModalTournament.name} — {enrolledCount} inscritos</p>
 
             {!showQuickAdd ? (
               <Button variant="outline" size="sm" onClick={() => setShowQuickAdd(true)} className="w-full mb-4 font-heading tracking-wider gap-2 border-secondary/30 text-secondary hover:bg-secondary/10">
@@ -1121,7 +1128,7 @@ export default function TournamentHub() {
 
             {/* Counter */}
             <p className="text-[11px] text-muted-foreground font-body mb-2">
-              {allBladers.length} bladers na plataforma · {enrollModalTournament.playerIds.length + inscricoesSet.size} inscritos · {Math.max(0, (enrollModalTournament.maxPlayers || 32) - enrollModalTournament.playerIds.length)} vagas restantes
+              {allBladers.length} bladers na plataforma · {enrolledCount} inscritos · {Math.max(0, (enrollModalTournament.maxPlayers || 32) - enrolledCount)} vagas restantes
             </p>
 
             {/* Batch select controls */}
