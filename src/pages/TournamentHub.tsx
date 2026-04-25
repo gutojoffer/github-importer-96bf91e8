@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useMemo, memo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +38,7 @@ type View = 'list' | 'active';
 
 export default function TournamentHub() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const players = usePlayerStore(s => s.players);
   const loadPlayers = usePlayerStore(s => s.load);
   const addPlayerToStore = usePlayerStore(s => s.add);
