@@ -349,6 +349,14 @@ export default function CriarPerfilBlader() {
           </div>
         )}
       </div>
+      {showVincular && user && (
+        <VincularBladersTempModal
+          userId={user.id}
+          email={user.email}
+          onClose={() => setShowVincular(false)}
+          onLinked={refreshProfiles}
+        />
+      )}
     </div>
   );
 }
