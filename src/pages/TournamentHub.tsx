@@ -1151,14 +1151,23 @@ export default function TournamentHub() {
             ) : (
               <div className="surface-panel p-4 mb-4 space-y-3 border-secondary/20">
                 <p className="font-heading text-sm font-bold text-secondary tracking-wider">CADASTRO RÁPIDO</p>
+                <p className="text-[11px] text-muted-foreground">Para participar agora. Pode vincular ao perfil depois.</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="font-heading text-[10px] text-muted-foreground">Nome</Label>
+                    <Label className="font-heading text-[10px] text-muted-foreground">Nome *</Label>
                     <Input value={qaName} onChange={e => setQaName(e.target.value)} placeholder="Nome" className="bg-muted/30 border-border h-9 text-sm" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="font-heading text-[10px] text-muted-foreground">Nick</Label>
+                    <Label className="font-heading text-[10px] text-muted-foreground">Apelido / Handle</Label>
                     <Input value={qaNick} onChange={e => setQaNick(e.target.value)} placeholder="@nick" className="bg-muted/30 border-border h-9 text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="font-heading text-[10px] text-muted-foreground">Email (vinculação futura)</Label>
+                    <Input type="email" value={qaEmail} onChange={e => setQaEmail(e.target.value)} placeholder="email@exemplo.com" className="bg-muted/30 border-border h-9 text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="font-heading text-[10px] text-muted-foreground">Beyblade favorita</Label>
+                    <Input value={qaBeyblade} onChange={e => setQaBeyblade(e.target.value)} placeholder="Ex: Phoenix Wing" className="bg-muted/30 border-border h-9 text-sm" />
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1173,6 +1182,7 @@ export default function TournamentHub() {
                     </button>
                   ))}
                 </div>
+                <p className="text-[10px] text-muted-foreground">💡 Se informar o email, quando essa pessoa criar conta no BLADEX o sistema oferecerá vinculação automática com as estatísticas.</p>
                 <div className="flex gap-2">
                   <Button onClick={handleQuickAdd} size="sm" className="font-heading tracking-wider gap-1 bg-secondary text-secondary-foreground flex-1">
                     <Plus className="h-3 w-3" /> Cadastrar e Inscrever
