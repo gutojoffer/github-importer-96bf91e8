@@ -6,6 +6,7 @@ import { useActiveMode } from '@/contexts/ActiveModeContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { toast } from 'sonner';
 import { Camera, Check, ArrowRight, ArrowLeft, Sparkles, Info } from 'lucide-react';
+import VincularBladersTempModal from '@/components/blader/VincularBladersTempModal';
 
 const STEPS = ['Identidade', 'Seu Beyblade', 'Tudo pronto'] as const;
 
@@ -19,6 +20,7 @@ export default function CriarPerfilBlader() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [showVincular, setShowVincular] = useState(false);
 
   const [avatarUrl, setAvatarUrl] = useState<string>('');
   const [nomeBlader, setNomeBlader] = useState('');
@@ -114,6 +116,8 @@ export default function CriarPerfilBlader() {
         await refreshProfiles();
         toast.success('Perfil de Blader criado com sucesso!');
         setStep(2);
+        // Verificar vinculação pendente baseada no email
+        if (user.email) setShowVincular(true);
       } catch (err: any) {
         console.error('Erro inesperado:', err);
         setErro('Erro inesperado. Tente novamente.');
@@ -345,6 +349,14 @@ export default function CriarPerfilBlader() {
           </div>
         )}
       </div>
+      {showVincular && user && (
+        <VincularBladersTempModal
+          userId={user.id}
+          email={user.email}
+          onClose={() => setShowVincular(false)}
+          onLinked={refreshProfiles}
+        />
+      )}
     </div>
   );
 }

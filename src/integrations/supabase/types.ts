@@ -62,9 +62,55 @@ export type Database = {
         }
         Relationships: []
       }
+      bladers_temp: {
+        Row: {
+          apelido: string | null
+          avatar_url: string | null
+          beyblade_favorita: string | null
+          cidade: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          organizador_id: string
+          telefone: string | null
+          vinculado_a: string | null
+          vinculado_em: string | null
+        }
+        Insert: {
+          apelido?: string | null
+          avatar_url?: string | null
+          beyblade_favorita?: string | null
+          cidade?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome: string
+          organizador_id: string
+          telefone?: string | null
+          vinculado_a?: string | null
+          vinculado_em?: string | null
+        }
+        Update: {
+          apelido?: string | null
+          avatar_url?: string | null
+          beyblade_favorita?: string | null
+          cidade?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          organizador_id?: string
+          telefone?: string | null
+          vinculado_a?: string | null
+          vinculado_em?: string | null
+        }
+        Relationships: []
+      }
       inscricoes: {
         Row: {
-          blader_id: string
+          blader_id: string | null
+          blader_temp_id: string | null
           id: string
           inscrito_em: string
           posicao_final: number | null
@@ -73,7 +119,8 @@ export type Database = {
           xp_ganho: number
         }
         Insert: {
-          blader_id: string
+          blader_id?: string | null
+          blader_temp_id?: string | null
           id?: string
           inscrito_em?: string
           posicao_final?: number | null
@@ -82,7 +129,8 @@ export type Database = {
           xp_ganho?: number
         }
         Update: {
-          blader_id?: string
+          blader_id?: string | null
+          blader_temp_id?: string | null
           id?: string
           inscrito_em?: string
           posicao_final?: number | null
@@ -96,6 +144,13 @@ export type Database = {
             columns: ["blader_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inscricoes_blader_temp_id_fkey"
+            columns: ["blader_temp_id"]
+            isOneToOne: false
+            referencedRelation: "bladers_temp"
             referencedColumns: ["id"]
           },
           {
@@ -449,6 +504,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      link_bladers_temp: {
+        Args: { _temp_ids: string[]; _user_id: string }
+        Returns: undefined
       }
     }
     Enums: {

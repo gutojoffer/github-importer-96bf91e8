@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useMemo, memo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +38,7 @@ type View = 'list' | 'active';
 
 export default function TournamentHub() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const players = usePlayerStore(s => s.players);
   const loadPlayers = usePlayerStore(s => s.load);
   const addPlayerToStore = usePlayerStore(s => s.add);
@@ -93,6 +94,8 @@ export default function TournamentHub() {
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [qaName, setQaName] = useState('');
   const [qaNick, setQaNick] = useState('');
+  const [qaEmail, setQaEmail] = useState('');
+  const [qaBeyblade, setQaBeyblade] = useState('');
   const [qaAvatar, setQaAvatar] = useState(DEFAULT_AVATARS[0]);
   const [qaCustomAvatar, setQaCustomAvatar] = useState('');
   const qaFileRef = useRef<HTMLInputElement>(null);
@@ -227,20 +230,56 @@ export default function TournamentHub() {
     }
   }, [enrollModalTournament, enrollPlayer, unenrollPlayer]);
 
-  const handleQuickAdd = useCallback(() => {
+  const handleQuickAdd = useCallback(async () => {
     if (!qaName.trim() || !enrollModal) { toast.error('Nome obrigatório!'); return; }
-    const player: Player = {
-      id: crypto.randomUUID(), name: qaName.trim(),
-      nickname: qaNick.trim().replace(/^@/, ''),
-      avatar: qaCustomAvatar || qaAvatar,
-      createdAt: new Date().toISOString(), xp: 0,
-    };
-    addPlayerToStore(player);
-    enrollPlayer(enrollModal, player.id);
-    setQaName(''); setQaNick(''); setQaCustomAvatar(''); setQaAvatar(DEFAULT_AVATARS[0]);
+    const { data: userData } = await supabase.auth.getUser();
+    const organizadorId = userData.user?.id;
+    if (!organizadorId) { toast.error('Sessão expirada.'); return; }
+
+    const avatar = qaCustomAvatar || qaAvatar;
+    // 1. Criar blader_temp
+    const { data: bladerTemp, error: errTemp } = await supabase
+      .from('bladers_temp')
+      .insert({
+        organizador_id: organizadorId,
+        nome: qaName.trim(),
+        apelido: qaNick.trim().replace(/^@/, '') || null,
+        email: qaEmail.trim().toLowerCase() || null,
+        beyblade_favorita: qaBeyblade.trim() || null,
+        avatar_url: (avatar?.startsWith('http') || avatar?.startsWith('data:')) ? avatar : null,
+      })
+      .select()
+      .single();
+
+    if (errTemp || !bladerTemp) {
+      console.error('Erro ao criar blader_temp:', errTemp);
+      toast.error('Erro ao cadastrar blader.');
+      return;
+    }
+
+    // 2. Inscrever no torneio
+    const { error: errIns } = await supabase
+      .from('inscricoes')
+      .insert({
+        torneio_id: enrollModal,
+        blader_temp_id: bladerTemp.id,
+        blader_id: null,
+        status: 'confirmado',
+      });
+
+    if (errIns) {
+      console.error('Erro ao inscrever:', errIns);
+      toast.error('Blader criado, mas falhou ao inscrever no torneio.');
+      return;
+    }
+
+    setQaName(''); setQaNick(''); setQaEmail(''); setQaBeyblade('');
+    setQaCustomAvatar(''); setQaAvatar(DEFAULT_AVATARS[0]);
     setShowQuickAdd(false);
-    toast.success(`${player.name} cadastrado e inscrito!`);
-  }, [qaName, qaNick, qaCustomAvatar, qaAvatar, enrollModal, addPlayerToStore, enrollPlayer]);
+    queryClient.invalidateQueries({ queryKey: ['tournament-inscricoes', enrollModal] });
+    queryClient.invalidateQueries({ queryKey: ['tournament-temp-inscricoes', enrollModal] });
+    toast.success(`${qaName.trim()} cadastrado e inscrito!`);
+  }, [qaName, qaNick, qaEmail, qaBeyblade, qaCustomAvatar, qaAvatar, enrollModal, queryClient]);
 
   // ─── Start Tournament ───
   const handleStartTournament = useCallback(() => {
@@ -1112,14 +1151,23 @@ export default function TournamentHub() {
             ) : (
               <div className="surface-panel p-4 mb-4 space-y-3 border-secondary/20">
                 <p className="font-heading text-sm font-bold text-secondary tracking-wider">CADASTRO RÁPIDO</p>
+                <p className="text-[11px] text-muted-foreground">Para participar agora. Pode vincular ao perfil depois.</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="font-heading text-[10px] text-muted-foreground">Nome</Label>
+                    <Label className="font-heading text-[10px] text-muted-foreground">Nome *</Label>
                     <Input value={qaName} onChange={e => setQaName(e.target.value)} placeholder="Nome" className="bg-muted/30 border-border h-9 text-sm" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="font-heading text-[10px] text-muted-foreground">Nick</Label>
+                    <Label className="font-heading text-[10px] text-muted-foreground">Apelido / Handle</Label>
                     <Input value={qaNick} onChange={e => setQaNick(e.target.value)} placeholder="@nick" className="bg-muted/30 border-border h-9 text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="font-heading text-[10px] text-muted-foreground">Email (vinculação futura)</Label>
+                    <Input type="email" value={qaEmail} onChange={e => setQaEmail(e.target.value)} placeholder="email@exemplo.com" className="bg-muted/30 border-border h-9 text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="font-heading text-[10px] text-muted-foreground">Beyblade favorita</Label>
+                    <Input value={qaBeyblade} onChange={e => setQaBeyblade(e.target.value)} placeholder="Ex: Phoenix Wing" className="bg-muted/30 border-border h-9 text-sm" />
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1134,6 +1182,7 @@ export default function TournamentHub() {
                     </button>
                   ))}
                 </div>
+                <p className="text-[10px] text-muted-foreground">💡 Se informar o email, quando essa pessoa criar conta no BLADEX o sistema oferecerá vinculação automática com as estatísticas.</p>
                 <div className="flex gap-2">
                   <Button onClick={handleQuickAdd} size="sm" className="font-heading tracking-wider gap-1 bg-secondary text-secondary-foreground flex-1">
                     <Plus className="h-3 w-3" /> Cadastrar e Inscrever

@@ -35,7 +35,8 @@ interface LigaInfo {
 }
 
 interface InscritoRow {
-  blader_id: string;
+  blader_id: string | null;
+  blader_temp_id: string | null;
   inscrito_em: string;
   status: string;
   profiles: {
@@ -44,6 +45,14 @@ interface InscritoRow {
     cidade_blader: string | null;
     beyblade_favorita: string | null;
     nivel: string | null;
+  } | null;
+  bladers_temp: {
+    nome: string | null;
+    apelido: string | null;
+    avatar_url: string | null;
+    cidade: string | null;
+    beyblade_favorita: string | null;
+    vinculado_a: string | null;
   } | null;
 }
 
@@ -104,11 +113,15 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
       .from('inscricoes')
       .select(`
         blader_id,
+        blader_temp_id,
         inscrito_em,
         status,
         profiles!inscricoes_blader_id_fkey (
           nome_blader, avatar_blader_url, cidade_blader,
           beyblade_favorita, nivel
+        ),
+        bladers_temp!inscricoes_blader_temp_id_fkey (
+          nome, apelido, avatar_url, cidade, beyblade_favorita, vinculado_a
         )
       `, { count: 'exact' })
       .eq('torneio_id', tournament.id)
@@ -267,7 +280,7 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
           ) : inscritos.length === 0 ? (
             <div style={{ padding: '40px 20px', textAlign: 'center', color: 'rgba(255,255,255,.2)', fontSize: 13 }}><div style={{ fontSize: 28, marginBottom: 8, opacity: .3 }}>👥</div>Nenhum blader inscrito ainda</div>
           ) : (
-            inscritos.map((inscricao, index) => <InscritoItem key={inscricao.blader_id} inscricao={inscricao} index={index} />)
+            inscritos.map((inscricao, index) => <InscritoItem key={inscricao.blader_id || inscricao.blader_temp_id || index} inscricao={inscricao} index={index} />)
           )}
         </div>
 
@@ -320,15 +333,26 @@ function EmptyInfo({ text }: { text: string }) {
 
 function InscritoItem({ inscricao, index }: { inscricao: InscritoRow; index: number }) {
   const profile = inscricao.profiles;
+  const temp = inscricao.bladers_temp;
+  const isTemp = !!inscricao.blader_temp_id;
+  const vinculado = !!temp?.vinculado_a;
+  const nome = profile?.nome_blader || temp?.nome || 'Blader';
+  const avatar = profile?.avatar_blader_url || temp?.avatar_url || null;
+  const cidade = profile?.cidade_blader || temp?.cidade;
+  const beyblade = profile?.beyblade_favorita || temp?.beyblade_favorita;
+  const nivel = profile?.nivel;
+
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,.04)', transition: 'background .15s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,.03)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
       <div style={{ width: 24, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,.2)', textAlign: 'center', flexShrink: 0 }}>{index + 1}</div>
-      {profile?.avatar_blader_url ? <img src={profile.avatar_blader_url} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(37,99,235,.3)', flexShrink: 0 }} /> : <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #1e3a8a, #2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 14, color: '#fff', flexShrink: 0, border: '1.5px solid rgba(37,99,235,.3)' }}>{initials(profile?.nome_blader)}</div>}
+      {avatar ? <img src={avatar} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(37,99,235,.3)', flexShrink: 0 }} /> : <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #1e3a8a, #2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 14, color: '#fff', flexShrink: 0, border: '1.5px solid rgba(37,99,235,.3)' }}>{initials(nome)}</div>}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{profile?.nome_blader || 'Blader'}</div>
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,.35)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{profile?.cidade_blader && `📍 ${profile.cidade_blader}`}{profile?.beyblade_favorita && ` · ⚡ ${profile.beyblade_favorita}`}</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nome}{temp?.apelido && <span style={{ color: 'rgba(255,255,255,.35)', fontWeight: 400 }}> · @{temp.apelido}</span>}</div>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,.35)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cidade && `📍 ${cidade}`}{beyblade && ` · ⚡ ${beyblade}`}</div>
       </div>
-      {profile?.nivel && <div style={{ padding: '2px 8px', borderRadius: 8, background: 'rgba(37,99,235,.12)', color: '#60A5FA', fontSize: 10, fontWeight: 700, letterSpacing: 1, flexShrink: 0 }}>{profile.nivel}</div>}
+      {isTemp && !vinculado && <div style={{ padding: '2px 7px', borderRadius: 6, background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.2)', color: '#FCD34D', fontSize: 9, fontWeight: 700, letterSpacing: 1, flexShrink: 0 }}>SEM CONTA</div>}
+      {isTemp && vinculado && <div style={{ padding: '2px 7px', borderRadius: 6, background: 'rgba(16,185,129,.1)', border: '1px solid rgba(16,185,129,.2)', color: '#34D399', fontSize: 9, fontWeight: 700, letterSpacing: 1, flexShrink: 0 }}>VINCULADO ✓</div>}
+      {!isTemp && nivel && <div style={{ padding: '2px 8px', borderRadius: 8, background: 'rgba(37,99,235,.12)', color: '#60A5FA', fontSize: 10, fontWeight: 700, letterSpacing: 1, flexShrink: 0 }}>{nivel}</div>}
       <div style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', flexShrink: 0 }}>{formatarDataCurta(inscricao.inscrito_em)}</div>
     </div>
   );
