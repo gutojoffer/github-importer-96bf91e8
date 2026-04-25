@@ -113,11 +113,15 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
       .from('inscricoes')
       .select(`
         blader_id,
+        blader_temp_id,
         inscrito_em,
         status,
         profiles!inscricoes_blader_id_fkey (
           nome_blader, avatar_blader_url, cidade_blader,
           beyblade_favorita, nivel
+        ),
+        bladers_temp!inscricoes_blader_temp_id_fkey (
+          nome, apelido, avatar_url, cidade, beyblade_favorita, vinculado_a
         )
       `, { count: 'exact' })
       .eq('torneio_id', tournament.id)
