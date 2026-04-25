@@ -93,6 +93,8 @@ export default function TournamentHub() {
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [qaName, setQaName] = useState('');
   const [qaNick, setQaNick] = useState('');
+  const [qaEmail, setQaEmail] = useState('');
+  const [qaBeyblade, setQaBeyblade] = useState('');
   const [qaAvatar, setQaAvatar] = useState(DEFAULT_AVATARS[0]);
   const [qaCustomAvatar, setQaCustomAvatar] = useState('');
   const qaFileRef = useRef<HTMLInputElement>(null);
