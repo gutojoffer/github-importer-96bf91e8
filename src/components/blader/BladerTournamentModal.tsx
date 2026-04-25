@@ -35,7 +35,8 @@ interface LigaInfo {
 }
 
 interface InscritoRow {
-  blader_id: string;
+  blader_id: string | null;
+  blader_temp_id: string | null;
   inscrito_em: string;
   status: string;
   profiles: {
@@ -44,6 +45,14 @@ interface InscritoRow {
     cidade_blader: string | null;
     beyblade_favorita: string | null;
     nivel: string | null;
+  } | null;
+  bladers_temp: {
+    nome: string | null;
+    apelido: string | null;
+    avatar_url: string | null;
+    cidade: string | null;
+    beyblade_favorita: string | null;
+    vinculado_a: string | null;
   } | null;
 }
 
