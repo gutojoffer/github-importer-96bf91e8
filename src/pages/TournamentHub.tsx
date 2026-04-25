@@ -230,20 +230,56 @@ export default function TournamentHub() {
     }
   }, [enrollModalTournament, enrollPlayer, unenrollPlayer]);
 
-  const handleQuickAdd = useCallback(() => {
+  const handleQuickAdd = useCallback(async () => {
     if (!qaName.trim() || !enrollModal) { toast.error('Nome obrigatório!'); return; }
-    const player: Player = {
-      id: crypto.randomUUID(), name: qaName.trim(),
-      nickname: qaNick.trim().replace(/^@/, ''),
-      avatar: qaCustomAvatar || qaAvatar,
-      createdAt: new Date().toISOString(), xp: 0,
-    };
-    addPlayerToStore(player);
-    enrollPlayer(enrollModal, player.id);
-    setQaName(''); setQaNick(''); setQaCustomAvatar(''); setQaAvatar(DEFAULT_AVATARS[0]);
+    const { data: userData } = await supabase.auth.getUser();
+    const organizadorId = userData.user?.id;
+    if (!organizadorId) { toast.error('Sessão expirada.'); return; }
+
+    const avatar = qaCustomAvatar || qaAvatar;
+    // 1. Criar blader_temp
+    const { data: bladerTemp, error: errTemp } = await supabase
+      .from('bladers_temp')
+      .insert({
+        organizador_id: organizadorId,
+        nome: qaName.trim(),
+        apelido: qaNick.trim().replace(/^@/, '') || null,
+        email: qaEmail.trim().toLowerCase() || null,
+        beyblade_favorita: qaBeyblade.trim() || null,
+        avatar_url: (avatar?.startsWith('http') || avatar?.startsWith('data:')) ? avatar : null,
+      })
+      .select()
+      .single();
+
+    if (errTemp || !bladerTemp) {
+      console.error('Erro ao criar blader_temp:', errTemp);
+      toast.error('Erro ao cadastrar blader.');
+      return;
+    }
+
+    // 2. Inscrever no torneio
+    const { error: errIns } = await supabase
+      .from('inscricoes')
+      .insert({
+        torneio_id: enrollModal,
+        blader_temp_id: bladerTemp.id,
+        blader_id: null,
+        status: 'confirmado',
+      });
+
+    if (errIns) {
+      console.error('Erro ao inscrever:', errIns);
+      toast.error('Blader criado, mas falhou ao inscrever no torneio.');
+      return;
+    }
+
+    setQaName(''); setQaNick(''); setQaEmail(''); setQaBeyblade('');
+    setQaCustomAvatar(''); setQaAvatar(DEFAULT_AVATARS[0]);
     setShowQuickAdd(false);
-    toast.success(`${player.name} cadastrado e inscrito!`);
-  }, [qaName, qaNick, qaCustomAvatar, qaAvatar, enrollModal, addPlayerToStore, enrollPlayer]);
+    queryClient.invalidateQueries({ queryKey: ['tournament-inscricoes', enrollModal] });
+    queryClient.invalidateQueries({ queryKey: ['tournament-temp-inscricoes', enrollModal] });
+    toast.success(`${qaName.trim()} cadastrado e inscrito!`);
+  }, [qaName, qaNick, qaEmail, qaBeyblade, qaCustomAvatar, qaAvatar, enrollModal, queryClient]);
 
   // ─── Start Tournament ───
   const handleStartTournament = useCallback(() => {
