@@ -160,8 +160,84 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
     if (!open || !tournament) return;
     setAbaAtiva('Informações');
     setConfirmandoDesistencia(false);
+    setModoInscricao('lista');
+    setBusca('');
+    setNomeRapido(''); setApelidoRapido(''); setEmailRapido(''); setBeybladeRapido('');
     refreshDetails();
   }, [open, tournament?.id, user?.id]);
+
+  // Load eligible bladers for organizer search
+  useEffect(() => {
+    if (mode !== 'organizer' || modoInscricao !== 'buscar' || !open) return;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, nome_blader, avatar_blader_url, cidade_blader, nivel')
+        .eq('tem_perfil_blader', true)
+        .not('nome_blader', 'is', null)
+        .order('nome_blader', { ascending: true })
+        .limit(200);
+      setBladersDisponiveis((data ?? []) as any);
+    })();
+  }, [mode, modoInscricao, open]);
+
+  const inscritosIdsSet = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of inscritos) if (r.blader_id) s.add(r.blader_id);
+    return s;
+  }, [inscritos]);
+
+  const bladersFiltrados = useMemo(() => {
+    const term = busca.trim().toLowerCase();
+    return bladersDisponiveis.filter(b => {
+      if (inscritosIdsSet.has(b.id)) return false;
+      if (!term) return true;
+      return (b.nome_blader || '').toLowerCase().includes(term) || (b.cidade_blader || '').toLowerCase().includes(term);
+    });
+  }, [bladersDisponiveis, busca, inscritosIdsSet]);
+
+  async function handleEnrollExisting(bladerId: string) {
+    if (!tournament) return;
+    setEnrolling(bladerId);
+    const { error } = await supabase
+      .from('inscricoes')
+      .insert({ torneio_id: tournament.id, blader_id: bladerId, status: 'confirmado' });
+    setEnrolling(null);
+    if (error) { toast.error('Erro ao inscrever blader'); return; }
+    toast.success('Blader inscrito!');
+    await refreshDetails();
+    onInscrito?.();
+  }
+
+  async function handleCadastroRapido() {
+    if (!tournament || !user) return;
+    if (!nomeRapido.trim()) { toast.error('Nome obrigatório'); return; }
+    setSavingQuick(true);
+    const { data: bt, error: e1 } = await supabase
+      .from('bladers_temp')
+      .insert({
+        organizador_id: user.id,
+        nome: nomeRapido.trim(),
+        apelido: apelidoRapido.trim().replace(/^@/, '') || null,
+        email: emailRapido.trim().toLowerCase() || null,
+        beyblade_favorita: beybladeRapido.trim() || null,
+      })
+      .select()
+      .single();
+    if (e1 || !bt) { setSavingQuick(false); toast.error('Erro ao cadastrar'); return; }
+
+    const { error: e2 } = await supabase
+      .from('inscricoes')
+      .insert({ torneio_id: tournament.id, blader_temp_id: bt.id, blader_id: null, status: 'confirmado' });
+    setSavingQuick(false);
+    if (e2) { toast.error('Cadastrado, mas falhou a inscrição'); return; }
+
+    toast.success(`${nomeRapido.trim()} cadastrado e inscrito!`);
+    setNomeRapido(''); setApelidoRapido(''); setEmailRapido(''); setBeybladeRapido('');
+    setModoInscricao('lista');
+    await refreshDetails();
+    onInscrito?.();
+  }
 
   const maxPlayers = tournament?.max_players ?? 32;
   const vagasEsgotadas = inscritosCount >= maxPlayers;
