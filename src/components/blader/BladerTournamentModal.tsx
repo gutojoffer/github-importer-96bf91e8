@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Calendar, MapPin, Users, Trophy, ChevronDown, X } from 'lucide-react';
+import { Calendar, MapPin, Users, Trophy, ChevronDown, X, Search, Check } from 'lucide-react';
 
 interface TournamentData {
   id: string;
