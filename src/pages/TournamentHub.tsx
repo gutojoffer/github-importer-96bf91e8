@@ -1666,10 +1666,6 @@ export default function TournamentHub() {
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-2 shrink-0 pt-1">
-                      <Button size="sm" onClick={(e) => { e.stopPropagation(); setEnrollModal(t.id); }}
-                        className="font-heading tracking-wider gap-1.5 bg-secondary/15 text-secondary hover:bg-secondary/25 border border-secondary/25 h-9 px-3.5">
-                        <UserPlus className="h-3.5 w-3.5" /> Inscrever
-                      </Button>
                       <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setStartingTournament(t); setStartEliminationSize(t.eliminationSize || null); }}
                         className="font-heading tracking-wider gap-1.5 border-primary/30 text-primary hover:bg-primary/10 h-9 px-3.5" disabled={t.playerIds.length < 2}>
                         <Play className="h-3.5 w-3.5" /> Iniciar
