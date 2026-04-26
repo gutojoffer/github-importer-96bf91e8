@@ -30,8 +30,13 @@ interface LigaRow {
   id: string;
   nome_liga: string | null;
   cidade: string | null;
+  estado: string | null;
   logo_url: string | null;
 }
+
+const UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+const UF_NAMES: Record<string, string> = { AC:'Acre',AL:'Alagoas',AP:'Amapá',AM:'Amazonas',BA:'Bahia',CE:'Ceará',DF:'Distrito Federal',ES:'Espírito Santo',GO:'Goiás',MA:'Maranhão',MT:'Mato Grosso',MS:'Mato Grosso do Sul',MG:'Minas Gerais',PA:'Pará',PB:'Paraíba',PR:'Paraná',PE:'Pernambuco',PI:'Piauí',RJ:'Rio de Janeiro',RN:'Rio Grande do Norte',RS:'Rio Grande do Sul',RO:'Rondônia',RR:'Roraima',SC:'Santa Catarina',SP:'São Paulo',SE:'Sergipe',TO:'Tocantins' };
+
 
 type FilterMode = 'todos' | 'inscritos' | 'disponiveis';
 
@@ -53,6 +58,8 @@ function isAmanha(data: string | null) {
 export default function BladerTournaments() {
   const { user } = useAuth();
   const [filter, setFilter] = useState<FilterMode>('todos');
+  const [filtroEstado, setFiltroEstado] = useState<string>('');
+  const [filtroCidade, setFiltroCidade] = useState<string>('');
   const [selectedTournament, setSelectedTournament] = useState<TournamentRow | null>(null);
   const [confirmandoDesistencia, setConfirmandoDesistencia] = useState<TournamentRow | null>(null);
 
@@ -75,7 +82,7 @@ export default function BladerTournaments() {
       if (ligaIds.length === 0) return [];
       const { data } = await supabase
         .from('profiles')
-        .select('id, nome_liga, cidade, logo_url')
+        .select('id, nome_liga, cidade, estado, logo_url')
         .in('id', ligaIds);
       return (data ?? []) as LigaRow[];
     },

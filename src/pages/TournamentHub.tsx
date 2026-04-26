@@ -87,18 +87,7 @@ export default function TournamentHub() {
   const [editMaxPlayers, setEditMaxPlayers] = useState(32);
   const [editEliminationSize, setEditEliminationSize] = useState<EliminationSize>(null);
 
-  // Enrollment modal
-  const [enrollModal, setEnrollModal] = useState<string | null>(null);
-  const [enrollSearch, setEnrollSearch] = useState('');
-  const [batchSelected, setBatchSelected] = useState<Set<string>>(new Set());
-  const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [qaName, setQaName] = useState('');
-  const [qaNick, setQaNick] = useState('');
-  const [qaEmail, setQaEmail] = useState('');
-  const [qaBeyblade, setQaBeyblade] = useState('');
-  const [qaAvatar, setQaAvatar] = useState(DEFAULT_AVATARS[0]);
-  const [qaCustomAvatar, setQaCustomAvatar] = useState('');
-  const qaFileRef = useRef<HTMLInputElement>(null);
+  // (Inscriptions are now managed inside the BladerTournamentModal — no separate enroll modal here.)
 
   // Start config
   const [startingTournament, setStartingTournament] = useState<Tournament | null>(null);
@@ -165,9 +154,7 @@ export default function TournamentHub() {
   }), []);
   const suggested = startingTournament ? suggestRounds(startingTournament.playerIds.length) : 3;
 
-  const enrollModalTournament = useMemo(() =>
-    enrollModal ? tournaments.find(t => t.id === enrollModal) : null
-  , [enrollModal, tournaments]);
+  // (enrollModalTournament removed — handled inside BladerTournamentModal)
 
   // ─── Create Tournament ───
   const handleCreate = useCallback(() => {
@@ -220,66 +207,7 @@ export default function TournamentHub() {
     toast.success('Torneio atualizado!');
   }, [editingTournament, editName, editDate, editMaxPlayers, editEliminationSize, updateTournament]);
 
-  // ─── Enrollment ───
-  const handleEnroll = useCallback((playerId: string) => {
-    if (!enrollModalTournament) return;
-    if (enrollModalTournament.playerIds.includes(playerId)) {
-      unenrollPlayer(enrollModalTournament.id, playerId);
-    } else {
-      enrollPlayer(enrollModalTournament.id, playerId);
-    }
-  }, [enrollModalTournament, enrollPlayer, unenrollPlayer]);
-
-  const handleQuickAdd = useCallback(async () => {
-    if (!qaName.trim() || !enrollModal) { toast.error('Nome obrigatório!'); return; }
-    const { data: userData } = await supabase.auth.getUser();
-    const organizadorId = userData.user?.id;
-    if (!organizadorId) { toast.error('Sessão expirada.'); return; }
-
-    const avatar = qaCustomAvatar || qaAvatar;
-    // 1. Criar blader_temp
-    const { data: bladerTemp, error: errTemp } = await supabase
-      .from('bladers_temp')
-      .insert({
-        organizador_id: organizadorId,
-        nome: qaName.trim(),
-        apelido: qaNick.trim().replace(/^@/, '') || null,
-        email: qaEmail.trim().toLowerCase() || null,
-        beyblade_favorita: qaBeyblade.trim() || null,
-        avatar_url: (avatar?.startsWith('http') || avatar?.startsWith('data:')) ? avatar : null,
-      })
-      .select()
-      .single();
-
-    if (errTemp || !bladerTemp) {
-      console.error('Erro ao criar blader_temp:', errTemp);
-      toast.error('Erro ao cadastrar blader.');
-      return;
-    }
-
-    // 2. Inscrever no torneio
-    const { error: errIns } = await supabase
-      .from('inscricoes')
-      .insert({
-        torneio_id: enrollModal,
-        blader_temp_id: bladerTemp.id,
-        blader_id: null,
-        status: 'confirmado',
-      });
-
-    if (errIns) {
-      console.error('Erro ao inscrever:', errIns);
-      toast.error('Blader criado, mas falhou ao inscrever no torneio.');
-      return;
-    }
-
-    setQaName(''); setQaNick(''); setQaEmail(''); setQaBeyblade('');
-    setQaCustomAvatar(''); setQaAvatar(DEFAULT_AVATARS[0]);
-    setShowQuickAdd(false);
-    queryClient.invalidateQueries({ queryKey: ['tournament-inscricoes', enrollModal] });
-    queryClient.invalidateQueries({ queryKey: ['tournament-temp-inscricoes', enrollModal] });
-    toast.success(`${qaName.trim()} cadastrado e inscrito!`);
-  }, [qaName, qaNick, qaEmail, qaBeyblade, qaCustomAvatar, qaAvatar, enrollModal, queryClient]);
+  // Enrollment / quick-add are handled inside BladerTournamentModal (organizer mode).
 
   // ─── Start Tournament ───
   const handleStartTournament = useCallback(() => {
@@ -672,69 +600,7 @@ export default function TournamentHub() {
     toast.success(`${playerName} foi dropado. Vitória(s) por W/O atribuída(s).`);
   }, [activeTournament, confirmDropPlayer, updateActive, getPlayer]);
 
-  // Fetch platform bladers (self-registered via profiles)
-  const { data: platformBladers = [] } = useQuery({
-    queryKey: ['platform-bladers-for-enroll'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, nome_blader, avatar_blader_url, cidade_blader, estado_blader, beyblade_favorita, nome_liga, avatar_url')
-        .eq('tem_perfil_blader', true)
-        .not('nome_blader', 'is', null)
-        .order('nome_blader', { ascending: true });
-      return (data ?? []).map((b: any) => ({
-        id: b.id,
-        name: b.nome_blader || 'Blader',
-        nickname: '',
-        avatar: b.avatar_blader_url || '🔵',
-        createdAt: '',
-        xp: 0,
-        _platform: true,
-        cidadeBlader: b.cidade_blader,
-        estadoBlader: b.estado_blader,
-        beybladeFavorita: b.beyblade_favorita,
-        nomeLiga: b.nome_liga,
-        avatarLiga: b.avatar_url,
-      }));
-    },
-    enabled: !!enrollModal,
-  });
-
-  // Fetch inscricoes for the current tournament
-  const { data: tournamentInscricoes = [] } = useQuery({
-    queryKey: ['tournament-inscricoes', enrollModal],
-    queryFn: async () => {
-      if (!enrollModal) return [];
-      const { data } = await supabase
-        .from('inscricoes')
-        .select('blader_id')
-        .eq('torneio_id', enrollModal);
-      return (data ?? []).map((r: any) => r.blader_id as string);
-    },
-    enabled: !!enrollModal,
-  });
-
-  const inscricoesSet = useMemo(() => new Set(tournamentInscricoes), [tournamentInscricoes]);
-  const enrolledCount = enrollModalTournament
-    ? new Set([...enrollModalTournament.playerIds, ...tournamentInscricoes]).size
-    : 0;
-
-  // Merge local players + platform bladers, deduplicate by id
-  const allBladers = useMemo(() => {
-    const map = new Map<string, any>();
-    for (const p of players) map.set(p.id, p);
-    for (const b of platformBladers) {
-      if (!map.has(b.id)) map.set(b.id, b);
-    }
-    return Array.from(map.values());
-  }, [players, platformBladers]);
-
-  const filteredPlayers = useMemo(() =>
-    allBladers.filter((p: any) =>
-      p.name.toLowerCase().includes(enrollSearch.toLowerCase()) ||
-      (p.nickname && p.nickname.toLowerCase().includes(enrollSearch.toLowerCase()))
-    )
-  , [allBladers, enrollSearch]);
+  // Platform bladers / inscricoes queries removed — handled inside BladerTournamentModal.
 
   // ─── Helpers for elimination phase ───
   const isInEliminationPhase = activeTournament?.phase === 'elimination';
@@ -1131,166 +997,6 @@ export default function TournamentHub() {
   return (
     <div className="p-6 lg:p-8 max-w-[1200px] mx-auto space-y-6 relative">
       
-      {/* Enrollment Modal */}
-      {enrollModalTournament && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => { setEnrollModal(null); setShowQuickAdd(false); setBatchSelected(new Set()); }}>
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-md" />
-          <div className="relative z-10 surface-card p-6 max-w-lg w-full max-h-[85vh] overflow-auto border-primary/15" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-heading text-xl font-bold text-foreground tracking-wider">INSCREVER BLADERS</h2>
-              <button onClick={() => { setEnrollModal(null); setShowQuickAdd(false); setBatchSelected(new Set()); }} className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-muted/30">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-              <p className="text-xs text-muted-foreground font-body mb-4">{enrollModalTournament.name} — {enrolledCount} inscritos</p>
-
-            {!showQuickAdd ? (
-              <Button variant="outline" size="sm" onClick={() => setShowQuickAdd(true)} className="w-full mb-4 font-heading tracking-wider gap-2 border-secondary/30 text-secondary hover:bg-secondary/10">
-                <UserPlus className="h-4 w-4" /> Novo Blader (Cadastro Rápido)
-              </Button>
-            ) : (
-              <div className="surface-panel p-4 mb-4 space-y-3 border-secondary/20">
-                <p className="font-heading text-sm font-bold text-secondary tracking-wider">CADASTRO RÁPIDO</p>
-                <p className="text-[11px] text-muted-foreground">Para participar agora. Pode vincular ao perfil depois.</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="font-heading text-[10px] text-muted-foreground">Nome *</Label>
-                    <Input value={qaName} onChange={e => setQaName(e.target.value)} placeholder="Nome" className="bg-muted/30 border-border h-9 text-sm" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="font-heading text-[10px] text-muted-foreground">Apelido / Handle</Label>
-                    <Input value={qaNick} onChange={e => setQaNick(e.target.value)} placeholder="@nick" className="bg-muted/30 border-border h-9 text-sm" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="font-heading text-[10px] text-muted-foreground">Email (vinculação futura)</Label>
-                    <Input type="email" value={qaEmail} onChange={e => setQaEmail(e.target.value)} placeholder="email@exemplo.com" className="bg-muted/30 border-border h-9 text-sm" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="font-heading text-[10px] text-muted-foreground">Beyblade favorita</Label>
-                    <Input value={qaBeyblade} onChange={e => setQaBeyblade(e.target.value)} placeholder="Ex: Phoenix Wing" className="bg-muted/30 border-border h-9 text-sm" />
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => qaFileRef.current?.click()} className={`h-9 w-9 flex items-center justify-center rounded-full border-2 border-dashed shrink-0 ${qaCustomAvatar ? 'border-primary' : 'border-muted hover:border-primary/50'}`}>
-                    {qaCustomAvatar ? <img src={qaCustomAvatar} className="h-full w-full rounded-full object-cover" /> : <Camera className="h-3.5 w-3.5 text-muted-foreground" />}
-                  </button>
-                  <input ref={qaFileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => { setQaCustomAvatar(r.result as string); setQaAvatar(''); }; r.readAsDataURL(f); } }} />
-                  {DEFAULT_AVATARS.slice(0, 6).map(a => (
-                    <button key={a} onClick={() => { setQaAvatar(a); setQaCustomAvatar(''); }}
-                      className={`h-7 w-7 flex items-center justify-center text-sm rounded-lg border transition-all ${qaAvatar === a && !qaCustomAvatar ? 'border-primary bg-primary/10' : 'border-muted bg-card hover:border-primary/30'}`}>
-                      {a}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-[10px] text-muted-foreground">💡 Se informar o email, quando essa pessoa criar conta no BLADEX o sistema oferecerá vinculação automática com as estatísticas.</p>
-                <div className="flex gap-2">
-                  <Button onClick={handleQuickAdd} size="sm" className="font-heading tracking-wider gap-1 bg-secondary text-secondary-foreground flex-1">
-                    <Plus className="h-3 w-3" /> Cadastrar e Inscrever
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setShowQuickAdd(false)} className="font-heading">Cancelar</Button>
-                </div>
-              </div>
-            )}
-
-            <div className="relative mb-3">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input value={enrollSearch} onChange={e => setEnrollSearch(e.target.value)} placeholder="Buscar blader..." className="pl-9 bg-muted/30 border-border h-9" />
-            </div>
-
-            {/* Counter */}
-            <p className="text-[11px] text-muted-foreground font-body mb-2">
-              {allBladers.length} bladers na plataforma · {enrolledCount} inscritos · {Math.max(0, (enrollModalTournament.maxPlayers || 32) - enrolledCount)} vagas restantes
-            </p>
-
-            {/* Batch select controls */}
-            {(() => {
-              const unenrolledFiltered = filteredPlayers.filter((p: any) => !enrollModalTournament.playerIds.includes(p.id) && !inscricoesSet.has(p.id));
-              const allBatchSelected = unenrolledFiltered.length > 0 && unenrolledFiltered.every((p: any) => batchSelected.has(p.id));
-              return unenrolledFiltered.length > 0 ? (
-                <button
-                  onClick={() => {
-                    if (allBatchSelected) setBatchSelected(new Set());
-                    else setBatchSelected(new Set(unenrolledFiltered.map((p: any) => p.id)));
-                  }}
-                  className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 border border-transparent mb-1 text-left"
-                >
-                  <div className={`h-4 w-4 rounded border-2 flex items-center justify-center shrink-0 transition-all ${allBatchSelected ? 'bg-primary border-primary' : 'border-muted'}`}>
-                    {allBatchSelected && <Check className="h-3 w-3 text-primary-foreground" />}
-                  </div>
-                  <span className="text-xs font-heading text-muted-foreground tracking-wider">Selecionar todos ({unenrolledFiltered.length})</span>
-                </button>
-              ) : null;
-            })()}
-
-            <div className="space-y-1.5 max-h-[40vh] overflow-auto">
-              {filteredPlayers.map((p: any) => {
-                const enrolled = enrollModalTournament.playerIds.includes(p.id) || inscricoesSet.has(p.id);
-                const isSelected = batchSelected.has(p.id);
-                return (
-                  <button key={p.id} onClick={() => {
-                    if (enrolled) handleEnroll(p.id);
-                    else {
-                      setBatchSelected(prev => {
-                        const next = new Set(prev);
-                        if (next.has(p.id)) next.delete(p.id); else next.add(p.id);
-                        return next;
-                      });
-                    }
-                  }}
-                    className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-all text-left ${enrolled ? 'bg-primary/10 border border-primary/30' : isSelected ? 'bg-secondary/10 border border-secondary/30' : 'hover:bg-muted/30 border border-transparent'}`}>
-                    {!enrolled && (
-                      <div className={`h-4 w-4 rounded border-2 flex items-center justify-center shrink-0 transition-all ${isSelected ? 'bg-secondary border-secondary' : 'border-muted'}`}>
-                        {isSelected && <Check className="h-3 w-3 text-secondary-foreground" />}
-                      </div>
-                    )}
-                    <Avatar className="h-9 w-9 border border-muted">
-                      {(p.avatar?.startsWith('http') || p.avatar?.startsWith('data:')) ? <AvatarImage src={p.avatar} /> : <AvatarFallback className="bg-muted text-sm">{p.avatar || '🔵'}</AvatarFallback>}
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-heading font-bold text-sm text-foreground truncate">{p.name}</p>
-                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                        {p.nickname && <span>@{p.nickname}</span>}
-                        {p.cidadeBlader && <span>📍 {p.cidadeBlader}</span>}
-                        {p.beybladeFavorita && <span>⚡ {p.beybladeFavorita}</span>}
-                      </div>
-                    </div>
-                    {!p._platform && <EloBadge xp={p.xp || 0} size="sm" />}
-                    {enrolled && (
-                      <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center shrink-0">
-                        <Check className="h-3.5 w-3.5 text-primary-foreground" />
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-              {filteredPlayers.length === 0 && (
-                <p className="text-center text-sm text-muted-foreground py-4">Nenhum blader encontrado.</p>
-              )}
-            </div>
-
-            {/* Batch enroll button */}
-            {batchSelected.size > 0 && (
-              <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/30">
-                <span className="text-xs text-muted-foreground font-body">
-                  <Users className="h-3 w-3 inline mr-1" />
-                  {batchSelected.size} selecionado{batchSelected.size !== 1 ? 's' : ''}
-                </span>
-                <Button
-                  onClick={() => {
-                    for (const pid of batchSelected) enrollPlayer(enrollModalTournament.id, pid);
-                    toast.success(`${batchSelected.size} blader${batchSelected.size > 1 ? 's' : ''} inscrito${batchSelected.size > 1 ? 's' : ''}!`);
-                    setBatchSelected(new Set());
-                  }}
-                  className="font-heading tracking-wider gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  Inscrever selecionados
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Page Header */}
       {detailsTournament && (
         <BladerTournamentModal
@@ -1298,7 +1004,8 @@ export default function TournamentHub() {
           open={!!detailsTournament}
           onOpenChange={(open) => { if (!open) setDetailsTournament(null); }}
           mode="organizer"
-          onManage={(id) => { setDetailsTournament(null); setEnrollModal(id); }}
+          onInscrito={() => { /* refresh handled internally + store reload via card list */ }}
+          onManage={() => { setDetailsTournament(null); }}
         />
       )}
 
@@ -1359,127 +1066,154 @@ export default function TournamentHub() {
       </div>
 
       {/* Create form */}
-      {showCreate && (
-        <div className="anim-fade-up rounded-2xl border border-[rgba(255,255,255,0.07)] p-7" style={{ background: '#111827' }}>
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-9 h-9 rounded-xl bg-primary/12 border border-primary/15 flex items-center justify-center">
-              <Trophy className="h-[18px] w-[18px] text-primary" />
+      {showCreate && (() => {
+        const inputStyle: React.CSSProperties = {
+          width: '100%', padding: '10px 14px', background: '#111827',
+          border: '1px solid rgba(255,255,255,.1)', borderRadius: 10,
+          color: '#E2E8F0', fontSize: 14, outline: 'none', transition: 'border-color .15s, box-shadow .15s',
+          fontFamily: 'inherit',
+        };
+        const labelStyle: React.CSSProperties = {
+          fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,.7)',
+          marginBottom: 6, display: 'block',
+        };
+        const sectionStyle: React.CSSProperties = {
+          fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase',
+          color: 'rgba(255,255,255,.3)', margin: '20px 0 12px', display: 'flex',
+          alignItems: 'center', gap: 8,
+        };
+        const sectionLine = <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,.06)' }} />;
+        const onFocus = (e: React.FocusEvent<HTMLElement>) => {
+          (e.target as HTMLElement).style.borderColor = 'rgba(37,99,235,.5)';
+          (e.target as HTMLElement).style.boxShadow = '0 0 0 3px rgba(37,99,235,.08)';
+        };
+        const onBlur = (e: React.FocusEvent<HTMLElement>) => {
+          (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,.1)';
+          (e.target as HTMLElement).style.boxShadow = 'none';
+        };
+        return (
+        <div className="anim-fade-up" style={{
+          background: '#0d1120', border: '1px solid rgba(255,255,255,.08)',
+          borderRadius: 16, padding: 24, maxWidth: 680, margin: '0 auto',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(37,99,235,.12)', border: '1px solid rgba(37,99,235,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Trophy className="h-[18px] w-[18px]" style={{ color: '#60A5FA' }} />
             </div>
             <div>
-              <h2 className="font-heading text-xl font-bold text-foreground tracking-wider">Novo torneio</h2>
-              <p className="text-xs text-muted-foreground font-body mt-0.5">Configure e publique seu campeonato</p>
+              <h2 className="font-heading" style={{ fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: 0.5 }}>Novo torneio</h2>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginTop: 2 }}>Configure e publique seu campeonato</p>
             </div>
           </div>
 
-          <div className="space-y-5 mt-6">
-            {/* Informações básicas */}
-            <p className="font-heading text-[10px] text-muted-foreground tracking-[0.2em] uppercase">Informações básicas</p>
-            <div className="space-y-2">
-              <Label className="font-heading text-muted-foreground text-xs tracking-wider">Nome do torneio</Label>
-              <Input value={tName} onChange={e => setTName(e.target.value)} placeholder="Ex: Copa BLADEX Abril" className="bg-muted/30 border-border h-11 font-body" />
-            </div>
-            <div className="space-y-2">
-              <Label className="font-heading text-muted-foreground text-xs tracking-wider">Descrição (opcional)</Label>
-              <textarea value={tDescricao} onChange={e => setTDescricao(e.target.value.slice(0, 200))} placeholder="Descrição breve do torneio..." maxLength={200}
-                className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground resize-none h-20 focus:outline-none focus:ring-2 focus:ring-ring" />
-              <p className="text-[10px] text-muted-foreground text-right">{tDescricao.length}/200</p>
-            </div>
+          {/* Informações básicas */}
+          <div style={sectionStyle}>Informações básicas{sectionLine}</div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Nome do torneio</label>
+            <input value={tName} onChange={e => setTName(e.target.value)} placeholder="Ex: Copa BLADEX Abril" style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+          </div>
+          <div>
+            <label style={labelStyle}>Descrição (opcional)</label>
+            <textarea value={tDescricao} onChange={e => setTDescricao(e.target.value.slice(0, 200))} placeholder="Descrição breve do torneio..." maxLength={200}
+              style={{ ...inputStyle, height: 80, resize: 'none', paddingTop: 10 }} onFocus={onFocus} onBlur={onBlur} />
+            <p style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', textAlign: 'right', marginTop: 4 }}>{tDescricao.length}/200</p>
+          </div>
 
-            {/* Data e horário */}
-            <p className="font-heading text-[10px] text-muted-foreground tracking-[0.2em] uppercase pt-2">Data e horário</p>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="font-heading text-muted-foreground text-xs tracking-wider">Início</Label>
-                <Input type="datetime-local" value={tHorarioInicio} onChange={e => { setTHorarioInicio(e.target.value); if (!tDate) setTDate(e.target.value.split('T')[0]); }} className="bg-muted/30 border-border h-11 font-body arena-input-clean" />
-              </div>
-              <div className="space-y-2">
-                <Label className="font-heading text-muted-foreground text-xs tracking-wider">Término (opcional)</Label>
-                <Input type="datetime-local" value={tHorarioFim} onChange={e => setTHorarioFim(e.target.value)} className="bg-muted/30 border-border h-11 font-body arena-input-clean" />
-              </div>
+          {/* Data e horário */}
+          <div style={sectionStyle}>Data e horário{sectionLine}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
+            <div>
+              <label style={labelStyle}>Início</label>
+              <input type="datetime-local" value={tHorarioInicio} onChange={e => { setTHorarioInicio(e.target.value); if (!tDate) setTDate(e.target.value.split('T')[0]); }}
+                style={{ ...inputStyle, colorScheme: 'dark' }} onFocus={onFocus} onBlur={onBlur} />
             </div>
-            {!tHorarioInicio && (
-              <div className="space-y-2">
-                <Label className="font-heading text-muted-foreground text-xs tracking-wider">Data (se não usar horário)</Label>
-                <Input type="date" value={tDate} onChange={e => setTDate(e.target.value)} className="bg-muted/30 border-border h-11 font-body arena-input-clean" />
-              </div>
-            )}
+            <div>
+              <label style={labelStyle}>Término (opcional)</label>
+              <input type="datetime-local" value={tHorarioFim} onChange={e => setTHorarioFim(e.target.value)}
+                style={{ ...inputStyle, colorScheme: 'dark' }} onFocus={onFocus} onBlur={onBlur} />
+            </div>
+          </div>
 
-            {/* Local */}
-            <p className="font-heading text-[10px] text-muted-foreground tracking-[0.2em] uppercase pt-2">Local</p>
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <Label className="font-heading text-muted-foreground text-xs tracking-wider">Nome do local</Label>
-                <Input value={tLocalNome} onChange={e => setTLocalNome(e.target.value)} placeholder='Ex: "Arena Beyblade Campo Grande"' className="bg-muted/30 border-border h-11 font-body" />
-              </div>
-              <div className="space-y-2">
-                <Label className="font-heading text-muted-foreground text-xs tracking-wider">Endereço completo</Label>
-                <Input value={tLocalEndereco} onChange={e => setTLocalEndereco(e.target.value)} placeholder="Rua, número, bairro..." className="bg-muted/30 border-border h-11 font-body" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="font-heading text-muted-foreground text-xs tracking-wider">Cidade</Label>
-                  <Input value={tLocalCidade} onChange={e => setTLocalCidade(e.target.value)} placeholder="Cidade" className="bg-muted/30 border-border h-11 font-body" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-heading text-muted-foreground text-xs tracking-wider">Estado</Label>
-                  <select value={tLocalEstado} onChange={e => setTLocalEstado(e.target.value)}
-                    className="w-full bg-muted/30 border border-border rounded-lg px-3 h-11 text-sm font-body text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
-                    <option value="">Selecione</option>
-                    {['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].map(uf => (
-                      <option key={uf} value={uf}>{uf}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+          {/* Local */}
+          <div style={sectionStyle}>Local{sectionLine}</div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Nome do local</label>
+            <input value={tLocalNome} onChange={e => setTLocalNome(e.target.value)} placeholder='Ex: "Arena Beyblade Campo Grande"' style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Endereço completo</label>
+            <input value={tLocalEndereco} onChange={e => setTLocalEndereco(e.target.value)} placeholder="Rua, número, bairro..." style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
+            <div>
+              <label style={labelStyle}>Cidade</label>
+              <input value={tLocalCidade} onChange={e => setTLocalCidade(e.target.value)} placeholder="Cidade" style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
             </div>
-
-            {/* Configurações */}
-            <p className="font-heading text-[10px] text-muted-foreground tracking-[0.2em] uppercase pt-2">Configurações</p>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="font-heading text-muted-foreground text-xs tracking-wider">Máx. bladers</Label>
-                <Input type="number" min={2} max={128} value={tMaxPlayers} onChange={e => setTMaxPlayers(parseInt(e.target.value) || 32)} className="bg-muted/30 border-border h-11 font-body arena-input-clean" />
-              </div>
-              <div className="space-y-2">
-                <Label className="font-heading text-muted-foreground text-xs tracking-wider">Arenas simultâneas</Label>
-                <Input type="number" min={1} max={10} value={tArenaCount} onChange={e => setTArenaCount(parseInt(e.target.value) || 1)} className="bg-muted/30 border-border h-11 font-body arena-input-clean" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="font-heading text-muted-foreground text-xs tracking-wider">Prêmio (opcional)</Label>
-              <Input value={tPremio} onChange={e => setTPremio(e.target.value)} placeholder="Ex: Troféu + kit exclusivo" className="bg-muted/30 border-border h-11 font-body" />
-            </div>
-            <div className="space-y-2">
-              <Label className="font-heading text-muted-foreground text-xs tracking-wider">Regras especiais (opcional)</Label>
-              <textarea value={tRegras} onChange={e => setTRegras(e.target.value)} placeholder="Regras adicionais do torneio..."
-                className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground resize-none h-20 focus:outline-none focus:ring-2 focus:ring-ring" />
-            </div>
-            <div className="space-y-2">
-              <Label className="font-heading text-muted-foreground text-xs tracking-wider">Fase final</Label>
-              <div className="flex gap-2 h-11 items-stretch">
-                {([null, 4, 8, 16] as EliminationSize[]).map(size => (
-                  <button key={String(size)} onClick={() => setTEliminationSize(size)}
-                    className={`flex-1 font-heading text-[12px] font-bold tracking-wider rounded-lg border transition-all ${
-                      tEliminationSize === size
-                        ? 'bg-[rgba(37,99,235,0.15)] border-[rgba(37,99,235,0.4)] text-[#60A5FA]'
-                        : 'border-[rgba(255,255,255,0.1)] text-muted-foreground hover:border-[rgba(37,99,235,0.25)] hover:text-foreground'
-                    }`}>
-                    {size ? `Top ${size}` : 'Sem fase final'}
-                  </button>
+            <div>
+              <label style={labelStyle}>Estado</label>
+              <select value={tLocalEstado} onChange={e => setTLocalEstado(e.target.value)}
+                style={{ ...inputStyle, cursor: 'pointer' }} onFocus={onFocus} onBlur={onBlur}>
+                <option value="">Selecione</option>
+                {['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].map(uf => (
+                  <option key={uf} value={uf}>{uf}</option>
                 ))}
-              </div>
+              </select>
             </div>
           </div>
-          <div className="flex items-center justify-end gap-3 pt-6 mt-2 border-t border-[rgba(255,255,255,0.06)]">
-            <Button variant="ghost" onClick={() => setShowCreate(false)} className="font-heading tracking-wider h-11 text-muted-foreground">
+
+          {/* Configurações */}
+          <div style={sectionStyle}>Configurações{sectionLine}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
+            <div>
+              <label style={labelStyle}>Máx. bladers</label>
+              <input type="number" min={2} max={128} value={tMaxPlayers} onChange={e => setTMaxPlayers(parseInt(e.target.value) || 32)} style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+            </div>
+            <div>
+              <label style={labelStyle}>Nº arenas</label>
+              <input type="number" min={1} max={10} value={tArenaCount} onChange={e => setTArenaCount(parseInt(e.target.value) || 1)} style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+            </div>
+          </div>
+          <div style={{ marginTop: 14 }}>
+            <label style={labelStyle}>Prêmio (opcional)</label>
+            <input value={tPremio} onChange={e => setTPremio(e.target.value)} placeholder="Ex: Troféu + kit exclusivo" style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+          </div>
+          <div style={{ marginTop: 14 }}>
+            <label style={labelStyle}>Regras especiais (opcional)</label>
+            <textarea value={tRegras} onChange={e => setTRegras(e.target.value)} placeholder="Regras adicionais do torneio..."
+              style={{ ...inputStyle, height: 80, resize: 'none', paddingTop: 10 }} onFocus={onFocus} onBlur={onBlur} />
+          </div>
+          <div style={{ marginTop: 14 }}>
+            <label style={labelStyle}>Fase final</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {([null, 4, 8, 16] as EliminationSize[]).map(size => (
+                <button key={String(size)} onClick={() => setTEliminationSize(size)}
+                  style={{
+                    flex: 1, padding: '10px 8px', borderRadius: 10, fontSize: 12, fontWeight: 700, letterSpacing: 1,
+                    cursor: 'pointer', transition: 'all .15s',
+                    background: tEliminationSize === size ? 'rgba(37,99,235,.15)' : 'rgba(255,255,255,.02)',
+                    border: tEliminationSize === size ? '1px solid rgba(37,99,235,.4)' : '1px solid rgba(255,255,255,.08)',
+                    color: tEliminationSize === size ? '#60A5FA' : 'rgba(255,255,255,.45)',
+                  }}>
+                  {size ? `Top ${size}` : 'Sem fase'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div style={{ display: 'flex', gap: 12, marginTop: 24, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,.06)', justifyContent: 'flex-end' }}>
+            <button onClick={() => setShowCreate(false)}
+              style={{ padding: '11px 18px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,.5)', fontSize: 13, fontWeight: 600, cursor: 'pointer', borderRadius: 10 }}>
               Cancelar
-            </Button>
-            <Button onClick={handleCreate} className="font-heading tracking-wider gap-2 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-6 shadow-[0_0_15px_rgba(79,142,247,0.2)]">
-              <Plus className="h-4 w-4" /> Criar e publicar
-            </Button>
+            </button>
+            <button onClick={handleCreate}
+              style={{ padding: '11px 24px', background: '#2563EB', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, letterSpacing: 0.5, cursor: 'pointer', boxShadow: '0 0 15px rgba(37,99,235,.25)' }}>
+              Criar e publicar
+            </button>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Start config panel */}
       {startingTournament && (
@@ -1639,10 +1373,6 @@ export default function TournamentHub() {
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-2 shrink-0 pt-1">
-                      <Button size="sm" onClick={(e) => { e.stopPropagation(); setEnrollModal(t.id); }}
-                        className="font-heading tracking-wider gap-1.5 bg-secondary/15 text-secondary hover:bg-secondary/25 border border-secondary/25 h-9 px-3.5">
-                        <UserPlus className="h-3.5 w-3.5" /> Inscrever
-                      </Button>
                       <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setStartingTournament(t); setStartEliminationSize(t.eliminationSize || null); }}
                         className="font-heading tracking-wider gap-1.5 border-primary/30 text-primary hover:bg-primary/10 h-9 px-3.5" disabled={t.playerIds.length < 2}>
                         <Play className="h-3.5 w-3.5" /> Iniciar
