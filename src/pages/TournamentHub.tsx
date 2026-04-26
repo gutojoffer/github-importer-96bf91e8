@@ -154,9 +154,7 @@ export default function TournamentHub() {
   }), []);
   const suggested = startingTournament ? suggestRounds(startingTournament.playerIds.length) : 3;
 
-  const enrollModalTournament = useMemo(() =>
-    enrollModal ? tournaments.find(t => t.id === enrollModal) : null
-  , [enrollModal, tournaments]);
+  // (enrollModalTournament removed — handled inside BladerTournamentModal)
 
   // ─── Create Tournament ───
   const handleCreate = useCallback(() => {
