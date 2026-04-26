@@ -58,6 +58,8 @@ function isAmanha(data: string | null) {
 export default function BladerTournaments() {
   const { user } = useAuth();
   const [filter, setFilter] = useState<FilterMode>('todos');
+  const [filtroEstado, setFiltroEstado] = useState<string>('');
+  const [filtroCidade, setFiltroCidade] = useState<string>('');
   const [selectedTournament, setSelectedTournament] = useState<TournamentRow | null>(null);
   const [confirmandoDesistencia, setConfirmandoDesistencia] = useState<TournamentRow | null>(null);
 
@@ -80,7 +82,7 @@ export default function BladerTournaments() {
       if (ligaIds.length === 0) return [];
       const { data } = await supabase
         .from('profiles')
-        .select('id, nome_liga, cidade, logo_url')
+        .select('id, nome_liga, cidade, estado, logo_url')
         .in('id', ligaIds);
       return (data ?? []) as LigaRow[];
     },
