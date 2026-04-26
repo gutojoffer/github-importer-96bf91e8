@@ -95,6 +95,18 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
   const [inscritos, setInscritos] = useState<InscritoRow[]>([]);
   const [confirmandoDesistencia, setConfirmandoDesistencia] = useState(false);
 
+  // Organizer enrollment management state
+  const [modoInscricao, setModoInscricao] = useState<'lista' | 'buscar' | 'rapido'>('lista');
+  const [busca, setBusca] = useState('');
+  const [bladersDisponiveis, setBladersDisponiveis] = useState<Array<{ id: string; nome_blader: string | null; avatar_blader_url: string | null; cidade_blader: string | null; nivel: string | null }>>([]);
+  const [enrolling, setEnrolling] = useState<string | null>(null);
+  // Quick add fields
+  const [nomeRapido, setNomeRapido] = useState('');
+  const [apelidoRapido, setApelidoRapido] = useState('');
+  const [emailRapido, setEmailRapido] = useState('');
+  const [beybladeRapido, setBeybladeRapido] = useState('');
+  const [savingQuick, setSavingQuick] = useState(false);
+
   async function refreshDetails() {
     if (!open || !tournament) return;
     setChecking(true);
