@@ -363,12 +363,85 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
                 </Collapsible>
               )}
             </div>
-          ) : checking ? (
-            <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,.35)' }}>Carregando inscritos...</div>
-          ) : inscritos.length === 0 ? (
-            <div style={{ padding: '40px 20px', textAlign: 'center', color: 'rgba(255,255,255,.2)', fontSize: 13 }}><div style={{ fontSize: 28, marginBottom: 8, opacity: .3 }}>👥</div>Nenhum blader inscrito ainda</div>
           ) : (
-            inscritos.map((inscricao, index) => <InscritoItem key={inscricao.blader_id || inscricao.blader_temp_id || index} inscricao={inscricao} index={index} />)
+            <>
+              {mode === 'organizer' && (
+                <div style={{ display: 'flex', gap: 8, padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,.06)' }}>
+                  <button onClick={() => setModoInscricao(modoInscricao === 'buscar' ? 'lista' : 'buscar')} style={{
+                    flex: 1, padding: '9px',
+                    background: modoInscricao === 'buscar' ? 'rgba(37,99,235,.15)' : 'rgba(255,255,255,.03)',
+                    border: `1px solid ${modoInscricao === 'buscar' ? 'rgba(37,99,235,.3)' : 'rgba(255,255,255,.08)'}`,
+                    borderRadius: 9, color: modoInscricao === 'buscar' ? '#60A5FA' : 'rgba(255,255,255,.4)',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  }}>Buscar cadastrado</button>
+                  <button onClick={() => setModoInscricao(modoInscricao === 'rapido' ? 'lista' : 'rapido')} style={{
+                    flex: 1, padding: '9px',
+                    background: modoInscricao === 'rapido' ? 'rgba(245,158,11,.12)' : 'rgba(255,255,255,.03)',
+                    border: `1px solid ${modoInscricao === 'rapido' ? 'rgba(245,158,11,.3)' : 'rgba(255,255,255,.08)'}`,
+                    borderRadius: 9, color: modoInscricao === 'rapido' ? '#FCD34D' : 'rgba(255,255,255,.4)',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  }}>+ Cadastro rápido</button>
+                </div>
+              )}
+
+              {mode === 'organizer' && modoInscricao === 'buscar' ? (
+                <div style={{ padding: '12px 20px' }}>
+                  <div style={{ position: 'relative', marginBottom: 12 }}>
+                    <Search size={14} style={{ position: 'absolute', top: '50%', left: 12, transform: 'translateY(-50%)', color: 'rgba(255,255,255,.3)' }} />
+                    <input placeholder="Buscar blader pelo nome..." value={busca} onChange={e => setBusca(e.target.value)}
+                      style={{ width: '100%', padding: '10px 12px 10px 34px', background: '#111827', border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, color: '#E2E8F0', fontSize: 13, outline: 'none' }} />
+                  </div>
+                  {bladersFiltrados.length === 0 ? (
+                    <div style={{ padding: '24px 0', textAlign: 'center', color: 'rgba(255,255,255,.25)', fontSize: 12 }}>Nenhum blader disponível.</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {bladersFiltrados.slice(0, 50).map(b => (
+                        <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 9, background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)' }}>
+                          {b.avatar_blader_url ? (
+                            <img src={b.avatar_blader_url} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                          ) : (
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#1e3a8a,#2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{(b.nome_blader || 'B').charAt(0)}</div>
+                          )}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.nome_blader}</div>
+                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.3)' }}>{b.cidade_blader || ''}{b.nivel ? ` · ${b.nivel}` : ''}</div>
+                          </div>
+                          <button onClick={() => handleEnrollExisting(b.id)} disabled={enrolling === b.id}
+                            style={{ padding: '7px 12px', background: '#2563EB', border: 'none', borderRadius: 8, color: '#fff', fontSize: 11, fontWeight: 700, cursor: enrolling === b.id ? 'wait' : 'pointer', flexShrink: 0 }}>
+                            {enrolling === b.id ? '...' : 'Inscrever'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : mode === 'organizer' && modoInscricao === 'rapido' ? (
+                <div style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {[
+                    { v: nomeRapido, set: setNomeRapido, ph: 'Nome completo *' },
+                    { v: apelidoRapido, set: setApelidoRapido, ph: 'Apelido / Handle' },
+                    { v: emailRapido, set: setEmailRapido, ph: 'Email (para vincular depois)', type: 'email' },
+                    { v: beybladeRapido, set: setBeybladeRapido, ph: 'Beyblade favorita' },
+                  ].map((f, i) => (
+                    <input key={i} placeholder={f.ph} type={(f as any).type || 'text'} value={f.v} onChange={e => f.set(e.target.value)}
+                      style={{ width: '100%', padding: '10px 14px', background: '#111827', border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, color: '#E2E8F0', fontSize: 13, outline: 'none' }} />
+                  ))}
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,.25)', lineHeight: 1.4 }}>
+                    💡 Se informar o email, quando essa pessoa criar conta no BLADEX o sistema oferecerá vinculação automática.
+                  </div>
+                  <button onClick={handleCadastroRapido} disabled={savingQuick}
+                    style={{ marginTop: 4, padding: '11px 18px', background: '#2563EB', border: 'none', borderRadius: 10, color: '#fff', fontSize: 13, fontWeight: 700, cursor: savingQuick ? 'wait' : 'pointer' }}>
+                    {savingQuick ? 'Salvando...' : 'Cadastrar e inscrever'}
+                  </button>
+                </div>
+              ) : checking ? (
+                <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,.35)' }}>Carregando inscritos...</div>
+              ) : inscritos.length === 0 ? (
+                <div style={{ padding: '40px 20px', textAlign: 'center', color: 'rgba(255,255,255,.2)', fontSize: 13 }}><div style={{ fontSize: 28, marginBottom: 8, opacity: .3 }}>👥</div>Nenhum blader inscrito ainda</div>
+              ) : (
+                inscritos.map((inscricao, index) => <InscritoItem key={inscricao.blader_id || inscricao.blader_temp_id || index} inscricao={inscricao} index={index} />)
+              )}
+            </>
           )}
         </div>
 
