@@ -115,8 +115,14 @@ export default function BladerTournaments() {
   }));
 
   const filtered = enriched.filter(t => {
-    if (filter === 'inscritos') return t.inscrito;
-    if (filter === 'disponiveis') return !t.inscrito && !t.cheio;
+    if (filter === 'inscritos' && !t.inscrito) return false;
+    if (filter === 'disponiveis' && (t.inscrito || t.cheio)) return false;
+
+    const estado = (t.local_estado || t.liga?.estado || '').toUpperCase();
+    const cidade = t.local_cidade || t.liga?.cidade || '';
+    if (filtroEstado && estado !== filtroEstado) return false;
+    if (filtroCidade && !cidade.toLowerCase().includes(filtroCidade.toLowerCase())) return false;
+
     return true;
   });
 
