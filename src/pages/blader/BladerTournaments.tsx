@@ -169,6 +169,61 @@ export default function BladerTournaments() {
         ))}
       </div>
 
+      {/* Filtros estado/cidade */}
+      <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr_auto] gap-2">
+        <select
+          value={filtroEstado}
+          onChange={e => setFiltroEstado(e.target.value)}
+          className="rounded-lg font-body text-xs"
+          style={{
+            background: '#111827',
+            border: '1px solid rgba(255,255,255,.08)',
+            color: filtroEstado ? '#fff' : '#9CA3AF',
+            padding: '8px 12px',
+            outline: 'none',
+          }}
+        >
+          <option value="">Todos os estados</option>
+          {UFS.map(uf => (
+            <option key={uf} value={uf}>{uf} — {UF_NAMES[uf]}</option>
+          ))}
+        </select>
+        <input
+          type="text"
+          value={filtroCidade}
+          onChange={e => setFiltroCidade(e.target.value)}
+          placeholder="Filtrar por cidade…"
+          className="rounded-lg font-body text-xs"
+          style={{
+            background: '#111827',
+            border: '1px solid rgba(255,255,255,.08)',
+            color: '#fff',
+            padding: '8px 12px',
+            outline: 'none',
+          }}
+        />
+        {(filtroEstado || filtroCidade) && (
+          <button
+            onClick={() => { setFiltroEstado(''); setFiltroCidade(''); }}
+            className="rounded-lg font-body font-medium text-xs"
+            style={{
+              padding: '8px 14px',
+              background: 'rgba(255,255,255,.04)',
+              border: '1px solid rgba(255,255,255,.08)',
+              color: '#9CA3AF',
+            }}
+          >
+            Limpar
+          </button>
+        )}
+      </div>
+
+      <div style={{ fontSize: 12, color: 'rgba(255,255,255,.35)' }} className="font-body">
+        {filtered.length} torneio{filtered.length !== 1 ? 's' : ''} encontrado{filtered.length !== 1 ? 's' : ''}
+        {filtroEstado && ` em ${filtroEstado}`}
+        {filtroCidade && ` · ${filtroCidade}`}
+      </div>
+
       {/* Lista */}
       {isLoading ? (
         <div className="space-y-2">
