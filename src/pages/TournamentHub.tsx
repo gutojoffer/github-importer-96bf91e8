@@ -87,18 +87,7 @@ export default function TournamentHub() {
   const [editMaxPlayers, setEditMaxPlayers] = useState(32);
   const [editEliminationSize, setEditEliminationSize] = useState<EliminationSize>(null);
 
-  // Enrollment modal
-  const [enrollModal, setEnrollModal] = useState<string | null>(null);
-  const [enrollSearch, setEnrollSearch] = useState('');
-  const [batchSelected, setBatchSelected] = useState<Set<string>>(new Set());
-  const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [qaName, setQaName] = useState('');
-  const [qaNick, setQaNick] = useState('');
-  const [qaEmail, setQaEmail] = useState('');
-  const [qaBeyblade, setQaBeyblade] = useState('');
-  const [qaAvatar, setQaAvatar] = useState(DEFAULT_AVATARS[0]);
-  const [qaCustomAvatar, setQaCustomAvatar] = useState('');
-  const qaFileRef = useRef<HTMLInputElement>(null);
+  // (Inscriptions are now managed inside the BladerTournamentModal — no separate enroll modal here.)
 
   // Start config
   const [startingTournament, setStartingTournament] = useState<Tournament | null>(null);
