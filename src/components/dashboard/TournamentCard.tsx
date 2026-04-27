@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Player, Tournament } from '@/types/tournament';
 import { Calendar, Users, UserPlus } from 'lucide-react';
 
@@ -8,9 +7,10 @@ interface Props {
   players: Player[];
   index: number;
   onBatchEnroll?: (tournamentId: string) => void;
+  onOpenDetails?: (tournament: Tournament) => void;
 }
 
-const TournamentCard = React.memo(({ tournament: t, players, index, onBatchEnroll }: Props) => {
+const TournamentCard = React.memo(({ tournament: t, players, index, onBatchEnroll, onOpenDetails }: Props) => {
   const spotsLeft = (t.maxPlayers || 32) - t.playerIds.length;
   const fillPercent = Math.min(100, (t.playerIds.length / (t.maxPlayers || 32)) * 100);
 
@@ -27,15 +27,23 @@ const TournamentCard = React.memo(({ tournament: t, players, index, onBatchEnrol
   const status = statusConfig[t.status] || statusConfig.upcoming;
   const accentColor = t.status === 'active' ? 'from-success' : 'from-primary';
 
+  const handleCardClick = () => {
+    onOpenDetails?.(t);
+  };
+
   return (
     <div
-      className="surface-panel group hover:bg-[hsl(var(--surface2))] hover:border-[rgba(79,142,247,0.25)] hover:-translate-y-[1px] transition-all duration-200 block overflow-hidden anim-fade-up"
+      role="button"
+      tabIndex={0}
+      onClick={handleCardClick}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCardClick(); } }}
+      className="surface-panel group hover:bg-[hsl(var(--surface2))] hover:border-[rgba(79,142,247,0.25)] hover:-translate-y-[1px] transition-all duration-200 block overflow-hidden anim-fade-up cursor-pointer"
       style={{ animationDelay: `${index * 60}ms` }}
     >
       {/* Top accent line */}
       <div className={`h-[2px] w-full bg-gradient-to-r ${accentColor} to-transparent`} />
 
-      <Link to={t.status === 'active' ? '/tournament' : `/signup/${t.id}`} className="block p-4 space-y-3">
+      <div className="block p-4 space-y-3">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-heading text-base font-bold text-foreground tracking-wide truncate">{t.name}</h3>
@@ -63,7 +71,7 @@ const TournamentCard = React.memo(({ tournament: t, players, index, onBatchEnrol
             style={{ width: `${fillPercent}%` }}
           />
         </div>
-      </Link>
+      </div>
 
       {/* Batch enroll button for upcoming */}
       {t.status === 'upcoming' && onBatchEnroll && (
