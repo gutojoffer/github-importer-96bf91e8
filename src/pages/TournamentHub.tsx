@@ -1011,6 +1011,16 @@ export default function TournamentHub() {
         />
       )}
 
+      {enrollTournament && (
+        <EnrollBladersModal
+          tournamentId={enrollTournament.id}
+          tournamentName={enrollTournament.name}
+          open={!!enrollTournament}
+          onOpenChange={(open) => { if (!open) setEnrollTournament(null); }}
+          onEnrolled={() => loadTournaments()}
+        />
+      )}
+
       {/* Page Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
