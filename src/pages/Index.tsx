@@ -8,7 +8,7 @@ import DashboardHero from '@/components/dashboard/DashboardHero';
 import TournamentCard from '@/components/dashboard/TournamentCard';
 import TopBladers from '@/components/dashboard/TopBladers';
 import ActivityFeed from '@/components/dashboard/ActivityFeed';
-import BatchEnrollModal from '@/components/BatchEnrollModal';
+import EnrollBladersModal from '@/components/EnrollBladersModal';
 import BladerTournamentModal from '@/components/blader/BladerTournamentModal';
 
 const Index = () => {
