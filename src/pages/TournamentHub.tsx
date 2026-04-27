@@ -88,7 +88,8 @@ export default function TournamentHub() {
   const [editMaxPlayers, setEditMaxPlayers] = useState(32);
   const [editEliminationSize, setEditEliminationSize] = useState<EliminationSize>(null);
 
-  // (Inscriptions are now managed inside the BladerTournamentModal — no separate enroll modal here.)
+  // Enroll modal state
+  const [enrollTournament, setEnrollTournament] = useState<Tournament | null>(null);
 
   // Start config
   const [startingTournament, setStartingTournament] = useState<Tournament | null>(null);
