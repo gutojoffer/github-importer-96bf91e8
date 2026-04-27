@@ -102,11 +102,22 @@ const Index = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {[...active, ...upcoming].map((t, i) => (
-              <TournamentCard key={t.id} tournament={t} players={players} index={i} onBatchEnroll={(id) => setBatchEnrollTournamentId(id)} />
+              <TournamentCard key={t.id} tournament={t} players={players} index={i} onBatchEnroll={(id) => setBatchEnrollTournamentId(id)} onOpenDetails={(tt) => setDetailsTournament(tt)} />
             ))}
           </div>
         )}
       </section>
+
+      {/* Tournament Details Modal */}
+      {detailsTournament && (
+        <BladerTournamentModal
+          tournament={toModalTournament(detailsTournament)}
+          open={!!detailsTournament}
+          onOpenChange={(open) => { if (!open) setDetailsTournament(null); }}
+          mode="organizer"
+          onManage={() => { setDetailsTournament(null); }}
+        />
+      )}
 
       {/* Bottom Panels */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
