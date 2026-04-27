@@ -1375,6 +1375,10 @@ export default function TournamentHub() {
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-2 shrink-0 pt-1">
+                      <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setEnrollTournament(t); }}
+                        className="font-heading tracking-wider gap-1.5 border-accent/40 text-accent hover:bg-accent/10 h-9 px-3.5">
+                        <UserPlus className="h-3.5 w-3.5" /> Inscrever
+                      </Button>
                       <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setStartingTournament(t); setStartEliminationSize(t.eliminationSize || null); }}
                         className="font-heading tracking-wider gap-1.5 border-primary/30 text-primary hover:bg-primary/10 h-9 px-3.5" disabled={t.playerIds.length < 2}>
                         <Play className="h-3.5 w-3.5" /> Iniciar
