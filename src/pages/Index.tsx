@@ -8,7 +8,7 @@ import DashboardHero from '@/components/dashboard/DashboardHero';
 import TournamentCard from '@/components/dashboard/TournamentCard';
 import TopBladers from '@/components/dashboard/TopBladers';
 import ActivityFeed from '@/components/dashboard/ActivityFeed';
-import BatchEnrollModal from '@/components/BatchEnrollModal';
+import EnrollBladersModal from '@/components/EnrollBladersModal';
 import BladerTournamentModal from '@/components/blader/BladerTournamentModal';
 
 const Index = () => {
@@ -60,14 +60,14 @@ const Index = () => {
 
   return (
     <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
-      {/* Batch Enrollment Modal */}
+      {/* Enroll Bladers Modal */}
       {batchEnrollTournament && (
-        <BatchEnrollModal
+        <EnrollBladersModal
           tournamentId={batchEnrollTournament.id}
           tournamentName={batchEnrollTournament.name}
-          enrolledPlayerIds={batchEnrollTournament.playerIds}
-          allPlayers={players}
-          onClose={() => setBatchEnrollTournamentId(null)}
+          open={!!batchEnrollTournament}
+          onOpenChange={(open) => { if (!open) setBatchEnrollTournamentId(null); }}
+          onEnrolled={() => loadTournaments()}
         />
       )}
 

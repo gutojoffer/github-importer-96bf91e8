@@ -27,6 +27,7 @@ import FinishOverlay from '@/components/FinishOverlay';
 import LigaLogo from '@/components/LigaLogo';
 import EloBadge from '@/components/EloBadge';
 import BladerTournamentModal from '@/components/blader/BladerTournamentModal';
+import EnrollBladersModal from '@/components/EnrollBladersModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Plus, Play, Lightbulb, Calendar, Users, Trophy, XOctagon, Award,
@@ -87,7 +88,8 @@ export default function TournamentHub() {
   const [editMaxPlayers, setEditMaxPlayers] = useState(32);
   const [editEliminationSize, setEditEliminationSize] = useState<EliminationSize>(null);
 
-  // (Inscriptions are now managed inside the BladerTournamentModal — no separate enroll modal here.)
+  // Enroll modal state
+  const [enrollTournament, setEnrollTournament] = useState<Tournament | null>(null);
 
   // Start config
   const [startingTournament, setStartingTournament] = useState<Tournament | null>(null);
@@ -1009,6 +1011,16 @@ export default function TournamentHub() {
         />
       )}
 
+      {enrollTournament && (
+        <EnrollBladersModal
+          tournamentId={enrollTournament.id}
+          tournamentName={enrollTournament.name}
+          open={!!enrollTournament}
+          onOpenChange={(open) => { if (!open) setEnrollTournament(null); }}
+          onEnrolled={() => loadTournaments()}
+        />
+      )}
+
       {/* Page Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
@@ -1373,6 +1385,10 @@ export default function TournamentHub() {
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-2 shrink-0 pt-1">
+                      <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setEnrollTournament(t); }}
+                        className="font-heading tracking-wider gap-1.5 border-accent/40 text-accent hover:bg-accent/10 h-9 px-3.5">
+                        <UserPlus className="h-3.5 w-3.5" /> Inscrever
+                      </Button>
                       <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setStartingTournament(t); setStartEliminationSize(t.eliminationSize || null); }}
                         className="font-heading tracking-wider gap-1.5 border-primary/30 text-primary hover:bg-primary/10 h-9 px-3.5" disabled={t.playerIds.length < 2}>
                         <Play className="h-3.5 w-3.5" /> Iniciar
