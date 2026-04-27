@@ -2,19 +2,42 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import { useTournamentStore } from '@/stores/useTournamentStore';
-import { Player } from '@/types/tournament';
+import { Player, Tournament } from '@/types/tournament';
 import { Trophy, Calendar, Users, Swords, ChevronRight, Plus, Clock } from 'lucide-react';
 import DashboardHero from '@/components/dashboard/DashboardHero';
 import TournamentCard from '@/components/dashboard/TournamentCard';
 import TopBladers from '@/components/dashboard/TopBladers';
 import ActivityFeed from '@/components/dashboard/ActivityFeed';
 import BatchEnrollModal from '@/components/BatchEnrollModal';
+import BladerTournamentModal from '@/components/blader/BladerTournamentModal';
 
 const Index = () => {
   const players = usePlayerStore(s => s.players);
   const loadPlayers = usePlayerStore(s => s.load);
   const { tournaments, load: loadTournaments } = useTournamentStore();
   const [batchEnrollTournamentId, setBatchEnrollTournamentId] = useState<string | null>(null);
+  const [detailsTournament, setDetailsTournament] = useState<Tournament | null>(null);
+
+  const toModalTournament = (t: Tournament) => ({
+    id: t.id,
+    name: t.name,
+    date: t.date,
+    status: t.status,
+    liga_id: t.ligaId || null,
+    player_ids: t.playerIds,
+    max_players: t.maxPlayers || null,
+    local_nome: t.localNome || null,
+    local_endereco: t.localEndereco || null,
+    local_cidade: t.localCidade || null,
+    local_estado: t.localEstado || null,
+    horario_inicio: t.horarioInicio || null,
+    horario_fim: t.horarioFim || null,
+    descricao: t.descricao || null,
+    imagem_url: t.imagemUrl || null,
+    premio: t.premio || null,
+    regras: t.regras || null,
+    arena_count: t.arenaCount,
+  });
 
   useEffect(() => {
     loadPlayers();
@@ -79,11 +102,22 @@ const Index = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {[...active, ...upcoming].map((t, i) => (
-              <TournamentCard key={t.id} tournament={t} players={players} index={i} onBatchEnroll={(id) => setBatchEnrollTournamentId(id)} />
+              <TournamentCard key={t.id} tournament={t} players={players} index={i} onBatchEnroll={(id) => setBatchEnrollTournamentId(id)} onOpenDetails={(tt) => setDetailsTournament(tt)} />
             ))}
           </div>
         )}
       </section>
+
+      {/* Tournament Details Modal */}
+      {detailsTournament && (
+        <BladerTournamentModal
+          tournament={toModalTournament(detailsTournament)}
+          open={!!detailsTournament}
+          onOpenChange={(open) => { if (!open) setDetailsTournament(null); }}
+          mode="organizer"
+          onManage={() => { setDetailsTournament(null); }}
+        />
+      )}
 
       {/* Bottom Panels */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
