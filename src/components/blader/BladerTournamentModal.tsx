@@ -367,14 +367,14 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
             <>
               {mode === 'organizer' && (
                 <div style={{ display: 'flex', gap: 8, padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,.06)' }}>
-                  <button onClick={() => setModoInscricao(modoInscricao === 'buscar' ? 'lista' : 'buscar')} style={{
+                  <button onClick={() => setModoInscricao('buscar')} style={{
                     flex: 1, padding: '9px',
                     background: modoInscricao === 'buscar' ? 'rgba(37,99,235,.15)' : 'rgba(255,255,255,.03)',
                     border: `1px solid ${modoInscricao === 'buscar' ? 'rgba(37,99,235,.3)' : 'rgba(255,255,255,.08)'}`,
                     borderRadius: 9, color: modoInscricao === 'buscar' ? '#60A5FA' : 'rgba(255,255,255,.4)',
                     fontSize: 12, fontWeight: 600, cursor: 'pointer',
                   }}>Buscar cadastrado</button>
-                  <button onClick={() => setModoInscricao(modoInscricao === 'rapido' ? 'lista' : 'rapido')} style={{
+                  <button onClick={() => setModoInscricao('rapido')} style={{
                     flex: 1, padding: '9px',
                     background: modoInscricao === 'rapido' ? 'rgba(245,158,11,.12)' : 'rgba(255,255,255,.03)',
                     border: `1px solid ${modoInscricao === 'rapido' ? 'rgba(245,158,11,.3)' : 'rgba(255,255,255,.08)'}`,
