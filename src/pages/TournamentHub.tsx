@@ -27,6 +27,7 @@ import FinishOverlay from '@/components/FinishOverlay';
 import LigaLogo from '@/components/LigaLogo';
 import EloBadge from '@/components/EloBadge';
 import BladerTournamentModal from '@/components/blader/BladerTournamentModal';
+import EnrollBladersModal from '@/components/EnrollBladersModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Plus, Play, Lightbulb, Calendar, Users, Trophy, XOctagon, Award,
