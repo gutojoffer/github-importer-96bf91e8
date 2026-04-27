@@ -60,14 +60,14 @@ const Index = () => {
 
   return (
     <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
-      {/* Batch Enrollment Modal */}
+      {/* Enroll Bladers Modal */}
       {batchEnrollTournament && (
-        <BatchEnrollModal
+        <EnrollBladersModal
           tournamentId={batchEnrollTournament.id}
           tournamentName={batchEnrollTournament.name}
-          enrolledPlayerIds={batchEnrollTournament.playerIds}
-          allPlayers={players}
-          onClose={() => setBatchEnrollTournamentId(null)}
+          open={!!batchEnrollTournament}
+          onOpenChange={(open) => { if (!open) setBatchEnrollTournamentId(null); }}
+          onEnrolled={() => loadTournaments()}
         />
       )}
 
