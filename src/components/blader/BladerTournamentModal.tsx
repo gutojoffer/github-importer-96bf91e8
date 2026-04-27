@@ -96,7 +96,7 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
   const [confirmandoDesistencia, setConfirmandoDesistencia] = useState(false);
 
   // Organizer enrollment management state
-  const [modoInscricao, setModoInscricao] = useState<'lista' | 'buscar' | 'rapido'>('lista');
+  const [modoInscricao, setModoInscricao] = useState<'buscar' | 'rapido'>('buscar');
   const [busca, setBusca] = useState('');
   const [bladersDisponiveis, setBladersDisponiveis] = useState<Array<{ id: string; nome_blader: string | null; avatar_blader_url: string | null; cidade_blader: string | null; nivel: string | null }>>([]);
   const [enrolling, setEnrolling] = useState<string | null>(null);
@@ -160,7 +160,7 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
     if (!open || !tournament) return;
     setAbaAtiva('Informações');
     setConfirmandoDesistencia(false);
-    setModoInscricao('lista');
+    setModoInscricao('buscar');
     setBusca('');
     setNomeRapido(''); setApelidoRapido(''); setEmailRapido(''); setBeybladeRapido('');
     refreshDetails();
@@ -234,7 +234,7 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
 
     toast.success(`${nomeRapido.trim()} cadastrado e inscrito!`);
     setNomeRapido(''); setApelidoRapido(''); setEmailRapido(''); setBeybladeRapido('');
-    setModoInscricao('lista');
+    setModoInscricao('buscar');
     await refreshDetails();
     onInscrito?.();
   }
@@ -367,14 +367,14 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
             <>
               {mode === 'organizer' && (
                 <div style={{ display: 'flex', gap: 8, padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,.06)' }}>
-                  <button onClick={() => setModoInscricao(modoInscricao === 'buscar' ? 'lista' : 'buscar')} style={{
+                  <button onClick={() => setModoInscricao('buscar')} style={{
                     flex: 1, padding: '9px',
                     background: modoInscricao === 'buscar' ? 'rgba(37,99,235,.15)' : 'rgba(255,255,255,.03)',
                     border: `1px solid ${modoInscricao === 'buscar' ? 'rgba(37,99,235,.3)' : 'rgba(255,255,255,.08)'}`,
                     borderRadius: 9, color: modoInscricao === 'buscar' ? '#60A5FA' : 'rgba(255,255,255,.4)',
                     fontSize: 12, fontWeight: 600, cursor: 'pointer',
                   }}>Buscar cadastrado</button>
-                  <button onClick={() => setModoInscricao(modoInscricao === 'rapido' ? 'lista' : 'rapido')} style={{
+                  <button onClick={() => setModoInscricao('rapido')} style={{
                     flex: 1, padding: '9px',
                     background: modoInscricao === 'rapido' ? 'rgba(245,158,11,.12)' : 'rgba(255,255,255,.03)',
                     border: `1px solid ${modoInscricao === 'rapido' ? 'rgba(245,158,11,.3)' : 'rgba(255,255,255,.08)'}`,
