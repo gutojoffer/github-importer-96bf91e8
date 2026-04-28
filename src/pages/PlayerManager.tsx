@@ -78,18 +78,22 @@ export default function PlayerManager() {
     reader.readAsDataURL(file);
   }, []);
 
-  const handleAdd = useCallback(() => {
+  const handleAdd = useCallback(async () => {
     if (!name.trim()) { toast.error('Nome é obrigatório!'); return; }
-    const player: Player = {
-      id: crypto.randomUUID(), name: name.trim(),
-      nickname: nickname.trim().replace(/^@/, ''),
-      avatar: customAvatar || selectedAvatar,
-      createdAt: new Date().toISOString(), xp: 0,
-    };
-    add(player);
+    if (!user) { toast.error('Faça login novamente'); return; }
+    const avatarVal = customAvatar || selectedAvatar;
+    const isImage = avatarVal && (avatarVal.startsWith('data:') || avatarVal.startsWith('http'));
+    const { error } = await supabase.from('bladers_temp').insert({
+      organizador_id: user.id,
+      nome: name.trim(),
+      apelido: nickname.trim().replace(/^@/, '') || null,
+      avatar_url: isImage ? avatarVal : null,
+    });
+    if (error) { toast.error('Erro ao cadastrar'); console.error(error); return; }
     setName(''); setNickname(''); setCustomAvatar(''); setSelectedAvatar(DEFAULT_AVATARS[0]);
-    toast.success(`${player.nickname ? `@${player.nickname}` : player.name} cadastrado!`);
-  }, [name, nickname, customAvatar, selectedAvatar, add]);
+    toast.success(`${name.trim()} cadastrado!`);
+    refetchTemp();
+  }, [name, nickname, customAvatar, selectedAvatar, user, refetchTemp]);
 
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
