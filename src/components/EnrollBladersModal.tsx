@@ -162,6 +162,8 @@ export default function EnrollBladersModal({ tournamentId, tournamentName, open,
     await loadData();
     onEnrolled?.();
   }
+
+  async function handleQuickAdd() {
     if (!user) return;
     if (!nome.trim()) { toast.error('Nome obrigatório'); return; }
     setSavingQuick(true);
