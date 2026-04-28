@@ -269,11 +269,11 @@ export default function EnrollBladersModal({ tournamentId, tournamentName, open,
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {filtered.map(b => {
-                      const isSel = selected.has(b.id);
+                      const isSel = selected.has(b.key);
                       return (
                         <button
-                          key={b.id}
-                          onClick={() => toggleOne(b.id)}
+                          key={b.key}
+                          onClick={() => toggleOne(b.key)}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 9,
                             background: isSel ? 'rgba(37,99,235,.12)' : 'rgba(255,255,255,.03)',
@@ -282,19 +282,31 @@ export default function EnrollBladersModal({ tournamentId, tournamentName, open,
                           }}
                         >
                           <CheckBox checked={isSel} />
-                          {b.avatar_blader_url ? (
-                            <img src={b.avatar_blader_url} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                          {b.avatar ? (
+                            <img src={b.avatar} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                           ) : (
-                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#1e3a8a,#2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                              {(b.nome_blader || 'B').charAt(0)}
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: b.isTemp ? 'linear-gradient(135deg,#92400e,#f59e0b)' : 'linear-gradient(135deg,#1e3a8a,#2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                              {(b.nome || 'B').charAt(0).toUpperCase()}
                             </div>
                           )}
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.nome_blader}</div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.nome}</div>
                             <div style={{ fontSize: 11, color: 'rgba(255,255,255,.3)' }}>
-                              {b.cidade_blader || ''}{b.nivel ? ` · ${b.nivel}` : ''}
+                              {b.cidade || ''}{b.nivel ? ` · ${b.nivel}` : ''}{b.beyblade ? ` · ${b.beyblade}` : ''}
                             </div>
                           </div>
+                          {b.isTemp && (
+                            <div style={{
+                              padding: '2px 7px', borderRadius: 6,
+                              background: 'rgba(245,158,11,.1)',
+                              border: '1px solid rgba(245,158,11,.2)',
+                              color: '#FCD34D', fontSize: 9,
+                              fontWeight: 700, letterSpacing: 1,
+                              flexShrink: 0,
+                            }}>
+                              CADASTRO RÁPIDO
+                            </div>
+                          )}
                         </button>
                       );
                     })}
