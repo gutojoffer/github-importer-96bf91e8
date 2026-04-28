@@ -6,11 +6,15 @@ import { toast } from 'sonner';
 import { Search, X, Users, UserPlus, Check } from 'lucide-react';
 
 interface BladerRow {
-  id: string;
-  nome_blader: string | null;
-  avatar_blader_url: string | null;
-  cidade_blader: string | null;
+  key: string;            // unique key (prefix + id)
+  blader_id: string | null;
+  blader_temp_id: string | null;
+  nome: string;
+  avatar: string | null;
+  cidade: string | null;
+  beyblade: string | null;
   nivel: string | null;
+  isTemp: boolean;
 }
 
 interface Props {
