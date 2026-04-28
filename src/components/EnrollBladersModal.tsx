@@ -6,11 +6,15 @@ import { toast } from 'sonner';
 import { Search, X, Users, UserPlus, Check } from 'lucide-react';
 
 interface BladerRow {
-  id: string;
-  nome_blader: string | null;
-  avatar_blader_url: string | null;
-  cidade_blader: string | null;
+  key: string;            // unique key (prefix + id)
+  blader_id: string | null;
+  blader_temp_id: string | null;
+  nome: string;
+  avatar: string | null;
+  cidade: string | null;
+  beyblade: string | null;
   nivel: string | null;
+  isTemp: boolean;
 }
 
 interface Props {
@@ -50,62 +54,110 @@ export default function EnrollBladersModal({ tournamentId, tournamentName, open,
   }, [open, tournamentId]);
 
   async function loadData() {
+    if (!user) return;
     setLoading(true);
-    const [{ data: bladersData }, { data: inscritosData }] = await Promise.all([
+    const [profilesRes, tempRes, inscritosRes] = await Promise.all([
       supabase
         .from('profiles')
-        .select('id, nome_blader, avatar_blader_url, cidade_blader, nivel')
+        .select('id, nome_blader, avatar_blader_url, cidade_blader, beyblade_favorita, nivel')
         .eq('tem_perfil_blader', true)
         .not('nome_blader', 'is', null)
         .order('nome_blader', { ascending: true })
         .limit(500),
       supabase
+        .from('bladers_temp')
+        .select('id, nome, apelido, avatar_url, cidade, beyblade_favorita, vinculado_a')
+        .eq('organizador_id', user.id)
+        .order('nome', { ascending: true })
+        .limit(500),
+      supabase
         .from('inscricoes')
-        .select('blader_id')
+        .select('blader_id, blader_temp_id')
         .eq('torneio_id', tournamentId)
-        .eq('status', 'confirmado')
-        .not('blader_id', 'is', null),
+        .eq('status', 'confirmado'),
     ]);
-    setBladers((bladersData ?? []) as BladerRow[]);
-    setEnrolledIds(new Set(((inscritosData ?? []) as { blader_id: string | null }[]).map(r => r.blader_id!).filter(Boolean)));
+
+    const fromProfiles: BladerRow[] = (profilesRes.data ?? []).map((b: any) => ({
+      key: `p:${b.id}`,
+      blader_id: b.id,
+      blader_temp_id: null,
+      nome: b.nome_blader,
+      avatar: b.avatar_blader_url,
+      cidade: b.cidade_blader,
+      beyblade: b.beyblade_favorita,
+      nivel: b.nivel,
+      isTemp: false,
+    }));
+
+    const fromTemp: BladerRow[] = (tempRes.data ?? [])
+      .filter((b: any) => !b.vinculado_a)
+      .map((b: any) => ({
+        key: `t:${b.id}`,
+        blader_id: null,
+        blader_temp_id: b.id,
+        nome: b.nome || b.apelido || 'Sem nome',
+        avatar: b.avatar_url,
+        cidade: b.cidade,
+        beyblade: b.beyblade_favorita,
+        nivel: null,
+        isTemp: true,
+      }));
+
+    const merged = [...fromProfiles, ...fromTemp].sort((a, b) =>
+      (a.nome || '').localeCompare(b.nome || '')
+    );
+
+    const enrolled = new Set<string>();
+    (inscritosRes.data ?? []).forEach((r: any) => {
+      if (r.blader_id) enrolled.add(`p:${r.blader_id}`);
+      if (r.blader_temp_id) enrolled.add(`t:${r.blader_temp_id}`);
+    });
+
+    setBladers(merged);
+    setEnrolledIds(enrolled);
     setLoading(false);
   }
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return bladers.filter(b => {
-      if (enrolledIds.has(b.id)) return false;
+      if (enrolledIds.has(b.key)) return false;
       if (!term) return true;
-      return (b.nome_blader || '').toLowerCase().includes(term)
-        || (b.cidade_blader || '').toLowerCase().includes(term);
+      return (b.nome || '').toLowerCase().includes(term)
+        || (b.cidade || '').toLowerCase().includes(term);
     });
   }, [bladers, enrolledIds, search]);
 
-  function toggleOne(id: string) {
+  function toggleOne(key: string) {
     setSelected(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
   }
 
   function toggleAll() {
     if (selected.size === filtered.length) setSelected(new Set());
-    else setSelected(new Set(filtered.map(b => b.id)));
+    else setSelected(new Set(filtered.map(b => b.key)));
   }
 
   async function handleEnrollSelected() {
     if (selected.size === 0) return;
     setEnrolling(true);
-    const rows = Array.from(selected).map(bid => ({
-      torneio_id: tournamentId,
-      blader_id: bid,
-      status: 'confirmado',
-    }));
+    const byKey = new Map(bladers.map(b => [b.key, b]));
+    const rows = Array.from(selected)
+      .map(k => byKey.get(k))
+      .filter((b): b is BladerRow => !!b)
+      .map(b => ({
+        torneio_id: tournamentId,
+        blader_id: b.blader_id,
+        blader_temp_id: b.blader_temp_id,
+        status: 'confirmado',
+      }));
     const { error } = await supabase.from('inscricoes').insert(rows);
     setEnrolling(false);
     if (error) { toast.error('Erro ao inscrever bladers'); return; }
-    toast.success(`${selected.size} blader${selected.size > 1 ? 's' : ''} inscrito${selected.size > 1 ? 's' : ''}!`);
+    toast.success(`${rows.length} blader${rows.length > 1 ? 's' : ''} inscrito${rows.length > 1 ? 's' : ''}!`);
     setSelected(new Set());
     await loadData();
     onEnrolled?.();
@@ -217,11 +269,11 @@ export default function EnrollBladersModal({ tournamentId, tournamentName, open,
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {filtered.map(b => {
-                      const isSel = selected.has(b.id);
+                      const isSel = selected.has(b.key);
                       return (
                         <button
-                          key={b.id}
-                          onClick={() => toggleOne(b.id)}
+                          key={b.key}
+                          onClick={() => toggleOne(b.key)}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 9,
                             background: isSel ? 'rgba(37,99,235,.12)' : 'rgba(255,255,255,.03)',
@@ -230,19 +282,31 @@ export default function EnrollBladersModal({ tournamentId, tournamentName, open,
                           }}
                         >
                           <CheckBox checked={isSel} />
-                          {b.avatar_blader_url ? (
-                            <img src={b.avatar_blader_url} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                          {b.avatar ? (
+                            <img src={b.avatar} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                           ) : (
-                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#1e3a8a,#2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                              {(b.nome_blader || 'B').charAt(0)}
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: b.isTemp ? 'linear-gradient(135deg,#92400e,#f59e0b)' : 'linear-gradient(135deg,#1e3a8a,#2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                              {(b.nome || 'B').charAt(0).toUpperCase()}
                             </div>
                           )}
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.nome_blader}</div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.nome}</div>
                             <div style={{ fontSize: 11, color: 'rgba(255,255,255,.3)' }}>
-                              {b.cidade_blader || ''}{b.nivel ? ` · ${b.nivel}` : ''}
+                              {b.cidade || ''}{b.nivel ? ` · ${b.nivel}` : ''}{b.beyblade ? ` · ${b.beyblade}` : ''}
                             </div>
                           </div>
+                          {b.isTemp && (
+                            <div style={{
+                              padding: '2px 7px', borderRadius: 6,
+                              background: 'rgba(245,158,11,.1)',
+                              border: '1px solid rgba(245,158,11,.2)',
+                              color: '#FCD34D', fontSize: 9,
+                              fontWeight: 700, letterSpacing: 1,
+                              flexShrink: 0,
+                            }}>
+                              CADASTRO RÁPIDO
+                            </div>
+                          )}
                         </button>
                       );
                     })}
