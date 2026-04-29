@@ -21,7 +21,7 @@ export default function Login() {
       setLoading(false);
       setError('Email ou senha incorretos.');
     } else {
-      if (data.user) await verificarEExecutarMatch(data.user.id, data.user.email, { silent: true });
+      if (data.user) await verificarEExecutarMatch(data.user.id, data.user.email);
       setLoading(false);
       navigate('/select-mode');
     }
