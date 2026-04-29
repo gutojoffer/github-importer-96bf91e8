@@ -111,31 +111,40 @@ export type Database = {
         Row: {
           blader_id: string | null
           blader_temp_id: string | null
+          derrotas: number
           id: string
           inscrito_em: string
           posicao_final: number | null
           status: string
+          streak_max: number
           torneio_id: string
+          vitorias: number
           xp_ganho: number
         }
         Insert: {
           blader_id?: string | null
           blader_temp_id?: string | null
+          derrotas?: number
           id?: string
           inscrito_em?: string
           posicao_final?: number | null
           status?: string
+          streak_max?: number
           torneio_id: string
+          vitorias?: number
           xp_ganho?: number
         }
         Update: {
           blader_id?: string | null
           blader_temp_id?: string | null
+          derrotas?: number
           id?: string
           inscrito_em?: string
           posicao_final?: number | null
           status?: string
+          streak_max?: number
           torneio_id?: string
+          vitorias?: number
           xp_ganho?: number
         }
         Relationships: [
@@ -288,6 +297,7 @@ export type Database = {
           nivel: string
           nome_blader: string | null
           nome_liga: string | null
+          streak_max: number
           tem_perfil_blader: boolean
           tem_perfil_organizador: boolean
           tipo_conta: string
@@ -317,6 +327,7 @@ export type Database = {
           nivel?: string
           nome_blader?: string | null
           nome_liga?: string | null
+          streak_max?: number
           tem_perfil_blader?: boolean
           tem_perfil_organizador?: boolean
           tipo_conta?: string
@@ -346,6 +357,7 @@ export type Database = {
           nivel?: string
           nome_blader?: string | null
           nome_liga?: string | null
+          streak_max?: number
           tem_perfil_blader?: boolean
           tem_perfil_organizador?: boolean
           tipo_conta?: string
