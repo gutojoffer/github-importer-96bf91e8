@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { verificarEExecutarMatch } from '@/lib/bladerMatch';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -15,11 +16,13 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
+      setLoading(false);
       setError('Email ou senha incorretos.');
     } else {
+      if (data.user) await verificarEExecutarMatch(data.user.id, data.user.email);
+      setLoading(false);
       navigate('/select-mode');
     }
   };

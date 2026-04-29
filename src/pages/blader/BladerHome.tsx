@@ -6,9 +6,10 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { Trophy, Zap, Flame, Target, MapPin, Calendar, ArrowRight, Users } from 'lucide-react';
 import BladerAvatar from '@/components/BladerAvatar';
 import { getBladerPalette } from '@/lib/bladerColors';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import BladerTournamentModal from '@/components/blader/BladerTournamentModal';
 import { toast } from 'sonner';
+import { verificarEExecutarMatch } from '@/lib/bladerMatch';
 
 interface TournamentRow {
   id: string;
@@ -58,7 +59,7 @@ export default function BladerHome() {
   const bladerCity = profile?.cidadeBlader || profile?.cidade || null;
 
   // Blader stats from profiles
-  const { data: stats } = useQuery({
+  const { data: stats, refetch: refetchStats } = useQuery({
     queryKey: ['blader-profile-stats', user?.id],
     queryFn: async () => {
       if (!user) return null;
@@ -110,6 +111,27 @@ export default function BladerHome() {
     },
     enabled: !!user,
   });
+
+  useEffect(() => {
+    async function verificarMatchPendente() {
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('match_verificado')
+        .eq('id', user.id)
+        .single();
+
+      if (!(profile as any)?.match_verificado) {
+        await verificarEExecutarMatch(user.id, user.email);
+        refetchStats();
+        refetchInscricoes();
+        refetch();
+      }
+    }
+
+    verificarMatchPendente();
+  }, [user, refetchStats, refetchInscricoes, refetch]);
 
   const torneiosTotal = stats?.torneios_total ?? 0;
   const vitoriasTotal = stats?.vitorias_total ?? 0;

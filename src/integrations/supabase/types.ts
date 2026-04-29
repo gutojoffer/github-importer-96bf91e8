@@ -283,6 +283,7 @@ export type Database = {
           estado_blader: string | null
           id: string
           logo_url: string | null
+          match_verificado: boolean
           melhor_posicao: number | null
           nivel: string
           nome_blader: string | null
@@ -311,6 +312,7 @@ export type Database = {
           estado_blader?: string | null
           id: string
           logo_url?: string | null
+          match_verificado?: boolean
           melhor_posicao?: number | null
           nivel?: string
           nome_blader?: string | null
@@ -339,6 +341,7 @@ export type Database = {
           estado_blader?: string | null
           id?: string
           logo_url?: string | null
+          match_verificado?: boolean
           melhor_posicao?: number | null
           nivel?: string
           nome_blader?: string | null
@@ -508,6 +511,10 @@ export type Database = {
       link_bladers_temp: {
         Args: { _temp_ids: string[]; _user_id: string }
         Returns: undefined
+      }
+      match_bladers_temp_by_email: {
+        Args: { _email: string; _user_id: string }
+        Returns: number
       }
     }
     Enums: {
