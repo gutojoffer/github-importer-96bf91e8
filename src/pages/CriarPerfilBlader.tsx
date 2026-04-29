@@ -7,6 +7,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { toast } from 'sonner';
 import { Camera, Check, ArrowRight, ArrowLeft, Sparkles, Info } from 'lucide-react';
 import VincularBladersTempModal from '@/components/blader/VincularBladersTempModal';
+import { verificarEExecutarMatch } from '@/lib/bladerMatch';
 
 const STEPS = ['Identidade', 'Seu Beyblade', 'Tudo pronto'] as const;
 
@@ -124,6 +125,7 @@ export default function CriarPerfilBlader() {
       }
     } else {
       setMode('blader');
+      await verificarEExecutarMatch(user.id, user.email);
       navigate('/blader/home', { replace: true });
     }
     setLoading(false);
