@@ -84,26 +84,6 @@ export default function BladerHome() {
     enabled: !!user,
   });
 
-  useEffect(() => {
-    async function verificarMatchPendente() {
-      if (!user) return;
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('match_verificado')
-        .eq('id', user.id)
-        .single();
-
-      if (!(profile as any)?.match_verificado) {
-        await verificarEExecutarMatch(user.id, user.email);
-        refetchInscricoes();
-        refetch();
-      }
-    }
-
-    verificarMatchPendente();
-  }, [user]);
-
   // My inscricoes
   const { data: myInscricoes = [], refetch: refetchInscricoes } = useQuery({
     queryKey: ['blader-inscricoes', user?.id],
@@ -131,6 +111,26 @@ export default function BladerHome() {
     },
     enabled: !!user,
   });
+
+  useEffect(() => {
+    async function verificarMatchPendente() {
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('match_verificado')
+        .eq('id', user.id)
+        .single();
+
+      if (!(profile as any)?.match_verificado) {
+        await verificarEExecutarMatch(user.id, user.email);
+        refetchInscricoes();
+        refetch();
+      }
+    }
+
+    verificarMatchPendente();
+  }, [user, refetchInscricoes, refetch]);
 
   const torneiosTotal = stats?.torneios_total ?? 0;
   const vitoriasTotal = stats?.vitorias_total ?? 0;
