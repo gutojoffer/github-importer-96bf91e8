@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Camera, Check, ArrowRight, ArrowLeft, Sparkles } from 'lucide-react';
+import { verificarEExecutarMatch } from '@/lib/bladerMatch';
 
 const STEPS = ['Identidade', 'Seu Beyblade', 'Tudo pronto'] as const;
 
@@ -95,6 +96,7 @@ export default function BladerOnboarding() {
       });
       if (ok) setStep(2);
     } else {
+      await verificarEExecutarMatch(user.id, user.email);
       navigate('/blader/home', { replace: true });
     }
 
