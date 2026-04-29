@@ -59,7 +59,7 @@ export default function BladerHome() {
   const bladerCity = profile?.cidadeBlader || profile?.cidade || null;
 
   // Blader stats from profiles
-  const { data: stats } = useQuery({
+  const { data: stats, refetch: refetchStats } = useQuery({
     queryKey: ['blader-profile-stats', user?.id],
     queryFn: async () => {
       if (!user) return null;
@@ -124,13 +124,14 @@ export default function BladerHome() {
 
       if (!(profile as any)?.match_verificado) {
         await verificarEExecutarMatch(user.id, user.email);
+        refetchStats();
         refetchInscricoes();
         refetch();
       }
     }
 
     verificarMatchPendente();
-  }, [user, refetchInscricoes, refetch]);
+  }, [user, refetchStats, refetchInscricoes, refetch]);
 
   const torneiosTotal = stats?.torneios_total ?? 0;
   const vitoriasTotal = stats?.vitorias_total ?? 0;
