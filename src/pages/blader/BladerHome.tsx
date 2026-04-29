@@ -3,13 +3,18 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { Trophy, Zap, Flame, Target, MapPin, Calendar, ArrowRight, Users } from 'lucide-react';
+import { MapPin, Calendar, ArrowRight, Trophy } from 'lucide-react';
 import BladerAvatar from '@/components/BladerAvatar';
 import { getBladerPalette } from '@/lib/bladerColors';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import BladerTournamentModal from '@/components/blader/BladerTournamentModal';
 import { toast } from 'sonner';
 import { verificarEExecutarMatch } from '@/lib/bladerMatch';
+import {
+  LineChart, Line, BarChart, Bar, RadarChart, Radar,
+  PolarGrid, PolarAngleAxis, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, Legend,
+} from 'recharts';
 
 interface TournamentRow {
   id: string;
@@ -32,6 +37,33 @@ interface TournamentRow {
   regras: string | null;
 }
 
+const NIVEIS = [
+  { nome: 'Rookie',     xpMin: 0,     xpMax: 99 },
+  { nome: 'Challenger', xpMin: 100,   xpMax: 299 },
+  { nome: 'Fighter',    xpMin: 300,   xpMax: 699 },
+  { nome: 'Warrior',    xpMin: 700,   xpMax: 1499 },
+  { nome: 'Champion',   xpMin: 1500,  xpMax: 2999 },
+  { nome: 'Legend',     xpMin: 3000,  xpMax: 9999 },
+  { nome: 'Mythic',     xpMin: 10000, xpMax: Infinity },
+];
+
+function calcularNivel(xp: number) {
+  const idx = NIVEIS.findIndex(n => xp >= n.xpMin && xp <= n.xpMax);
+  const atual = NIVEIS[idx] ?? NIVEIS[0];
+  const proximo = NIVEIS[idx + 1] ?? null;
+  const xpBase = atual.xpMin;
+  const xpTopo = proximo ? proximo.xpMin : atual.xpMin + 1;
+  const progresso = proximo
+    ? Math.min(100, Math.round(((xp - xpBase) / (xpTopo - xpBase)) * 100))
+    : 100;
+  return {
+    atual,
+    proximo,
+    progresso,
+    xpParaProximo: proximo ? Math.max(0, proximo.xpMin - xp) : 0,
+  };
+}
+
 function isHoje(data: string | null) {
   if (!data) return false;
   const hoje = new Date();
@@ -47,25 +79,35 @@ function isAmanha(data: string | null) {
   return amanha.getDate() === d.getDate() && amanha.getMonth() === d.getMonth() && amanha.getFullYear() === d.getFullYear();
 }
 
+function corPosicao(pos: number | null | undefined) {
+  if (pos === 1) return '#F59E0B';
+  if (pos === 2) return '#9CA3AF';
+  if (pos === 3) return '#CD7C3F';
+  return 'rgba(255,255,255,.15)';
+}
+
+const ABAS = ['Visão Geral', 'Histórico', 'Gráficos', 'ForjaBey'] as const;
+type Aba = typeof ABAS[number];
+
 export default function BladerHome() {
   const { user } = useAuth();
   const { profile } = useUserProfile();
   const navigate = useNavigate();
   const [selectedTournament, setSelectedTournament] = useState<TournamentRow | null>(null);
   const [confirmandoDesistencia, setConfirmandoDesistencia] = useState<TournamentRow | null>(null);
+  const [abaAtiva, setAbaAtiva] = useState<Aba>('Visão Geral');
 
   const bladerName = profile?.nomeBlader || profile?.nome || null;
   const bladerAvatar = profile?.avatarBladerUrl || profile?.avatarUrl || null;
   const bladerCity = profile?.cidadeBlader || profile?.cidade || null;
 
-  // Blader stats from profiles
   const { data: stats, refetch: refetchStats } = useQuery({
     queryKey: ['blader-profile-stats', user?.id],
     queryFn: async () => {
       if (!user) return null;
       const { data } = await supabase
         .from('profiles')
-        .select('torneios_total, vitorias_total, xp_total, nivel, melhor_posicao, nome_blader')
+        .select('torneios_total, vitorias_total, xp_total, nivel, melhor_posicao, streak_max')
         .eq('id', user.id)
         .single();
 
@@ -76,15 +118,20 @@ export default function BladerHome() {
         .eq('status', 'finalizado');
 
       const totalPartidas = count ?? 0;
+      const d = data as any;
       return {
-        ...(data as { torneios_total: number; vitorias_total: number; xp_total: number; nivel: string; melhor_posicao: number | null } | null),
-        winrate: totalPartidas > 0 ? Math.round((((data as any)?.vitorias_total || 0) / totalPartidas) * 100) : 0,
+        torneios_total: d?.torneios_total ?? 0,
+        vitorias_total: d?.vitorias_total ?? 0,
+        xp_total: d?.xp_total ?? 0,
+        nivel: d?.nivel ?? 'Rookie',
+        melhor_posicao: d?.melhor_posicao ?? null,
+        streak_max: d?.streak_max ?? 0,
+        winrate: totalPartidas > 0 ? Math.round(((d?.vitorias_total || 0) / totalPartidas) * 100) : 0,
       };
     },
     enabled: !!user,
   });
 
-  // My inscricoes
   const { data: myInscricoes = [], refetch: refetchInscricoes } = useQuery({
     queryKey: ['blader-inscricoes', user?.id],
     queryFn: async () => {
@@ -112,39 +159,49 @@ export default function BladerHome() {
     enabled: !!user,
   });
 
+  // Histórico detalhado para Histórico/Gráficos
+  const { data: historico = [] } = useQuery({
+    queryKey: ['blader-historico', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await (supabase as any)
+        .from('inscricoes')
+        .select('id, posicao_final, vitorias, derrotas, xp_ganho, streak_max, inscrito_em, torneio_id, tournaments:torneio_id(id, name, horario_inicio, status, imagem_url, liga_id)')
+        .eq('blader_id', user.id)
+        .order('inscrito_em', { ascending: false });
+      return (data ?? []) as any[];
+    },
+    enabled: !!user,
+  });
+
   useEffect(() => {
     async function verificarMatchPendente() {
       if (!user) return;
-
-      const { data: profile } = await supabase
+      const { data: p } = await supabase
         .from('profiles')
         .select('match_verificado')
         .eq('id', user.id)
         .single();
-
-      if (!(profile as any)?.match_verificado) {
+      if (!(p as any)?.match_verificado) {
         await verificarEExecutarMatch(user.id, user.email);
         refetchStats();
         refetchInscricoes();
         refetch();
       }
     }
-
     verificarMatchPendente();
   }, [user, refetchStats, refetchInscricoes, refetch]);
 
   const torneiosTotal = stats?.torneios_total ?? 0;
   const vitoriasTotal = stats?.vitorias_total ?? 0;
   const bestPlace = stats?.melhor_posicao ? `${stats.melhor_posicao}º` : '—';
-  const winrate = `${stats?.winrate ?? 0}%`;
+  const winrateNum = stats?.winrate ?? 0;
+  const xpTotal = stats?.xp_total ?? 0;
+  const nivelInfo = useMemo(() => calcularNivel(xpTotal), [xpTotal]);
+  const streakMax = stats?.streak_max ?? 0;
 
-  const upcoming = tournaments
-    .filter(t => t.status === 'upcoming')
-    .slice(0, 5);
-
-  const myRecent = tournaments
-    .filter(t => t.status === 'completed' && myInscricoesSet.has(t.id))
-    .slice(0, 3);
+  const upcoming = tournaments.filter(t => t.status === 'upcoming').slice(0, 5);
+  const myRecent = tournaments.filter(t => t.status === 'completed' && myInscricoesSet.has(t.id)).slice(0, 3);
 
   const palette = getBladerPalette(profile?.corPerfil);
   const dateRef = (t: TournamentRow) => t.horario_inicio || t.date;
@@ -159,9 +216,18 @@ export default function BladerHome() {
     refetch();
   }
 
+  const statsGrid = [
+    { label: 'Torneios',    value: torneiosTotal,                                                     icon: '🏆', color: '#00DCFF', sub: 'disputados' },
+    { label: 'Vitórias',    value: vitoriasTotal,                                                     icon: '⚡', color: '#10B981', sub: 'no total' },
+    { label: 'Winrate',     value: `${winrateNum}%`,                                                  icon: '🎯', color: '#A78BFA', sub: 'aproveitamento' },
+    { label: 'Streak Máx',  value: streakMax,                                                         icon: '🔥', color: '#F97316', sub: 'consecutivas' },
+    { label: 'Melhor Pos.', value: bestPlace,                                                         icon: '🥇', color: '#F59E0B', sub: 'colocação' },
+    { label: 'Nível',       value: stats?.nivel || 'Rookie',                                          icon: '⭐', color: '#EC4899', sub: `${xpTotal} XP` },
+  ];
+
   return (
-    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
-      {/* Welcome Card */}
+    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-5">
+      {/* Welcome / Hero */}
       <div
         className="rounded-2xl p-5 md:p-6 flex items-center gap-4 md:gap-5"
         style={{
@@ -200,63 +266,158 @@ export default function BladerHome() {
         </div>
       </div>
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard icon={<Trophy size={16} />} label="Torneios" value={torneiosTotal} color={palette.accent} />
-        <StatCard icon={<Zap size={16} />} label="Vitórias" value={vitoriasTotal} color={palette.accent} />
-        <StatCard icon={<Flame size={16} />} label="Melhor coloc." value={bestPlace} color={palette.accent} />
-        <StatCard icon={<Target size={16} />} label="Winrate" value={winrate} color={palette.accent} />
+      {/* Tabs */}
+      <div style={{
+        display: 'flex', gap: 4,
+        background: '#08091a',
+        border: '1px solid rgba(255,255,255,.06)',
+        borderRadius: 12, padding: 4,
+      }}>
+        {ABAS.map(aba => {
+          const ativa = abaAtiva === aba;
+          return (
+            <button
+              key={aba}
+              onClick={() => setAbaAtiva(aba)}
+              style={{
+                flex: 1, padding: '9px 12px',
+                borderRadius: 9, border: 'none',
+                background: ativa
+                  ? 'linear-gradient(135deg,rgba(0,220,255,.15),rgba(0,220,255,.08))'
+                  : 'transparent',
+                borderBottom: ativa ? '2px solid #00DCFF' : '2px solid transparent',
+                color: ativa ? '#00DCFF' : 'rgba(255,255,255,.35)',
+                fontFamily: 'Rajdhani, sans-serif',
+                fontWeight: 700, fontSize: 13,
+                letterSpacing: 1, cursor: 'pointer',
+                transition: 'all .15s',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {aba === 'ForjaBey' ? '⚙️ ForjaBey' : aba}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Próximos torneios */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-heading font-bold uppercase text-foreground" style={{ fontSize: 14, letterSpacing: 1.5 }}>
-            Próximos torneios
-          </h2>
-          <button onClick={() => navigate('/blader/tournaments')} className="text-xs font-body flex items-center gap-1" style={{ color: '#FBBF24' }}>
-            Ver todos <ArrowRight size={12} />
-          </button>
-        </div>
-
-        {isLoading ? (
-          <div className="space-y-2">
-            {[1,2].map(i => <div key={i} className="h-20 rounded-xl animate-pulse" style={{ background: 'rgba(255,255,255,.04)' }} />)}
-          </div>
-        ) : upcoming.length === 0 ? (
-          <EmptyState message="Nenhum torneio aberto no momento." />
-        ) : (
-          <div className="space-y-2">
-            {upcoming.map(t => (
-              <TournamentRowCard
-                key={t.id}
-                tournament={t}
-                isHoje={isHoje(dateRef(t))}
-                isAmanha={isAmanha(dateRef(t))}
-                inscrito={myInscricoesSet.has(t.id)}
-                onSignup={() => setSelectedTournament(t)}
-                onWithdraw={() => setConfirmandoDesistencia(t)}
-              />
+      {abaAtiva === 'Visão Geral' && (
+        <>
+          {/* Stats grid 3x2 */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {statsGrid.map(s => (
+              <div key={s.label} className="rounded-xl p-4" style={{ background: '#111827', border: '1px solid rgba(255,255,255,.07)' }}>
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <span style={{ fontSize: 14 }}>{s.icon}</span>
+                  <span className="font-body uppercase font-medium" style={{ fontSize: 10, letterSpacing: 1.5, color: '#9CA3AF' }}>{s.label}</span>
+                </div>
+                <div className="font-heading font-bold" style={{ fontSize: 24, color: s.color, lineHeight: 1 }}>{s.value}</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,.35)', marginTop: 4 }}>{s.sub}</div>
+              </div>
             ))}
           </div>
-        )}
-      </section>
 
-      {/* Meus torneios recentes */}
-      <section>
-        <h2 className="font-heading font-bold uppercase text-foreground mb-3" style={{ fontSize: 14, letterSpacing: 1.5 }}>
-          Meus torneios recentes
-        </h2>
-        {myRecent.length === 0 ? (
-          <EmptyState message="Você ainda não participou de nenhum torneio." />
-        ) : (
-          <div className="space-y-2">
-            {myRecent.map(t => (
-              <RecentTournamentCard key={t.id} tournament={t} />
-            ))}
+          {/* Barra de XP */}
+          <div style={{ background: '#08091a', border: '1px solid rgba(255,255,255,.06)', borderRadius: 12, padding: '14px 16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,.6)' }}>{nivelInfo.atual.nome}</span>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,.3)' }}>
+                {xpTotal} {nivelInfo.proximo ? `/ ${nivelInfo.proximo.xpMin}` : ''} XP
+              </span>
+            </div>
+            <div style={{ height: 6, background: 'rgba(255,255,255,.06)', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', borderRadius: 3,
+                background: 'linear-gradient(90deg, #00DCFF, #A78BFA)',
+                width: `${nivelInfo.progresso}%`,
+                transition: 'width 1s ease-out',
+              }} />
+            </div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.25)', marginTop: 6 }}>
+              {nivelInfo.proximo
+                ? `${nivelInfo.xpParaProximo} XP para ${nivelInfo.proximo.nome}`
+                : 'Nível máximo alcançado!'}
+            </div>
           </div>
-        )}
-      </section>
+
+          {/* Tabela de níveis */}
+          <div style={{ background: '#08091a', border: '1px solid rgba(255,255,255,.06)', borderRadius: 12, padding: 14 }}>
+            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 13, letterSpacing: 1.5, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', marginBottom: 10 }}>Níveis</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
+              {NIVEIS.map(n => {
+                const ativo = n.nome === nivelInfo.atual.nome;
+                return (
+                  <div key={n.nome} style={{
+                    padding: '8px 10px', borderRadius: 8,
+                    background: ativo ? 'rgba(0,220,255,.08)' : 'rgba(255,255,255,.02)',
+                    border: ativo ? '1px solid rgba(0,220,255,.3)' : '1px solid rgba(255,255,255,.04)',
+                  }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: ativo ? '#00DCFF' : '#fff' }}>{n.nome}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', marginTop: 2 }}>
+                      {n.xpMax === Infinity ? `${n.xpMin}+ XP` : `${n.xpMin} – ${n.xpMax} XP`}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Próximos torneios */}
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-heading font-bold uppercase text-foreground" style={{ fontSize: 14, letterSpacing: 1.5 }}>
+                Próximos torneios
+              </h2>
+              <button onClick={() => navigate('/blader/tournaments')} className="text-xs font-body flex items-center gap-1" style={{ color: '#FBBF24' }}>
+                Ver todos <ArrowRight size={12} />
+              </button>
+            </div>
+
+            {isLoading ? (
+              <div className="space-y-2">
+                {[1,2].map(i => <div key={i} className="h-20 rounded-xl animate-pulse" style={{ background: 'rgba(255,255,255,.04)' }} />)}
+              </div>
+            ) : upcoming.length === 0 ? (
+              <EmptyState message="Nenhum torneio aberto no momento." />
+            ) : (
+              <div className="space-y-2">
+                {upcoming.map(t => (
+                  <TournamentRowCard
+                    key={t.id}
+                    tournament={t}
+                    isHoje={isHoje(dateRef(t))}
+                    isAmanha={isAmanha(dateRef(t))}
+                    inscrito={myInscricoesSet.has(t.id)}
+                    onSignup={() => setSelectedTournament(t)}
+                    onWithdraw={() => setConfirmandoDesistencia(t)}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Recentes */}
+          <section>
+            <h2 className="font-heading font-bold uppercase text-foreground mb-3" style={{ fontSize: 14, letterSpacing: 1.5 }}>
+              Meus torneios recentes
+            </h2>
+            {myRecent.length === 0 ? (
+              <EmptyState message="Você ainda não participou de nenhum torneio." />
+            ) : (
+              <div className="space-y-2">
+                {myRecent.map(t => (
+                  <RecentTournamentCard key={t.id} tournament={t} />
+                ))}
+              </div>
+            )}
+          </section>
+        </>
+      )}
+
+      {abaAtiva === 'Histórico' && <HistoricoTab historico={historico} />}
+
+      {abaAtiva === 'Gráficos' && <GraficosTab historico={historico} stats={stats} />}
+
+      {abaAtiva === 'ForjaBey' && <ForjaBeyTab />}
 
       {/* Modal */}
       <BladerTournamentModal
@@ -284,14 +445,207 @@ export default function BladerHome() {
   );
 }
 
-function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string | number; color: string }) {
+function HistoricoTab({ historico }: { historico: any[] }) {
+  if (!historico || historico.length === 0) {
+    return <EmptyState message="Você ainda não tem histórico de torneios." />;
+  }
   return (
-    <div className="rounded-xl p-4" style={{ background: '#111827', border: '1px solid rgba(255,255,255,.07)' }}>
-      <div className="flex items-center gap-1.5 mb-1.5" style={{ color }}>
-        {icon}
-        <span className="font-body uppercase font-medium" style={{ fontSize: 10, letterSpacing: 1.5, color: '#9CA3AF' }}>{label}</span>
+    <div>
+      {historico.map((insc) => {
+        const torneio = insc.tournaments;
+        const cor = corPosicao(insc.posicao_final);
+        const dataStr = torneio?.horario_inicio
+          ? new Date(torneio.horario_inicio).toLocaleDateString('pt-BR')
+          : '—';
+        const posLabel =
+          insc.posicao_final === 1 ? '🥇' :
+          insc.posicao_final === 2 ? '🥈' :
+          insc.posicao_final === 3 ? '🥉' :
+          insc.posicao_final ? `${insc.posicao_final}º` : '—';
+        return (
+          <div key={insc.id} style={{
+            display: 'flex', alignItems: 'center', gap: 14,
+            padding: '14px 16px',
+            background: '#08091a',
+            border: `1px solid ${cor}30`,
+            borderLeft: `4px solid ${cor}`,
+            borderRadius: 12, marginBottom: 8,
+            transition: 'all .15s',
+          }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 10, flexShrink: 0,
+              background: torneio?.imagem_url
+                ? `url(${torneio.imagem_url}) center/cover`
+                : 'linear-gradient(135deg,#1e3a8a,#2563EB)',
+              border: '1px solid rgba(255,255,255,.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {!torneio?.imagem_url && <Trophy size={20} color="#fff" />}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 16, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {torneio?.name || 'Torneio'}
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 2 }}>
+                {dataStr}
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 12, flexShrink: 0 }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,.3)' }}>V/D</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#10B981' }}>
+                  {insc.vitorias || 0}
+                  <span style={{ color: 'rgba(255,255,255,.3)', fontWeight: 400 }}>/</span>
+                  <span style={{ color: '#EF4444' }}>{insc.derrotas || 0}</span>
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,.3)' }}>XP</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#A78BFA' }}>+{insc.xp_ganho || 0}</div>
+              </div>
+            </div>
+            <div style={{
+              width: 44, height: 44, borderRadius: 10, flexShrink: 0,
+              background: `${cor}15`, border: `1px solid ${cor}30`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: 'Rajdhani,sans-serif', fontWeight: 900, fontSize: 18,
+              color: cor,
+            }}>
+              {posLabel}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function GraficosTab({ historico, stats }: { historico: any[]; stats: any }) {
+  if (!historico || historico.length === 0) {
+    return <EmptyState message="Sem dados suficientes para gerar gráficos. Participe de torneios!" />;
+  }
+
+  // ordem cronológica (do mais antigo ao mais recente)
+  const cron = [...historico].reverse();
+
+  const dadosEvolucao = cron.map((h, i) => {
+    const acumVit = cron.slice(0, i + 1).reduce((acc, x) => acc + (x.vitorias || 0), 0);
+    const acumXp = cron.slice(0, i + 1).reduce((acc, x) => acc + (x.xp_ganho || 0), 0);
+    return {
+      torneio: (h.tournaments?.name || `T${i + 1}`).substring(0, 12),
+      vitorias: acumVit,
+      xp: acumXp,
+    };
+  });
+
+  const dadosStreak = cron.map((h, i) => ({
+    torneio: `T${i + 1}`,
+    streak: h.streak_max || 0,
+    vitorias: h.vitorias || 0,
+  }));
+
+  // Radar (normalizado em escala 0-100, valores ilustrativos contra média 50)
+  const winrateNorm = Math.min(100, stats?.winrate ?? 0);
+  const streakNorm = Math.min(100, (stats?.streak_max ?? 0) * 10);
+  const torneiosNorm = Math.min(100, (stats?.torneios_total ?? 0) * 5);
+  const xpNorm = Math.min(100, Math.round(((stats?.xp_total ?? 0) / 3000) * 100));
+  const rankingNorm = stats?.melhor_posicao
+    ? Math.max(0, 100 - (stats.melhor_posicao - 1) * 10)
+    : 0;
+
+  const dadosRadar = [
+    { stat: 'Winrate',  eu: winrateNorm,  media: 50 },
+    { stat: 'Streak',   eu: streakNorm,   media: 40 },
+    { stat: 'Torneios', eu: torneiosNorm, media: 45 },
+    { stat: 'XP',       eu: xpNorm,       media: 50 },
+    { stat: 'Ranking',  eu: rankingNorm,  media: 50 },
+  ];
+
+  return (
+    <div className="space-y-5">
+      <ChartCard title="Evolução de Vitórias e XP">
+        <ResponsiveContainer width="100%" height={220}>
+          <LineChart data={dadosEvolucao}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.05)" />
+            <XAxis dataKey="torneio" stroke="rgba(255,255,255,.3)" fontSize={10} />
+            <YAxis stroke="rgba(255,255,255,.3)" fontSize={10} />
+            <Tooltip
+              contentStyle={{ background: '#0d1120', border: '1px solid rgba(0,220,255,.2)', borderRadius: 8 }}
+              labelStyle={{ color: 'rgba(255,255,255,.6)', fontSize: 11 }}
+            />
+            <Legend wrapperStyle={{ fontSize: 11, color: 'rgba(255,255,255,.5)' }} />
+            <Line type="monotone" dataKey="vitorias" stroke="#00DCFF" strokeWidth={2} dot={{ fill: '#00DCFF', r: 3 }} />
+            <Line type="monotone" dataKey="xp" stroke="#A78BFA" strokeWidth={2} dot={{ fill: '#A78BFA', r: 3 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartCard>
+
+      <ChartCard title="Streak e Vitórias por Torneio">
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={dadosStreak}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.05)" />
+            <XAxis dataKey="torneio" stroke="rgba(255,255,255,.3)" fontSize={10} />
+            <YAxis stroke="rgba(255,255,255,.3)" fontSize={10} />
+            <Tooltip contentStyle={{ background: '#0d1120', border: '1px solid rgba(255,152,0,.2)', borderRadius: 8 }} />
+            <Legend wrapperStyle={{ fontSize: 11, color: 'rgba(255,255,255,.5)' }} />
+            <Bar dataKey="streak" fill="#F97316" radius={[4, 4, 0, 0]} opacity={0.85} />
+            <Bar dataKey="vitorias" fill="#00DCFF" radius={[4, 4, 0, 0]} opacity={0.85} />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartCard>
+
+      <ChartCard title="Comparativo (vs média)">
+        <ResponsiveContainer width="100%" height={260}>
+          <RadarChart data={dadosRadar}>
+            <PolarGrid stroke="rgba(255,255,255,.08)" />
+            <PolarAngleAxis dataKey="stat" stroke="rgba(255,255,255,.4)" fontSize={11} />
+            <Radar name="Você" dataKey="eu" stroke="#00DCFF" fill="#00DCFF" fillOpacity={0.18} />
+            <Radar name="Média" dataKey="media" stroke="#FF00B4" fill="#FF00B4" fillOpacity={0.1} strokeDasharray="4 4" />
+            <Legend wrapperStyle={{ fontSize: 11, color: 'rgba(255,255,255,.5)' }} />
+          </RadarChart>
+        </ResponsiveContainer>
+      </ChartCard>
+    </div>
+  );
+}
+
+function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div style={{ background: '#08091a', border: '1px solid rgba(255,255,255,.06)', borderRadius: 12, padding: 16 }}>
+      <div style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 13, letterSpacing: 1.5, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', marginBottom: 12 }}>
+        {title}
       </div>
-      <div className="font-heading font-bold" style={{ fontSize: 26, color, lineHeight: 1 }}>{value}</div>
+      {children}
+    </div>
+  );
+}
+
+function ForjaBeyTab() {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      minHeight: 300, gap: 16, textAlign: 'center',
+      padding: '40px 20px',
+      background: '#08091a', border: '1px solid rgba(255,255,255,.06)',
+      borderRadius: 12,
+    }}>
+      <div style={{ fontSize: 48 }}>⚙️</div>
+      <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 24, color: '#fff' }}>ForjaBey</div>
+      <div style={{ fontSize: 13, color: 'rgba(255,255,255,.4)', maxWidth: 320, lineHeight: 1.6 }}>
+        Monte suas combinações de Beyblade X com dados reais de peças, performance e estatísticas. Em breve.
+      </div>
+      <div style={{
+        padding: '8px 20px',
+        background: 'rgba(245,158,11,.08)',
+        border: '1px solid rgba(245,158,11,.2)',
+        borderRadius: 20,
+        fontSize: 11, fontWeight: 700,
+        color: '#FCD34D', letterSpacing: 2,
+        textTransform: 'uppercase',
+      }}>
+        Em desenvolvimento
+      </div>
     </div>
   );
 }
@@ -307,20 +661,10 @@ function TournamentRowCard({ tournament, onSignup, onWithdraw, inscrito, isHoje:
         <div className="flex items-center gap-2">
           <p className="font-heading font-bold text-foreground truncate" style={{ fontSize: 14 }}>{tournament.name}</p>
           {hoje && (
-            <span style={{
-              padding: '2px 8px', background: 'rgba(239,68,68,.15)',
-              border: '1px solid rgba(239,68,68,.4)', borderRadius: 20,
-              fontSize: 10, fontWeight: 700, color: '#F87171',
-              letterSpacing: 1, flexShrink: 0,
-            }}>🔴 HOJE</span>
+            <span style={{ padding: '2px 8px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 20, fontSize: 10, fontWeight: 700, color: '#F87171', letterSpacing: 1, flexShrink: 0 }}>🔴 HOJE</span>
           )}
           {amanha && !hoje && (
-            <span style={{
-              padding: '2px 8px', background: 'rgba(245,158,11,.12)',
-              border: '1px solid rgba(245,158,11,.3)', borderRadius: 20,
-              fontSize: 10, fontWeight: 700, color: '#FCD34D',
-              letterSpacing: 1, flexShrink: 0,
-            }}>⏰ AMANHÃ</span>
+            <span style={{ padding: '2px 8px', background: 'rgba(245,158,11,.12)', border: '1px solid rgba(245,158,11,.3)', borderRadius: 20, fontSize: 10, fontWeight: 700, color: '#FCD34D', letterSpacing: 1, flexShrink: 0 }}>⏰ AMANHÃ</span>
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5 text-xs font-body" style={{ color: '#94A3B8' }}>
