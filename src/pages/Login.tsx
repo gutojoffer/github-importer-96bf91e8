@@ -17,11 +17,12 @@ export default function Login() {
     setError('');
     setLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
     if (error) {
+      setLoading(false);
       setError('Email ou senha incorretos.');
     } else {
       if (data.user) await verificarEExecutarMatch(data.user.id, data.user.email, { silent: true });
+      setLoading(false);
       navigate('/select-mode');
     }
   };
