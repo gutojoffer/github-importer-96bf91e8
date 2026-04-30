@@ -119,7 +119,7 @@ export default function AdminForjaBey() {
     setShowModal(true);
   }
 
-  async function savePeca() {
+  async function savePeca(imagemFile?: File | null, removerImagem?: boolean) {
     if (!editing) return;
     if (!editing.nome?.trim()) { toast.error('Nome obrigatório'); return; }
 
@@ -130,6 +130,18 @@ export default function AdminForjaBey() {
     if (tabDef.hasPeso) payload.peso_g = editing.peso_g ? Number(editing.peso_g) : null;
     if (tabDef.hasStats) {
       STAT_KEYS.forEach(k => { payload[k] = Number(editing[k] ?? 0); });
+    }
+
+    // Upload da imagem se selecionada
+    if (imagemFile) {
+      const ext = imagemFile.name.split('.').pop();
+      const path = `${tabDef.table}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('bey-parts').upload(path, imagemFile, { upsert: true });
+      if (upErr) { toast.error('Erro no upload da imagem'); return; }
+      const { data } = supabase.storage.from('bey-parts').getPublicUrl(path);
+      payload.imagem_url = `${data.publicUrl}?t=${Date.now()}`;
+    } else if (removerImagem) {
+      payload.imagem_url = null;
     }
 
     if (editing.id && editing.id > 0) {
@@ -351,9 +363,29 @@ function btnSmall(color: string): React.CSSProperties {
 
 function PecaModal({ editing, setEditing, tabDef, onClose, onSave }: {
   editing: Peca; setEditing: (p: Peca) => void; tabDef: TabDef;
-  onClose: () => void; onSave: () => void;
+  onClose: () => void; onSave: (file?: File | null, remover?: boolean) => void;
 }) {
   const upd = (k: string, v: any) => setEditing({ ...editing, [k]: v });
+  const [imagemFile, setImagemFile] = useState<File | null>(null);
+  const [imagemPreview, setImagemPreview] = useState<string | null>(editing.imagem_url || null);
+  const [removerImagem, setRemoverImagem] = useState(false);
+
+  function handleImagemChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { toast.error('Imagem muito grande. Máximo 2MB.'); return; }
+    setImagemFile(file);
+    setRemoverImagem(false);
+    const reader = new FileReader();
+    reader.onload = ev => setImagemPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  function removerImg() {
+    setImagemFile(null);
+    setImagemPreview(null);
+    setRemoverImagem(true);
+  }
   return (
     <div onClick={onClose}
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
@@ -369,6 +401,41 @@ function PecaModal({ editing, setEditing, tabDef, onClose, onSave }: {
         <Field label="Nome">
           <input value={editing.nome} onChange={e => upd('nome', e.target.value)} style={inputStyle} />
         </Field>
+
+        {/* Upload de imagem */}
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: 'block', fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+            Imagem da peça
+          </label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{
+              width: 72, height: 72, borderRadius: 10, flexShrink: 0,
+              background: imagemPreview ? `url(${imagemPreview}) center/contain no-repeat #08091a` : '#08091a',
+              border: imagemPreview ? '1px solid rgba(0,212,255,.3)' : '2px dashed rgba(255,255,255,.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {!imagemPreview && <Camera size={22} style={{ opacity: .35, color: '#fff' }} />}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+              <label style={{
+                padding: '7px 12px', borderRadius: 6, cursor: 'pointer', textAlign: 'center',
+                background: 'rgba(0,212,255,.1)', border: '1px solid rgba(0,212,255,.3)',
+                color: '#00d4ff', fontSize: 12, fontWeight: 700,
+                fontFamily: 'Rajdhani, sans-serif', letterSpacing: 1,
+              }}>
+                {imagemPreview ? 'Trocar imagem' : 'Selecionar imagem'}
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImagemChange} />
+              </label>
+              {imagemPreview && (
+                <button type="button" onClick={removerImg}
+                  style={{ padding: '5px 10px', borderRadius: 5, background: 'rgba(255,45,85,.08)', border: '1px solid rgba(255,45,85,.2)', color: '#FF2D55', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                  Remover
+                </button>
+              )}
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,.3)' }}>PNG ou JPEG · máx 2MB</span>
+            </div>
+          </div>
+        </div>
 
         {tabDef.hasLinha && (
           <Field label="Linha">
@@ -419,7 +486,7 @@ function PecaModal({ editing, setEditing, tabDef, onClose, onSave }: {
           <button onClick={onClose} style={{ flex: 1, padding: 10, background: 'transparent', border: '1px solid rgba(255,255,255,.12)', borderRadius: 6, color: '#fff', cursor: 'pointer', fontWeight: 600 }}>
             Cancelar
           </button>
-          <button onClick={onSave} style={{ flex: 1, padding: 10, background: 'linear-gradient(135deg, #00d4ff, #0099cc)', border: 'none', borderRadius: 6, color: '#000', cursor: 'pointer', fontWeight: 700 }}>
+          <button onClick={() => onSave(imagemFile, removerImagem)} style={{ flex: 1, padding: 10, background: 'linear-gradient(135deg, #00d4ff, #0099cc)', border: 'none', borderRadius: 6, color: '#000', cursor: 'pointer', fontWeight: 700 }}>
             Salvar
           </button>
         </div>
