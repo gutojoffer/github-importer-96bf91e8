@@ -2,7 +2,7 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useActiveMode } from '@/contexts/ActiveModeContext';
-import { Home, Trophy, Clock, Star, User, Settings, LogOut, ChevronRight, Repeat } from 'lucide-react';
+import { Home, Trophy, Clock, Star, User, Settings, LogOut, ChevronRight, Repeat, Wrench } from 'lucide-react';
 import BladerAvatar from '@/components/BladerAvatar';
 import { getBladerPalette } from '@/lib/bladerColors';
 
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { title: 'Torneios', url: '/blader/tournaments', icon: Trophy },
   { title: 'Meu histórico', url: '/blader/history', icon: Clock },
   { title: 'Rankings', url: '/blader/rankings', icon: Star },
+  { title: 'ForjaBey', url: '/blader/forjabey', icon: Wrench },
   { title: 'Meu perfil', url: '/blader/profile', icon: User },
 ];
 
