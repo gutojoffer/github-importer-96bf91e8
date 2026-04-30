@@ -1,5 +1,5 @@
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Disc3, FileText, Users, Settings, ArrowLeft, Shield } from 'lucide-react';
+import { LayoutDashboard, Disc3, FileText, Users, Settings, ArrowLeft, Shield, Wrench } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { title: 'Beyblades Meta', url: '/admin/beyblades', icon: Disc3 },
   { title: 'Release Notes', url: '/admin/release-notes', icon: FileText },
   { title: 'Ligas', url: '/admin/ligas', icon: Users },
+  { title: 'ForjaBey · Peças', url: '/admin/forjabey', icon: Wrench },
   { title: 'Configurações', url: '/admin/config', icon: Settings },
 ];
 
