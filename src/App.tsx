@@ -52,6 +52,7 @@ const AdminBeyblades = lazy(() => import("@/pages/admin/AdminBeyblades"));
 const AdminReleaseNotes = lazy(() => import("@/pages/admin/AdminReleaseNotes"));
 const AdminLigas = lazy(() => import("@/pages/admin/AdminLigas"));
 const AdminConfig = lazy(() => import("@/pages/admin/AdminConfig"));
+const AdminForjaBey = lazy(() => import("@/pages/admin/AdminForjaBey"));
 
 const queryClient = new QueryClient();
 
@@ -138,6 +139,7 @@ const App = () => (
                               <Route path="/beyblades" element={<AdminBeyblades />} />
                               <Route path="/release-notes" element={<AdminReleaseNotes />} />
                               <Route path="/ligas" element={<AdminLigas />} />
+                              <Route path="/forjabey" element={<AdminForjaBey />} />
                               <Route path="/config" element={<AdminConfig />} />
                             </Routes>
                           </Suspense>
