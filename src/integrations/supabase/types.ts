@@ -14,6 +14,322 @@ export type Database = {
   }
   public: {
     Tables: {
+      bey_assist_blades: {
+        Row: {
+          created_at: string | null
+          id: number
+          imagem_url: string | null
+          nome: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          imagem_url?: string | null
+          nome: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          imagem_url?: string | null
+          nome?: string
+        }
+        Relationships: []
+      }
+      bey_bits: {
+        Row: {
+          abreviacao: string | null
+          atk: number | null
+          br: number | null
+          burst_resist: string | null
+          created_at: string | null
+          dash_performance: string | null
+          def: number | null
+          endr: number | null
+          id: number
+          imagem_url: string | null
+          linha: string | null
+          nome: string
+          tipo: string | null
+          xdash: number | null
+        }
+        Insert: {
+          abreviacao?: string | null
+          atk?: number | null
+          br?: number | null
+          burst_resist?: string | null
+          created_at?: string | null
+          dash_performance?: string | null
+          def?: number | null
+          endr?: number | null
+          id?: number
+          imagem_url?: string | null
+          linha?: string | null
+          nome: string
+          tipo?: string | null
+          xdash?: number | null
+        }
+        Update: {
+          abreviacao?: string | null
+          atk?: number | null
+          br?: number | null
+          burst_resist?: string | null
+          created_at?: string | null
+          dash_performance?: string | null
+          def?: number | null
+          endr?: number | null
+          id?: number
+          imagem_url?: string | null
+          linha?: string | null
+          nome?: string
+          tipo?: string | null
+          xdash?: number | null
+        }
+        Relationships: []
+      }
+      bey_blades: {
+        Row: {
+          atk: number | null
+          br: number | null
+          created_at: string | null
+          def: number | null
+          endr: number | null
+          id: number
+          imagem_url: string | null
+          linha: string
+          nome: string
+          peso_g: number | null
+          spin: string | null
+          tipo_ataque: string | null
+          xdash: number | null
+        }
+        Insert: {
+          atk?: number | null
+          br?: number | null
+          created_at?: string | null
+          def?: number | null
+          endr?: number | null
+          id?: number
+          imagem_url?: string | null
+          linha: string
+          nome: string
+          peso_g?: number | null
+          spin?: string | null
+          tipo_ataque?: string | null
+          xdash?: number | null
+        }
+        Update: {
+          atk?: number | null
+          br?: number | null
+          created_at?: string | null
+          def?: number | null
+          endr?: number | null
+          id?: number
+          imagem_url?: string | null
+          linha?: string
+          nome?: string
+          peso_g?: number | null
+          spin?: string | null
+          tipo_ataque?: string | null
+          xdash?: number | null
+        }
+        Relationships: []
+      }
+      bey_combos: {
+        Row: {
+          assist_blade_id: number | null
+          atk_total: number | null
+          bit_id: number | null
+          blade_id: number | null
+          br_total: number | null
+          created_at: string | null
+          def_total: number | null
+          endr_total: number | null
+          id: string
+          linha: string
+          lock_chip_id: number | null
+          main_blade_id: number | null
+          ratchet_id: number | null
+          slot: number
+          updated_at: string | null
+          user_id: string
+          xdash_total: number | null
+        }
+        Insert: {
+          assist_blade_id?: number | null
+          atk_total?: number | null
+          bit_id?: number | null
+          blade_id?: number | null
+          br_total?: number | null
+          created_at?: string | null
+          def_total?: number | null
+          endr_total?: number | null
+          id?: string
+          linha: string
+          lock_chip_id?: number | null
+          main_blade_id?: number | null
+          ratchet_id?: number | null
+          slot: number
+          updated_at?: string | null
+          user_id: string
+          xdash_total?: number | null
+        }
+        Update: {
+          assist_blade_id?: number | null
+          atk_total?: number | null
+          bit_id?: number | null
+          blade_id?: number | null
+          br_total?: number | null
+          created_at?: string | null
+          def_total?: number | null
+          endr_total?: number | null
+          id?: string
+          linha?: string
+          lock_chip_id?: number | null
+          main_blade_id?: number | null
+          ratchet_id?: number | null
+          slot?: number
+          updated_at?: string | null
+          user_id?: string
+          xdash_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bey_combos_assist_blade_id_fkey"
+            columns: ["assist_blade_id"]
+            isOneToOne: false
+            referencedRelation: "bey_assist_blades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bey_combos_bit_id_fkey"
+            columns: ["bit_id"]
+            isOneToOne: false
+            referencedRelation: "bey_bits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bey_combos_blade_id_fkey"
+            columns: ["blade_id"]
+            isOneToOne: false
+            referencedRelation: "bey_blades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bey_combos_lock_chip_id_fkey"
+            columns: ["lock_chip_id"]
+            isOneToOne: false
+            referencedRelation: "bey_lock_chips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bey_combos_main_blade_id_fkey"
+            columns: ["main_blade_id"]
+            isOneToOne: false
+            referencedRelation: "bey_main_blades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bey_combos_ratchet_id_fkey"
+            columns: ["ratchet_id"]
+            isOneToOne: false
+            referencedRelation: "bey_ratchets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bey_lock_chips: {
+        Row: {
+          created_at: string | null
+          id: number
+          imagem_url: string | null
+          nome: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          imagem_url?: string | null
+          nome: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          imagem_url?: string | null
+          nome?: string
+        }
+        Relationships: []
+      }
+      bey_main_blades: {
+        Row: {
+          atk: number | null
+          created_at: string | null
+          def: number | null
+          endr: number | null
+          id: number
+          imagem_url: string | null
+          nome: string
+          tipo_ataque: string | null
+        }
+        Insert: {
+          atk?: number | null
+          created_at?: string | null
+          def?: number | null
+          endr?: number | null
+          id?: number
+          imagem_url?: string | null
+          nome: string
+          tipo_ataque?: string | null
+        }
+        Update: {
+          atk?: number | null
+          created_at?: string | null
+          def?: number | null
+          endr?: number | null
+          id?: number
+          imagem_url?: string | null
+          nome?: string
+          tipo_ataque?: string | null
+        }
+        Relationships: []
+      }
+      bey_ratchets: {
+        Row: {
+          altura: number | null
+          atk: number | null
+          created_at: string | null
+          def: number | null
+          endr: number | null
+          id: number
+          imagem_url: string | null
+          lados: number | null
+          linha: string | null
+          nome: string
+        }
+        Insert: {
+          altura?: number | null
+          atk?: number | null
+          created_at?: string | null
+          def?: number | null
+          endr?: number | null
+          id?: number
+          imagem_url?: string | null
+          lados?: number | null
+          linha?: string | null
+          nome: string
+        }
+        Update: {
+          altura?: number | null
+          atk?: number | null
+          created_at?: string | null
+          def?: number | null
+          endr?: number | null
+          id?: number
+          imagem_url?: string | null
+          lados?: number | null
+          linha?: string | null
+          nome?: string
+        }
+        Relationships: []
+      }
       beyblades_meta: {
         Row: {
           ativo: boolean | null
