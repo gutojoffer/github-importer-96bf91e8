@@ -119,7 +119,7 @@ export default function AdminForjaBey() {
     setShowModal(true);
   }
 
-  async function savePeca() {
+  async function savePeca(imagemFile?: File | null, removerImagem?: boolean) {
     if (!editing) return;
     if (!editing.nome?.trim()) { toast.error('Nome obrigatório'); return; }
 
@@ -130,6 +130,18 @@ export default function AdminForjaBey() {
     if (tabDef.hasPeso) payload.peso_g = editing.peso_g ? Number(editing.peso_g) : null;
     if (tabDef.hasStats) {
       STAT_KEYS.forEach(k => { payload[k] = Number(editing[k] ?? 0); });
+    }
+
+    // Upload da imagem se selecionada
+    if (imagemFile) {
+      const ext = imagemFile.name.split('.').pop();
+      const path = `${tabDef.table}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('bey-parts').upload(path, imagemFile, { upsert: true });
+      if (upErr) { toast.error('Erro no upload da imagem'); return; }
+      const { data } = supabase.storage.from('bey-parts').getPublicUrl(path);
+      payload.imagem_url = `${data.publicUrl}?t=${Date.now()}`;
+    } else if (removerImagem) {
+      payload.imagem_url = null;
     }
 
     if (editing.id && editing.id > 0) {
