@@ -402,6 +402,41 @@ function PecaModal({ editing, setEditing, tabDef, onClose, onSave }: {
           <input value={editing.nome} onChange={e => upd('nome', e.target.value)} style={inputStyle} />
         </Field>
 
+        {/* Upload de imagem */}
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: 'block', fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+            Imagem da peça
+          </label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{
+              width: 72, height: 72, borderRadius: 10, flexShrink: 0,
+              background: imagemPreview ? `url(${imagemPreview}) center/contain no-repeat #08091a` : '#08091a',
+              border: imagemPreview ? '1px solid rgba(0,212,255,.3)' : '2px dashed rgba(255,255,255,.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {!imagemPreview && <Camera size={22} style={{ opacity: .35, color: '#fff' }} />}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+              <label style={{
+                padding: '7px 12px', borderRadius: 6, cursor: 'pointer', textAlign: 'center',
+                background: 'rgba(0,212,255,.1)', border: '1px solid rgba(0,212,255,.3)',
+                color: '#00d4ff', fontSize: 12, fontWeight: 700,
+                fontFamily: 'Rajdhani, sans-serif', letterSpacing: 1,
+              }}>
+                {imagemPreview ? 'Trocar imagem' : 'Selecionar imagem'}
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImagemChange} />
+              </label>
+              {imagemPreview && (
+                <button type="button" onClick={removerImg}
+                  style={{ padding: '5px 10px', borderRadius: 5, background: 'rgba(255,45,85,.08)', border: '1px solid rgba(255,45,85,.2)', color: '#FF2D55', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                  Remover
+                </button>
+              )}
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,.3)' }}>PNG ou JPEG · máx 2MB</span>
+            </div>
+          </div>
+        </div>
+
         {tabDef.hasLinha && (
           <Field label="Linha">
             <select value={editing.linha || 'BX'} onChange={e => upd('linha', e.target.value)} style={inputStyle}>
