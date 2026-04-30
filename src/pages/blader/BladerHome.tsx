@@ -618,35 +618,6 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
   );
 }
 
-function ForjaBeyTab() {
-  return (
-    <div style={{
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      minHeight: 300, gap: 16, textAlign: 'center',
-      padding: '40px 20px',
-      background: '#08091a', border: '1px solid rgba(255,255,255,.06)',
-      borderRadius: 12,
-    }}>
-      <div style={{ fontSize: 48 }}>⚙️</div>
-      <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 24, color: '#fff' }}>ForjaBey</div>
-      <div style={{ fontSize: 13, color: 'rgba(255,255,255,.4)', maxWidth: 320, lineHeight: 1.6 }}>
-        Monte suas combinações de Beyblade X com dados reais de peças, performance e estatísticas. Em breve.
-      </div>
-      <div style={{
-        padding: '8px 20px',
-        background: 'rgba(245,158,11,.08)',
-        border: '1px solid rgba(245,158,11,.2)',
-        borderRadius: 20,
-        fontSize: 11, fontWeight: 700,
-        color: '#FCD34D', letterSpacing: 2,
-        textTransform: 'uppercase',
-      }}>
-        Em desenvolvimento
-      </div>
-    </div>
-  );
-}
 
 function TournamentRowCard({ tournament, onSignup, onWithdraw, inscrito, isHoje: hoje, isAmanha: amanha }: { tournament: { id: string; name: string; date: string; player_ids: string[]; max_players: number | null; horario_inicio: string | null }; onSignup: () => void; onWithdraw: () => void; inscrito: boolean; isHoje: boolean; isAmanha: boolean }) {
   const isFull = tournament.max_players != null && tournament.player_ids.length >= tournament.max_players;
