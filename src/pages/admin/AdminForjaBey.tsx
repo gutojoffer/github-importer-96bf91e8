@@ -486,7 +486,7 @@ function PecaModal({ editing, setEditing, tabDef, onClose, onSave }: {
           <button onClick={onClose} style={{ flex: 1, padding: 10, background: 'transparent', border: '1px solid rgba(255,255,255,.12)', borderRadius: 6, color: '#fff', cursor: 'pointer', fontWeight: 600 }}>
             Cancelar
           </button>
-          <button onClick={onSave} style={{ flex: 1, padding: 10, background: 'linear-gradient(135deg, #00d4ff, #0099cc)', border: 'none', borderRadius: 6, color: '#000', cursor: 'pointer', fontWeight: 700 }}>
+          <button onClick={() => onSave(imagemFile, removerImagem)} style={{ flex: 1, padding: 10, background: 'linear-gradient(135deg, #00d4ff, #0099cc)', border: 'none', borderRadius: 6, color: '#000', cursor: 'pointer', fontWeight: 700 }}>
             Salvar
           </button>
         </div>
