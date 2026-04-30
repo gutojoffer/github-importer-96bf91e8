@@ -363,9 +363,29 @@ function btnSmall(color: string): React.CSSProperties {
 
 function PecaModal({ editing, setEditing, tabDef, onClose, onSave }: {
   editing: Peca; setEditing: (p: Peca) => void; tabDef: TabDef;
-  onClose: () => void; onSave: () => void;
+  onClose: () => void; onSave: (file?: File | null, remover?: boolean) => void;
 }) {
   const upd = (k: string, v: any) => setEditing({ ...editing, [k]: v });
+  const [imagemFile, setImagemFile] = useState<File | null>(null);
+  const [imagemPreview, setImagemPreview] = useState<string | null>(editing.imagem_url || null);
+  const [removerImagem, setRemoverImagem] = useState(false);
+
+  function handleImagemChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { toast.error('Imagem muito grande. Máximo 2MB.'); return; }
+    setImagemFile(file);
+    setRemoverImagem(false);
+    const reader = new FileReader();
+    reader.onload = ev => setImagemPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  function removerImg() {
+    setImagemFile(null);
+    setImagemPreview(null);
+    setRemoverImagem(true);
+  }
   return (
     <div onClick={onClose}
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
