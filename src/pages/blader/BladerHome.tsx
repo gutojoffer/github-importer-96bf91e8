@@ -86,7 +86,7 @@ function corPosicao(pos: number | null | undefined) {
   return 'rgba(255,255,255,.15)';
 }
 
-const ABAS = ['Visão Geral', 'Histórico', 'Gráficos', 'ForjaBey'] as const;
+const ABAS = ['Visão Geral', 'Histórico', 'Gráficos'] as const;
 type Aba = typeof ABAS[number];
 
 export default function BladerHome() {
@@ -294,7 +294,7 @@ export default function BladerHome() {
                 whiteSpace: 'nowrap',
               }}
             >
-              {aba === 'ForjaBey' ? '⚙️ ForjaBey' : aba}
+              {aba}
             </button>
           );
         })}
@@ -416,8 +416,6 @@ export default function BladerHome() {
       {abaAtiva === 'Histórico' && <HistoricoTab historico={historico} />}
 
       {abaAtiva === 'Gráficos' && <GraficosTab historico={historico} stats={stats} />}
-
-      {abaAtiva === 'ForjaBey' && <ForjaBeyTab />}
 
       {/* Modal */}
       <BladerTournamentModal
