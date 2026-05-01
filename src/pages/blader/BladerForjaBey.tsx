@@ -520,7 +520,8 @@ function PartSelector({
       </div>
 
       <div
-        onClick={() => setAberto(a => !a)}
+        ref={botaoRef}
+        onClick={() => (aberto ? setAberto(false) : abrirDropdown())}
         style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '8px 10px',
