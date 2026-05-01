@@ -93,8 +93,8 @@ export default function SelectMode() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{ background: '#060912' }}
+      className="flex flex-col items-center justify-center px-4"
+      style={{ background: '#060912', minHeight: '100dvh' }}
     >
       <h1
         className="font-heading text-4xl sm:text-5xl font-bold tracking-[0.18em] mb-2"
