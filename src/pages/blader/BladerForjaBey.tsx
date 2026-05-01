@@ -166,28 +166,70 @@ export default function BladerForjaBey() {
     }
   }
 
+  // Trava scroll do body enquanto a ForjaBey estiver montada (desktop)
+  useEffect(() => {
+    const isMobile = window.innerWidth < 900;
+    if (isMobile) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   return (
     <div style={{
       display: 'flex',
       height: 'calc(100vh - 54px)',
+      overflow: 'hidden',
       background: '#050714',
     }}
       className="forjabey-layout"
     >
       <style>{`
+        .forjabey-col::-webkit-scrollbar,
+        .forjabey-col-right::-webkit-scrollbar { width: 4px; }
+        .forjabey-col::-webkit-scrollbar-track,
+        .forjabey-col-right::-webkit-scrollbar-track { background: transparent; }
+        .forjabey-col::-webkit-scrollbar-thumb {
+          background: rgba(0, 220, 255, 0.15); border-radius: 2px;
+        }
+        .forjabey-col::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 220, 255, 0.3);
+        }
+        .forjabey-col-right::-webkit-scrollbar-thumb {
+          background: rgba(139, 92, 246, 0.15); border-radius: 2px;
+        }
+        .forjabey-col-right::-webkit-scrollbar-thumb:hover {
+          background: rgba(139, 92, 246, 0.3);
+        }
         @media (max-width: 900px) {
-          .forjabey-layout { flex-direction: column !important; height: auto !important; }
-          .forjabey-left { width: 100% !important; max-height: none !important; }
-          .forjabey-right { width: 100% !important; }
+          .forjabey-layout {
+            flex-direction: column !important;
+            height: auto !important;
+            overflow: visible !important;
+          }
+          .forjabey-left {
+            width: 100% !important;
+            max-height: none !important;
+            overflow: visible !important;
+            border-right: none !important;
+            border-bottom: 1px solid rgba(255,255,255,.05);
+          }
+          .forjabey-right {
+            width: 100% !important;
+            overflow: visible !important;
+          }
         }
       `}</style>
 
       {/* Coluna esquerda */}
-      <div className="forjabey-left" style={{
-        width: 400, flexShrink: 0,
-        borderRight: '1px solid rgba(255,255,255,.06)',
+      <div className="forjabey-left forjabey-col" style={{
+        width: 420, flexShrink: 0,
+        borderRight: '1px solid rgba(255,255,255,.05)',
         overflowY: 'auto',
-        padding: '16px 14px',
+        overflowX: 'hidden',
+        padding: '14px 12px',
+        scrollbarWidth: 'thin',
+        scrollbarColor: 'rgba(0,220,255,.15) transparent',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
@@ -237,9 +279,17 @@ export default function BladerForjaBey() {
       </div>
 
       {/* Coluna direita */}
-      <div className="forjabey-right" style={{
-        flex: 1, overflowY: 'auto', padding: '20px 22px',
+      <div className="forjabey-right forjabey-col-right" style={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        padding: '14px 16px',
         minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+        scrollbarWidth: 'thin',
+        scrollbarColor: 'rgba(139,92,246,.15) transparent',
       }}>
         <PainelAnalise beys={beys} />
       </div>
