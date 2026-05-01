@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
@@ -462,6 +463,42 @@ function PartSelector({
   const [aberto, setAberto] = useState(false);
   const [pecas, setPecas] = useState<Peca[]>([]);
   const [busca, setBusca] = useState('');
+  const botaoRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+
+  function abrirDropdown() {
+    const rect = botaoRef.current?.getBoundingClientRect();
+    if (rect) {
+      setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+    }
+    setAberto(true);
+  }
+
+  // Fechar ao clicar fora
+  useEffect(() => {
+    if (!aberto) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (botaoRef.current?.contains(target)) return;
+      if (dropdownRef.current?.contains(target)) return;
+      setAberto(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [aberto]);
+
+  // Fechar / reposicionar em scroll/resize
+  useEffect(() => {
+    if (!aberto) return;
+    const close = () => setAberto(false);
+    window.addEventListener('resize', close);
+    window.addEventListener('scroll', close, true);
+    return () => {
+      window.removeEventListener('resize', close);
+      window.removeEventListener('scroll', close, true);
+    };
+  }, [aberto]);
 
   useEffect(() => {
     let q: any = (supabase as any).from(tabela).select('*').order('nome');
@@ -483,7 +520,8 @@ function PartSelector({
       </div>
 
       <div
-        onClick={() => setAberto(a => !a)}
+        ref={botaoRef}
+        onClick={() => (aberto ? setAberto(false) : abrirDropdown())}
         style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '8px 10px',
@@ -537,16 +575,21 @@ function PartSelector({
         </div>
       )}
 
-      {/* Dropdown */}
-      {aberto && (
-        <div style={{
-          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
-          background: '#0d1120', border: '1px solid rgba(0,220,255,.15)',
-          borderRadius: 12, boxShadow: '0 16px 40px rgba(0,0,0,.6)',
-          display: 'flex', flexDirection: 'column', maxHeight: 280, overflow: 'hidden',
-          marginTop: 4,
-        }}>
-          <div style={{ padding: '8px 10px', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
+      {/* Dropdown via portal */}
+      {aberto && createPortal(
+        <div
+          ref={dropdownRef}
+          style={{
+            position: 'fixed',
+            top: dropdownPos.top,
+            left: dropdownPos.left,
+            width: dropdownPos.width,
+            zIndex: 9999,
+            background: '#0d1120', border: '1px solid rgba(0,220,255,.15)',
+            borderRadius: 12, boxShadow: '0 16px 40px rgba(0,0,0,.7)',
+            display: 'flex', flexDirection: 'column', maxHeight: 280, overflow: 'hidden',
+          }}>
+          <div style={{ padding: '8px 10px', borderBottom: '1px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
             <input
               autoFocus value={busca}
               onChange={e => setBusca(e.target.value)}
@@ -614,7 +657,8 @@ function PartSelector({
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -707,35 +751,45 @@ function PainelAnalise({ beys }: { beys: Bey[] }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 720, margin: '0 auto' }}>
-      {/* Resumo + Score */}
+      {/* Header da análise com score integrado */}
       <div style={{
-        background: 'linear-gradient(135deg, rgba(0,220,255,.06), #0b0f1f 60%)',
-        border: '1px solid rgba(0,220,255,.18)',
-        borderRadius: 14, padding: 18,
-        display: 'flex', alignItems: 'center', gap: 18,
+        background: '#0d1120',
+        border: '1px solid rgba(255,255,255,.07)',
+        borderRadius: 14,
+        overflow: 'hidden',
       }}>
         <div style={{
-          width: 84, height: 84, borderRadius: '50%',
-          background: 'conic-gradient(#00DCFF 0%, #00DCFF ' + (score * 10) + '%, rgba(255,255,255,.06) ' + (score * 10) + '%)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '12px 14px',
+          borderBottom: '1px solid rgba(255,255,255,.05)',
+          background: 'rgba(255,255,255,.02)',
         }}>
-          <div style={{
-            width: 70, height: 70, borderRadius: '50%', background: '#0b0f1f',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <div style={{ fontFamily: 'Orbitron,sans-serif', fontWeight: 800, fontSize: 22, color: '#00DCFF' }}>
-              {score.toFixed(1)}
+          <div>
+            <div style={{
+              fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
+              color: 'rgba(255,255,255,.28)', marginBottom: 3, fontWeight: 700,
+            }}>
+              Análise do Deck
             </div>
-            <div style={{ fontSize: 8, color: 'rgba(255,255,255,.4)', letterSpacing: 1 }}>/ 10</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)' }}>
+              {beysAtivas.length}/3 beys montadas
+            </div>
           </div>
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 18, color: '#fff', letterSpacing: .5 }}>
-            Análise do Deck
-          </div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginTop: 4 }}>
-            {beysAtivas.length}/3 beys montadas
+          <div style={{
+            display: 'flex', alignItems: 'baseline', gap: 4,
+            padding: '6px 14px',
+            background: 'rgba(0,220,255,.08)',
+            border: '1px solid rgba(0,220,255,.15)',
+            borderRadius: 10,
+          }}>
+            <span style={{
+              fontFamily: 'Orbitron, sans-serif',
+              fontWeight: 900, fontSize: 22,
+              color: score >= 7 ? '#34D399' : score >= 4 ? '#FBBF24' : '#F87171',
+            }}>
+              {score.toFixed(1)}
+            </span>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,.3)' }}>/10</span>
           </div>
         </div>
       </div>
