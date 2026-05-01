@@ -575,16 +575,21 @@ function PartSelector({
         </div>
       )}
 
-      {/* Dropdown */}
-      {aberto && (
-        <div style={{
-          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
-          background: '#0d1120', border: '1px solid rgba(0,220,255,.15)',
-          borderRadius: 12, boxShadow: '0 16px 40px rgba(0,0,0,.6)',
-          display: 'flex', flexDirection: 'column', maxHeight: 280, overflow: 'hidden',
-          marginTop: 4,
-        }}>
-          <div style={{ padding: '8px 10px', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
+      {/* Dropdown via portal */}
+      {aberto && createPortal(
+        <div
+          ref={dropdownRef}
+          style={{
+            position: 'fixed',
+            top: dropdownPos.top,
+            left: dropdownPos.left,
+            width: dropdownPos.width,
+            zIndex: 9999,
+            background: '#0d1120', border: '1px solid rgba(0,220,255,.15)',
+            borderRadius: 12, boxShadow: '0 16px 40px rgba(0,0,0,.7)',
+            display: 'flex', flexDirection: 'column', maxHeight: 280, overflow: 'hidden',
+          }}>
+          <div style={{ padding: '8px 10px', borderBottom: '1px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
             <input
               autoFocus value={busca}
               onChange={e => setBusca(e.target.value)}
@@ -652,7 +657,8 @@ function PartSelector({
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
