@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { AdminSidebar } from '@/components/AdminSidebar';
 import { BottomNav } from '@/components/BottomNav';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
