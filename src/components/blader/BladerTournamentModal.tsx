@@ -96,7 +96,8 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
   const [confirmandoDesistencia, setConfirmandoDesistencia] = useState(false);
 
   // Organizer enrollment management state
-  const [modoInscricao, setModoInscricao] = useState<'buscar' | 'rapido'>('buscar');
+  // null = lista de inscritos visível; 'buscar' ou 'rapido' = sub-painel de inscrição aberto
+  const [modoInscricao, setModoInscricao] = useState<'buscar' | 'rapido' | null>(null);
   const [busca, setBusca] = useState('');
   const [bladersDisponiveis, setBladersDisponiveis] = useState<Array<{ id: string; nome_blader: string | null; avatar_blader_url: string | null; cidade_blader: string | null; nivel: string | null }>>([]);
   const [enrolling, setEnrolling] = useState<string | null>(null);
