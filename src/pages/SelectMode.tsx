@@ -85,7 +85,7 @@ export default function SelectMode() {
 
   if (authLoading || perfis.loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#060912' }}>
+      <div className="flex items-center justify-center" style={{ background: '#060912', minHeight: '100dvh' }}>
         <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
