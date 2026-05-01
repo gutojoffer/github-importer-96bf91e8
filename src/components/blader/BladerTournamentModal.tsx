@@ -161,7 +161,7 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
     if (!open || !tournament) return;
     setAbaAtiva('Informações');
     setConfirmandoDesistencia(false);
-    setModoInscricao('buscar');
+    setModoInscricao(null);
     setBusca('');
     setNomeRapido(''); setApelidoRapido(''); setEmailRapido(''); setBeybladeRapido('');
     refreshDetails();
