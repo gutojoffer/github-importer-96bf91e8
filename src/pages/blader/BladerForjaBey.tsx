@@ -279,9 +279,17 @@ export default function BladerForjaBey() {
       </div>
 
       {/* Coluna direita */}
-      <div className="forjabey-right" style={{
-        flex: 1, overflowY: 'auto', padding: '20px 22px',
+      <div className="forjabey-right forjabey-col-right" style={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        padding: '14px 16px',
         minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+        scrollbarWidth: 'thin',
+        scrollbarColor: 'rgba(139,92,246,.15) transparent',
       }}>
         <PainelAnalise beys={beys} />
       </div>
