@@ -206,6 +206,7 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
     setEnrolling(null);
     if (error) { toast.error('Erro ao inscrever blader'); return; }
     toast.success('Blader inscrito!');
+    setModoInscricao(null);
     await refreshDetails();
     onInscrito?.();
   }
