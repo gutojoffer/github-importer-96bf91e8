@@ -112,48 +112,49 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
     if (!open || !tournament) return;
     setChecking(true);
 
-    if (user) {
-      const { data } = await supabase
+    // Run all queries in parallel
+    const [meInscritoRes, inscritosRes, ligaRes] = await Promise.all([
+      user
+        ? supabase
+            .from('inscricoes')
+            .select('id')
+            .eq('torneio_id', tournament.id)
+            .eq('blader_id', user.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      (supabase as any)
         .from('inscricoes')
-        .select('id')
+        .select(`
+          blader_id,
+          blader_temp_id,
+          inscrito_em,
+          status,
+          profiles!inscricoes_blader_id_fkey (
+            nome_blader, avatar_blader_url, cidade_blader,
+            beyblade_favorita, nivel
+          ),
+          bladers_temp!inscricoes_blader_temp_id_fkey (
+            nome, apelido, avatar_url, cidade, beyblade_favorita, vinculado_a
+          )
+        `, { count: 'exact' })
         .eq('torneio_id', tournament.id)
-        .eq('blader_id', user.id)
-        .maybeSingle();
-      setInscrito(!!data);
-    }
+        .eq('status', 'confirmado')
+        .order('inscrito_em', { ascending: true }),
+      tournament.liga_id
+        ? supabase
+            .from('profiles')
+            .select('nome_liga, cidade, estado, logo_url')
+            .eq('id', tournament.liga_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
 
-    const { data: rows, count } = await (supabase as any)
-      .from('inscricoes')
-      .select(`
-        blader_id,
-        blader_temp_id,
-        inscrito_em,
-        status,
-        profiles!inscricoes_blader_id_fkey (
-          nome_blader, avatar_blader_url, cidade_blader,
-          beyblade_favorita, nivel
-        ),
-        bladers_temp!inscricoes_blader_temp_id_fkey (
-          nome, apelido, avatar_url, cidade, beyblade_favorita, vinculado_a
-        )
-      `, { count: 'exact' })
-      .eq('torneio_id', tournament.id)
-      .eq('status', 'confirmado')
-      .order('inscrito_em', { ascending: true });
-
-    setInscritos((rows ?? []) as InscritoRow[]);
+    setInscrito(!!(meInscritoRes as any).data);
+    const rows = (inscritosRes as any).data ?? [];
+    const count = (inscritosRes as any).count;
+    setInscritos(rows as InscritoRow[]);
     setInscritosCount(count ?? tournament.player_ids.length);
-
-    if (tournament.liga_id) {
-      const { data: ligaData } = await supabase
-        .from('profiles')
-        .select('nome_liga, cidade, estado, logo_url')
-        .eq('id', tournament.liga_id)
-        .maybeSingle();
-      setLiga(ligaData as LigaInfo | null);
-    } else {
-      setLiga(null);
-    }
+    setLiga(((ligaRes as any).data ?? null) as LigaInfo | null);
     setChecking(false);
   }
 
@@ -167,9 +168,10 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
     refreshDetails();
   }, [open, tournament?.id, user?.id]);
 
-  // Load eligible bladers for organizer search
+  // Load eligible bladers for organizer search — lazy + cached per modal session
   useEffect(() => {
     if (mode !== 'organizer' || modoInscricao !== 'buscar' || !open) return;
+    if (bladersDisponiveis.length > 0) return; // already loaded
     (async () => {
       const { data } = await supabase
         .from('profiles')
@@ -180,7 +182,7 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
         .limit(200);
       setBladersDisponiveis((data ?? []) as any);
     })();
-  }, [mode, modoInscricao, open]);
+  }, [mode, modoInscricao, open, bladersDisponiveis.length]);
 
   const inscritosIdsSet = useMemo(() => {
     const s = new Set<string>();
