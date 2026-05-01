@@ -28,7 +28,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="flex items-center justify-center bg-background p-4" style={{ minHeight: '100dvh' }}>
       <div className="w-full max-w-[400px] surface-panel p-8 space-y-6">
         <div className="text-center">
           <h1 className="font-heading text-3xl font-bold tracking-[0.12em]">
