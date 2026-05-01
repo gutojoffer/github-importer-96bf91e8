@@ -46,6 +46,7 @@ function ModeCard({
         src={src}
         alt={alt}
         draggable={false}
+        onError={(e) => { e.currentTarget.style.display = 'none'; }}
         className="w-[240px] sm:w-[280px] select-none"
       />
     </div>
@@ -84,7 +85,7 @@ export default function SelectMode() {
 
   if (authLoading || perfis.loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#060912' }}>
+      <div className="flex items-center justify-center" style={{ background: '#060912', minHeight: '100dvh' }}>
         <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -92,8 +93,8 @@ export default function SelectMode() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{ background: '#060912' }}
+      className="flex flex-col items-center justify-center px-4"
+      style={{ background: '#060912', minHeight: '100dvh' }}
     >
       <h1
         className="font-heading text-4xl sm:text-5xl font-bold tracking-[0.18em] mb-2"

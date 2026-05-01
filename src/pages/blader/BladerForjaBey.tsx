@@ -171,15 +171,18 @@ export default function BladerForjaBey() {
   useEffect(() => {
     const isMobile = window.innerWidth < 900;
     if (isMobile) return;
-    const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
+    return () => {
+      // Sempre restaurar para o default — nunca preservar 'hidden'
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+    };
   }, []);
 
   return (
     <div style={{
       display: 'flex',
-      height: 'calc(100vh - 54px)',
+      height: 'calc(100dvh - 54px)',
       overflow: 'hidden',
       background: '#050714',
     }}
