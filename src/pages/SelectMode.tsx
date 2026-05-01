@@ -46,6 +46,7 @@ function ModeCard({
         src={src}
         alt={alt}
         draggable={false}
+        onError={(e) => { e.currentTarget.style.display = 'none'; }}
         className="w-[240px] sm:w-[280px] select-none"
       />
     </div>
