@@ -235,7 +235,7 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
 
     toast.success(`${nomeRapido.trim()} cadastrado e inscrito!`);
     setNomeRapido(''); setApelidoRapido(''); setEmailRapido(''); setBeybladeRapido('');
-    setModoInscricao('buscar');
+    setModoInscricao(null);
     await refreshDetails();
     onInscrito?.();
   }
