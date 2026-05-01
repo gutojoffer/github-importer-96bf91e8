@@ -105,83 +105,93 @@ const ProtectedLayout = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <ActiveModeProvider>
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/cadastro" element={<Register />} />
-              <Route path="/setup-admin" element={<SetupAdmin />} />
-              <Route path="/recuperar-senha" element={<ForgotPassword />} />
-              <Route path="/nova-senha" element={<ResetPassword />} />
-              <Route path="/select-mode" element={<ProtectedRoute><SelectMode /></ProtectedRoute>} />
-              <Route path="/signup/:tournamentId" element={<Suspense fallback={<LazyFallback />}><TournamentSignup /></Suspense>} />
-              <Route path="/admin/*" element={
-                <AdminRoute>
-                  <SidebarProvider>
-                    <div className="min-h-screen flex w-full">
-                      <AdminSidebar />
-                      <div className="flex-1 flex flex-col min-w-0">
-                        <header className="h-14 flex items-center sticky top-0 z-50" style={{ background: '#0a0d18', borderBottom: '1px solid rgba(255,255,255,.06)', padding: '0 24px' }}>
-                          <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
-                          <div className="h-5 w-px mx-3" style={{ background: 'rgba(255,255,255,.08)' }} />
-                          <span className="font-heading text-sm font-bold text-foreground">Admin Panel</span>
-                        </header>
-                        <main className="flex-1 overflow-auto">
-                          <Suspense fallback={<LazyFallback />}>
-                            <Routes>
-                              <Route path="/" element={<AdminDashboard />} />
-                              <Route path="/beyblades" element={<AdminBeyblades />} />
-                              <Route path="/release-notes" element={<AdminReleaseNotes />} />
-                              <Route path="/ligas" element={<AdminLigas />} />
-                              <Route path="/forjabey" element={<AdminForjaBey />} />
-                              <Route path="/config" element={<AdminConfig />} />
-                            </Routes>
-                          </Suspense>
-                        </main>
-                      </div>
-                    </div>
-                  </SidebarProvider>
-                </AdminRoute>
-              } />
-              <Route path="/onboarding" element={
-                <ProtectedRoute><BladerOnboarding /></ProtectedRoute>
-              } />
-              <Route path="/criar-perfil-blader" element={
-                <ProtectedRoute><CriarPerfilBlader /></ProtectedRoute>
-              } />
-              <Route path="/criar-perfil-organizador" element={
-                <ProtectedRoute><CriarPerfilOrganizador /></ProtectedRoute>
-              } />
-              <Route path="/blader/*" element={
-                <BladerLayout>
-                  <Suspense fallback={<LazyFallback />}>
-                    <Routes>
-                      <Route path="/home" element={<BladerHome />} />
-                      <Route path="/tournaments" element={<BladerTournaments />} />
-                      <Route path="/forjabey" element={<BladerForjaBey />} />
-                      <Route path="/profile" element={<BladerProfile />} />
-                      <Route path="/profile/:userId" element={<BladerProfile />} />
-                      <Route path="/profile/by-name/:name" element={<BladerProfile />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </Suspense>
-                </BladerLayout>
-              } />
-              <Route path="*" element={<ProtectedLayout />} />
-            </Routes>
-          </ActiveModeProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  useEffect(() => {
+    // Resetar body styles ao bootar (evita 'overflow: hidden' órfão de uma sessão anterior)
+    document.body.style.overflow = '';
+    document.body.style.height = '';
+  }, []);
+
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+              <ActiveModeProvider>
+                <Routes>
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/cadastro" element={<Register />} />
+                  <Route path="/setup-admin" element={<SetupAdmin />} />
+                  <Route path="/recuperar-senha" element={<ForgotPassword />} />
+                  <Route path="/nova-senha" element={<ResetPassword />} />
+                  <Route path="/select-mode" element={<ProtectedRoute><SelectMode /></ProtectedRoute>} />
+                  <Route path="/signup/:tournamentId" element={<Suspense fallback={<LazyFallback />}><TournamentSignup /></Suspense>} />
+                  <Route path="/admin/*" element={
+                    <AdminRoute>
+                      <SidebarProvider>
+                        <div className="min-h-screen flex w-full">
+                          <AdminSidebar />
+                          <div className="flex-1 flex flex-col min-w-0">
+                            <header className="h-14 flex items-center sticky top-0 z-50" style={{ background: '#0a0d18', borderBottom: '1px solid rgba(255,255,255,.06)', padding: '0 24px' }}>
+                              <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
+                              <div className="h-5 w-px mx-3" style={{ background: 'rgba(255,255,255,.08)' }} />
+                              <span className="font-heading text-sm font-bold text-foreground">Admin Panel</span>
+                            </header>
+                            <main className="flex-1 overflow-auto">
+                              <Suspense fallback={<LazyFallback />}>
+                                <Routes>
+                                  <Route path="/" element={<AdminDashboard />} />
+                                  <Route path="/beyblades" element={<AdminBeyblades />} />
+                                  <Route path="/release-notes" element={<AdminReleaseNotes />} />
+                                  <Route path="/ligas" element={<AdminLigas />} />
+                                  <Route path="/forjabey" element={<AdminForjaBey />} />
+                                  <Route path="/config" element={<AdminConfig />} />
+                                </Routes>
+                              </Suspense>
+                            </main>
+                          </div>
+                        </div>
+                      </SidebarProvider>
+                    </AdminRoute>
+                  } />
+                  <Route path="/onboarding" element={
+                    <ProtectedRoute><BladerOnboarding /></ProtectedRoute>
+                  } />
+                  <Route path="/criar-perfil-blader" element={
+                    <ProtectedRoute><CriarPerfilBlader /></ProtectedRoute>
+                  } />
+                  <Route path="/criar-perfil-organizador" element={
+                    <ProtectedRoute><CriarPerfilOrganizador /></ProtectedRoute>
+                  } />
+                  <Route path="/blader/*" element={
+                    <BladerLayout>
+                      <Suspense fallback={<LazyFallback />}>
+                        <Routes>
+                          <Route path="/home" element={<BladerHome />} />
+                          <Route path="/tournaments" element={<BladerTournaments />} />
+                          <Route path="/forjabey" element={<BladerForjaBey />} />
+                          <Route path="/profile" element={<BladerProfile />} />
+                          <Route path="/profile/:userId" element={<BladerProfile />} />
+                          <Route path="/profile/by-name/:name" element={<BladerProfile />} />
+                          <Route path="/settings" element={<Settings />} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </Suspense>
+                    </BladerLayout>
+                  } />
+                  <Route path="*" element={<ProtectedLayout />} />
+                </Routes>
+              </ActiveModeProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+};
 
 export default App;
