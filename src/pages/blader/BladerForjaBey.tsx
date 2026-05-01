@@ -751,35 +751,45 @@ function PainelAnalise({ beys }: { beys: Bey[] }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 720, margin: '0 auto' }}>
-      {/* Resumo + Score */}
+      {/* Header da análise com score integrado */}
       <div style={{
-        background: 'linear-gradient(135deg, rgba(0,220,255,.06), #0b0f1f 60%)',
-        border: '1px solid rgba(0,220,255,.18)',
-        borderRadius: 14, padding: 18,
-        display: 'flex', alignItems: 'center', gap: 18,
+        background: '#0d1120',
+        border: '1px solid rgba(255,255,255,.07)',
+        borderRadius: 14,
+        overflow: 'hidden',
       }}>
         <div style={{
-          width: 84, height: 84, borderRadius: '50%',
-          background: 'conic-gradient(#00DCFF 0%, #00DCFF ' + (score * 10) + '%, rgba(255,255,255,.06) ' + (score * 10) + '%)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '12px 14px',
+          borderBottom: '1px solid rgba(255,255,255,.05)',
+          background: 'rgba(255,255,255,.02)',
         }}>
-          <div style={{
-            width: 70, height: 70, borderRadius: '50%', background: '#0b0f1f',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <div style={{ fontFamily: 'Orbitron,sans-serif', fontWeight: 800, fontSize: 22, color: '#00DCFF' }}>
-              {score.toFixed(1)}
+          <div>
+            <div style={{
+              fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
+              color: 'rgba(255,255,255,.28)', marginBottom: 3, fontWeight: 700,
+            }}>
+              Análise do Deck
             </div>
-            <div style={{ fontSize: 8, color: 'rgba(255,255,255,.4)', letterSpacing: 1 }}>/ 10</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)' }}>
+              {beysAtivas.length}/3 beys montadas
+            </div>
           </div>
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 18, color: '#fff', letterSpacing: .5 }}>
-            Análise do Deck
-          </div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginTop: 4 }}>
-            {beysAtivas.length}/3 beys montadas
+          <div style={{
+            display: 'flex', alignItems: 'baseline', gap: 4,
+            padding: '6px 14px',
+            background: 'rgba(0,220,255,.08)',
+            border: '1px solid rgba(0,220,255,.15)',
+            borderRadius: 10,
+          }}>
+            <span style={{
+              fontFamily: 'Orbitron, sans-serif',
+              fontWeight: 900, fontSize: 22,
+              color: score >= 7 ? '#34D399' : score >= 4 ? '#FBBF24' : '#F87171',
+            }}>
+              {score.toFixed(1)}
+            </span>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,.3)' }}>/10</span>
           </div>
         </div>
       </div>
