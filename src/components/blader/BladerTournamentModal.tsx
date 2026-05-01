@@ -367,22 +367,32 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
             </div>
           ) : (
             <>
-              {mode === 'organizer' && (
+              {mode === 'organizer' && modoInscricao === null && (
                 <div style={{ display: 'flex', gap: 8, padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,.06)' }}>
                   <button onClick={() => setModoInscricao('buscar')} style={{
                     flex: 1, padding: '9px',
-                    background: modoInscricao === 'buscar' ? 'rgba(37,99,235,.15)' : 'rgba(255,255,255,.03)',
-                    border: `1px solid ${modoInscricao === 'buscar' ? 'rgba(37,99,235,.3)' : 'rgba(255,255,255,.08)'}`,
-                    borderRadius: 9, color: modoInscricao === 'buscar' ? '#60A5FA' : 'rgba(255,255,255,.4)',
+                    background: 'rgba(37,99,235,.15)',
+                    border: '1px solid rgba(37,99,235,.3)',
+                    borderRadius: 9, color: '#60A5FA',
                     fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                  }}>Buscar cadastrado</button>
+                  }}>+ Inscrever cadastrado</button>
                   <button onClick={() => setModoInscricao('rapido')} style={{
                     flex: 1, padding: '9px',
-                    background: modoInscricao === 'rapido' ? 'rgba(245,158,11,.12)' : 'rgba(255,255,255,.03)',
-                    border: `1px solid ${modoInscricao === 'rapido' ? 'rgba(245,158,11,.3)' : 'rgba(255,255,255,.08)'}`,
-                    borderRadius: 9, color: modoInscricao === 'rapido' ? '#FCD34D' : 'rgba(255,255,255,.4)',
+                    background: 'rgba(245,158,11,.12)',
+                    border: '1px solid rgba(245,158,11,.3)',
+                    borderRadius: 9, color: '#FCD34D',
                     fontSize: 12, fontWeight: 600, cursor: 'pointer',
                   }}>+ Cadastro rápido</button>
+                </div>
+              )}
+
+              {mode === 'organizer' && modoInscricao !== null && (
+                <div style={{ padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,.06)' }}>
+                  <button onClick={() => setModoInscricao(null)} style={{
+                    padding: '6px 10px', background: 'rgba(255,255,255,.04)',
+                    border: '1px solid rgba(255,255,255,.1)', borderRadius: 8,
+                    color: '#9CA3AF', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  }}>← Voltar para inscritos</button>
                 </div>
               )}
 
