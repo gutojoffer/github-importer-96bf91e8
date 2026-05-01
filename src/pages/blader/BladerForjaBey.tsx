@@ -463,6 +463,42 @@ function PartSelector({
   const [aberto, setAberto] = useState(false);
   const [pecas, setPecas] = useState<Peca[]>([]);
   const [busca, setBusca] = useState('');
+  const botaoRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+
+  function abrirDropdown() {
+    const rect = botaoRef.current?.getBoundingClientRect();
+    if (rect) {
+      setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+    }
+    setAberto(true);
+  }
+
+  // Fechar ao clicar fora
+  useEffect(() => {
+    if (!aberto) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (botaoRef.current?.contains(target)) return;
+      if (dropdownRef.current?.contains(target)) return;
+      setAberto(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [aberto]);
+
+  // Fechar / reposicionar em scroll/resize
+  useEffect(() => {
+    if (!aberto) return;
+    const close = () => setAberto(false);
+    window.addEventListener('resize', close);
+    window.addEventListener('scroll', close, true);
+    return () => {
+      window.removeEventListener('resize', close);
+      window.removeEventListener('scroll', close, true);
+    };
+  }, [aberto]);
 
   useEffect(() => {
     let q: any = (supabase as any).from(tabela).select('*').order('nome');
