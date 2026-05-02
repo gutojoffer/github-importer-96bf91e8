@@ -264,7 +264,15 @@ export async function getTournaments(): Promise<Tournament[]> {
 }
 
 export async function getTournamentParticipants(tournamentId: string): Promise<Player[]> {
-  const { data, error } = await (supabase as any)
+  type ParticipantRow = {
+    blader_id: string | null;
+    blader_temp_id: string | null;
+    inscrito_em: string;
+    profiles: { nome_blader: string | null; avatar_blader_url: string | null } | null;
+    bladers_temp: { nome: string | null; apelido: string | null; avatar_url: string | null } | null;
+  };
+
+  const { data, error } = await supabase
     .from('inscricoes')
     .select(`
       blader_id,
@@ -280,7 +288,7 @@ export async function getTournamentParticipants(tournamentId: string): Promise<P
   if (error) { console.error('getTournamentParticipants error:', error); return []; }
 
   const participants = new Map<string, Player>();
-  for (const row of data || []) {
+  for (const row of (data || []) as unknown as ParticipantRow[]) {
     const id = row.blader_id || row.blader_temp_id;
     if (!id || participants.has(id)) continue;
     const profile = row.profiles;
