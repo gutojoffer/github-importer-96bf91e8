@@ -194,7 +194,7 @@ export async function applyTournamentResults(tournamentId: string, standings: To
 
 function tournamentFromRow(row: any): Tournament {
   const inscricaoIds = Array.isArray(row.inscricoes)
-    ? row.inscricoes.map((i: any) => i.blader_id).filter(Boolean)
+    ? row.inscricoes.map((i: any) => i.blader_id || i.blader_temp_id).filter(Boolean)
     : [];
   const playerIds = Array.from(new Set([...(row.player_ids || []), ...inscricaoIds]));
   return {
@@ -258,9 +258,44 @@ function tournamentToRow(t: Tournament, ligaId: string) {
 }
 
 export async function getTournaments(): Promise<Tournament[]> {
-  const { data, error } = await supabase.from('tournaments').select('*, inscricoes(blader_id)').order('created_at', { ascending: false });
+  const { data, error } = await supabase.from('tournaments').select('*, inscricoes(blader_id, blader_temp_id)').order('created_at', { ascending: false });
   if (error) { console.error('getTournaments error:', error); return []; }
   return (data || []).map(tournamentFromRow);
+}
+
+export async function getTournamentParticipants(tournamentId: string): Promise<Player[]> {
+  const { data, error } = await (supabase as any)
+    .from('inscricoes')
+    .select(`
+      blader_id,
+      blader_temp_id,
+      inscrito_em,
+      profiles!inscricoes_blader_id_fkey (nome_blader, avatar_blader_url),
+      bladers_temp!inscricoes_blader_temp_id_fkey (nome, apelido, avatar_url)
+    `)
+    .eq('torneio_id', tournamentId)
+    .eq('status', 'confirmado')
+    .order('inscrito_em', { ascending: true });
+
+  if (error) { console.error('getTournamentParticipants error:', error); return []; }
+
+  const participants = new Map<string, Player>();
+  for (const row of data || []) {
+    const id = row.blader_id || row.blader_temp_id;
+    if (!id || participants.has(id)) continue;
+    const profile = row.profiles;
+    const temp = row.bladers_temp;
+    const name = profile?.nome_blader || temp?.nome || temp?.apelido || 'Blader';
+    participants.set(id, {
+      id,
+      name,
+      nickname: temp?.apelido || '',
+      avatar: profile?.avatar_blader_url || temp?.avatar_url || '🔵',
+      xp: 0,
+      createdAt: row.inscrito_em || new Date().toISOString(),
+    });
+  }
+  return Array.from(participants.values());
 }
 
 export async function saveTournaments(tournaments: Tournament[]) {
