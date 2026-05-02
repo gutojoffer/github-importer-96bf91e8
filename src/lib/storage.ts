@@ -264,35 +264,35 @@ export async function getTournaments(): Promise<Tournament[]> {
 }
 
 export async function getTournamentParticipants(tournamentId: string): Promise<Player[]> {
-  type ParticipantRow = {
-    blader_id: string | null;
-    blader_temp_id: string | null;
-    inscrito_em: string;
-    profiles: { nome_blader: string | null; avatar_blader_url: string | null } | null;
-    bladers_temp: { nome: string | null; apelido: string | null; avatar_url: string | null } | null;
-  };
-
-  const { data, error } = await supabase
+  const { data: inscricoes, error } = await supabase
     .from('inscricoes')
-    .select(`
-      blader_id,
-      blader_temp_id,
-      inscrito_em,
-      profiles!inscricoes_blader_id_fkey (nome_blader, avatar_blader_url),
-      bladers_temp!inscricoes_blader_temp_id_fkey (nome, apelido, avatar_url)
-    `)
+    .select('blader_id, blader_temp_id, inscrito_em')
     .eq('torneio_id', tournamentId)
     .eq('status', 'confirmado')
     .order('inscrito_em', { ascending: true });
 
   if (error) { console.error('getTournamentParticipants error:', error); return []; }
 
+  const profileIds = (inscricoes || []).map(row => row.blader_id).filter(Boolean) as string[];
+  const tempIds = (inscricoes || []).map(row => row.blader_temp_id).filter(Boolean) as string[];
+  const [profilesRes, tempRes] = await Promise.all([
+    profileIds.length
+      ? supabase.from('profiles').select('id, nome_blader, avatar_blader_url').in('id', profileIds)
+      : Promise.resolve({ data: [] }),
+    tempIds.length
+      ? supabase.from('bladers_temp').select('id, nome, apelido, avatar_url').in('id', tempIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const profilesById = new Map((profilesRes.data || []).map(row => [row.id, row]));
+  const tempById = new Map((tempRes.data || []).map(row => [row.id, row]));
+
   const participants = new Map<string, Player>();
-  for (const row of (data || []) as unknown as ParticipantRow[]) {
+  for (const row of inscricoes || []) {
     const id = row.blader_id || row.blader_temp_id;
     if (!id || participants.has(id)) continue;
-    const profile = row.profiles;
-    const temp = row.bladers_temp;
+    const profile = row.blader_id ? profilesById.get(row.blader_id) : null;
+    const temp = row.blader_temp_id ? tempById.get(row.blader_temp_id) : null;
     const name = profile?.nome_blader || temp?.nome || temp?.apelido || 'Blader';
     participants.set(id, {
       id,
