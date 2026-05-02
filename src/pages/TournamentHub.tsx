@@ -48,7 +48,7 @@ export default function TournamentHub() {
     tournaments, activeTournament, load: loadTournaments,
     createTournament, deleteTournament: deleteTournamentStore,
     setActiveTournament, updateActive, endTournament, cancelTournament: cancelTournamentStore,
-    enrollPlayer, unenrollPlayer, updateTournament,
+    enrollPlayer, unenrollPlayer, updateTournament, refreshList,
   } = useTournamentStore();
 
   const [view, setView] = useState<View>('list');
@@ -1010,7 +1010,7 @@ export default function TournamentHub() {
           open={!!detailsTournament}
           onOpenChange={(open) => { if (!open) setDetailsTournament(null); }}
           mode="organizer"
-          onInscrito={() => { /* refresh handled internally + store reload via card list */ }}
+          onInscrito={() => { refreshList(); }}
           onManage={() => { setDetailsTournament(null); }}
         />
       )}
@@ -1021,7 +1021,7 @@ export default function TournamentHub() {
           tournamentName={enrollTournament.name}
           open={!!enrollTournament}
           onOpenChange={(open) => { if (!open) setEnrollTournament(null); }}
-          onEnrolled={() => loadTournaments()}
+          onEnrolled={() => refreshList()}
         />
       )}
 
