@@ -1328,6 +1328,7 @@ export default function TournamentHub() {
           ) : (
             upcomingTournaments.map((t, i) => {
               const enrolledCount = t.enrolledCount ?? t.playerIds.length;
+              const canStart = enrolledCount >= 2;
               const spotsLeft = (t.maxPlayers || 32) - enrolledCount;
               const fillPercent = Math.min(100, (enrolledCount / (t.maxPlayers || 32)) * 100);
               return (
@@ -1395,7 +1396,7 @@ export default function TournamentHub() {
                         <UserPlus className="h-3.5 w-3.5" /> Inscrever
                       </Button>
                       <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setStartingTournament(t); setStartEliminationSize(t.eliminationSize || null); }}
-                        className="font-heading tracking-wider gap-1.5 border-primary/30 text-primary hover:bg-primary/10 h-9 px-3.5" disabled={t.playerIds.length < 2}>
+                        className="font-heading tracking-wider gap-1.5 border-primary/30 text-primary hover:bg-primary/10 h-9 px-3.5" disabled={!canStart}>
                         <Play className="h-3.5 w-3.5" /> Iniciar
                       </Button>
                       <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); openEditModal(t); }}
