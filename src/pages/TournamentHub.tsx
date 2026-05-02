@@ -223,12 +223,13 @@ export default function TournamentHub() {
       eliminationSize: startEliminationSize || t.eliminationSize,
       phase: 'swiss',
     };
-    deleteTournamentStore(t.id);
+    // Update in place (do NOT delete + recreate — that races with the upsert
+    // and can leave the tournament missing or orphan inscricoes).
     setActiveTournament(active);
     setStartingTournament(null);
     setView('active');
     toast.success('🌀 Torneio iniciado! Let it rip!');
-  }, [startingTournament, arenaCount, rounds, pointsToWin, startEliminationSize, tournaments, deleteTournamentStore, setActiveTournament]);
+  }, [startingTournament, arenaCount, rounds, pointsToWin, startEliminationSize, tournaments, setActiveTournament]);
 
   // ─── Match Scoring (OPTIMISTIC) ───
   const handleScorePoint = useCallback((matchId: string, winnerId: string, finishType: FinishType, isElimination = false) => {
