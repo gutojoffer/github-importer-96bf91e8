@@ -48,7 +48,14 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   },
 
   setActiveTournament: (t: Tournament | null) => {
-    set({ activeTournament: t });
+    set(s => ({
+      activeTournament: t,
+      tournaments: t
+        ? s.tournaments.some(x => x.id === t.id)
+          ? s.tournaments.map(x => (x.id === t.id ? t : x))
+          : [t, ...s.tournaments]
+        : s.tournaments,
+    }));
     if (t) {
       saveActiveTournament(t).catch(console.error);
     }
