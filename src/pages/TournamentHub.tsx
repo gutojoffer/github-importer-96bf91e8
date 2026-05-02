@@ -129,7 +129,14 @@ export default function TournamentHub() {
     loadPlayers();
     loadTournaments().then(() => {
       const store = useTournamentStore.getState();
-      if (store.activeTournament) setView('active');
+      if (store.activeTournament) {
+        setView('active');
+        getTournamentParticipants(store.activeTournament.id).then(participants => {
+          if (participants.length === 0) return;
+          const ids = participants.map(p => p.id);
+          usePlayerStore.setState(s => ({ players: [...s.players.filter(p => !ids.includes(p.id)), ...participants], loaded: true }));
+        });
+      }
     });
   }, []);
 
@@ -216,9 +223,11 @@ export default function TournamentHub() {
     if (!startingTournament) return;
     const t = tournaments.find(tr => tr.id === startingTournament.id) || startingTournament;
     const participants = await getTournamentParticipants(t.id);
-    const participantIds = participants.map(p => p.id);
+    const participantIds = participants.length >= 2 ? participants.map(p => p.id) : t.playerIds;
     if (participantIds.length < 2) { toast.error('Mínimo 2 jogadores inscritos!'); return; }
-    usePlayerStore.setState({ players: [...players.filter(p => !participantIds.includes(p.id)), ...participants], loaded: true });
+    if (participants.length > 0) {
+      usePlayerStore.setState({ players: [...players.filter(p => !participantIds.includes(p.id)), ...participants], loaded: true });
+    }
     const firstRound = generateFirstRound(participantIds, arenaCount);
     const active: Tournament = {
       ...t, playerIds: participantIds, status: 'active', arenaCount, totalRounds: rounds,
