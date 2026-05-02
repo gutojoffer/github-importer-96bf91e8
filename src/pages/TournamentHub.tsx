@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tournament, Player, FinishType, FINISH_POINTS, DEFAULT_AVATARS, ScoreAction, EliminationSize } from '@/types/tournament';
 import { suggestRounds, generateFirstRound, generateSwissRound, getSwissStandings, generateEliminationBracket, generateNextEliminationRound } from '@/lib/matchmaking';
-import { saveActiveTournament, saveTournaments } from '@/lib/storage';
+import { getTournamentParticipants, saveActiveTournament, saveTournaments } from '@/lib/storage';
 import { getPlayerStreak } from '@/lib/streak';
 import { usePlayerStore } from '@/stores/usePlayerStore';
 import { useTournamentStore } from '@/stores/useTournamentStore';
@@ -48,7 +48,7 @@ export default function TournamentHub() {
     tournaments, activeTournament, load: loadTournaments,
     createTournament, deleteTournament: deleteTournamentStore,
     setActiveTournament, updateActive, endTournament, cancelTournament: cancelTournamentStore,
-    enrollPlayer, unenrollPlayer, updateTournament,
+    enrollPlayer, unenrollPlayer, updateTournament, refreshList,
   } = useTournamentStore();
 
   const [view, setView] = useState<View>('list');
@@ -129,7 +129,14 @@ export default function TournamentHub() {
     loadPlayers();
     loadTournaments().then(() => {
       const store = useTournamentStore.getState();
-      if (store.activeTournament) setView('active');
+      if (store.activeTournament) {
+        setView('active');
+        getTournamentParticipants(store.activeTournament.id).then(participants => {
+          if (participants.length === 0) return;
+          const ids = participants.map(p => p.id);
+          usePlayerStore.setState(s => ({ players: [...s.players.filter(p => !ids.includes(p.id)), ...participants], loaded: true }));
+        });
+      }
     });
   }, []);
 
@@ -212,13 +219,18 @@ export default function TournamentHub() {
   // Enrollment / quick-add are handled inside BladerTournamentModal (organizer mode).
 
   // ─── Start Tournament ───
-  const handleStartTournament = useCallback(() => {
+  const handleStartTournament = useCallback(async () => {
     if (!startingTournament) return;
-    const t = tournaments.find(tr => tr.id === startingTournament.id);
-    if (!t || t.playerIds.length < 2) { toast.error('Mínimo 2 jogadores inscritos!'); return; }
-    const firstRound = generateFirstRound(t.playerIds, arenaCount);
+    const t = tournaments.find(tr => tr.id === startingTournament.id) || startingTournament;
+    const participants = await getTournamentParticipants(t.id);
+    const participantIds = participants.length >= 2 ? participants.map(p => p.id) : t.playerIds;
+    if (participantIds.length < 2) { toast.error('Mínimo 2 jogadores inscritos!'); return; }
+    if (participants.length > 0) {
+      usePlayerStore.setState({ players: [...players.filter(p => !participantIds.includes(p.id)), ...participants], loaded: true });
+    }
+    const firstRound = generateFirstRound(participantIds, arenaCount);
     const active: Tournament = {
-      ...t, status: 'active', arenaCount, totalRounds: rounds,
+      ...t, playerIds: participantIds, status: 'active', arenaCount, totalRounds: rounds,
       pointsToWin, rounds: [firstRound], currentRound: 0,
       eliminationSize: startEliminationSize || t.eliminationSize,
       phase: 'swiss',
@@ -229,7 +241,7 @@ export default function TournamentHub() {
     setStartingTournament(null);
     setView('active');
     toast.success('🌀 Torneio iniciado! Let it rip!');
-  }, [startingTournament, arenaCount, rounds, pointsToWin, startEliminationSize, tournaments, setActiveTournament]);
+  }, [startingTournament, arenaCount, rounds, pointsToWin, startEliminationSize, tournaments, setActiveTournament, players]);
 
   // ─── Match Scoring (OPTIMISTIC) ───
   const handleScorePoint = useCallback((matchId: string, winnerId: string, finishType: FinishType, isElimination = false) => {
@@ -1007,7 +1019,7 @@ export default function TournamentHub() {
           open={!!detailsTournament}
           onOpenChange={(open) => { if (!open) setDetailsTournament(null); }}
           mode="organizer"
-          onInscrito={() => { /* refresh handled internally + store reload via card list */ }}
+          onInscrito={() => { refreshList(); }}
           onManage={() => { setDetailsTournament(null); }}
         />
       )}
@@ -1018,7 +1030,7 @@ export default function TournamentHub() {
           tournamentName={enrollTournament.name}
           open={!!enrollTournament}
           onOpenChange={(open) => { if (!open) setEnrollTournament(null); }}
-          onEnrolled={() => loadTournaments()}
+          onEnrolled={() => refreshList()}
         />
       )}
 
@@ -1324,6 +1336,7 @@ export default function TournamentHub() {
           ) : (
             upcomingTournaments.map((t, i) => {
               const enrolledCount = t.enrolledCount ?? t.playerIds.length;
+              const canStart = enrolledCount >= 2;
               const spotsLeft = (t.maxPlayers || 32) - enrolledCount;
               const fillPercent = Math.min(100, (enrolledCount / (t.maxPlayers || 32)) * 100);
               return (
@@ -1391,7 +1404,7 @@ export default function TournamentHub() {
                         <UserPlus className="h-3.5 w-3.5" /> Inscrever
                       </Button>
                       <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setStartingTournament(t); setStartEliminationSize(t.eliminationSize || null); }}
-                        className="font-heading tracking-wider gap-1.5 border-primary/30 text-primary hover:bg-primary/10 h-9 px-3.5" disabled={t.playerIds.length < 2}>
+                        className="font-heading tracking-wider gap-1.5 border-primary/30 text-primary hover:bg-primary/10 h-9 px-3.5" disabled={!canStart}>
                         <Play className="h-3.5 w-3.5" /> Iniciar
                       </Button>
                       <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); openEditModal(t); }}

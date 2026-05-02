@@ -194,7 +194,7 @@ export async function applyTournamentResults(tournamentId: string, standings: To
 
 function tournamentFromRow(row: any): Tournament {
   const inscricaoIds = Array.isArray(row.inscricoes)
-    ? row.inscricoes.map((i: any) => i.blader_id).filter(Boolean)
+    ? row.inscricoes.map((i: any) => i.blader_id || i.blader_temp_id).filter(Boolean)
     : [];
   const playerIds = Array.from(new Set([...(row.player_ids || []), ...inscricaoIds]));
   return {
@@ -258,9 +258,52 @@ function tournamentToRow(t: Tournament, ligaId: string) {
 }
 
 export async function getTournaments(): Promise<Tournament[]> {
-  const { data, error } = await supabase.from('tournaments').select('*, inscricoes(blader_id)').order('created_at', { ascending: false });
+  const { data, error } = await supabase.from('tournaments').select('*, inscricoes(blader_id, blader_temp_id)').order('created_at', { ascending: false });
   if (error) { console.error('getTournaments error:', error); return []; }
   return (data || []).map(tournamentFromRow);
+}
+
+export async function getTournamentParticipants(tournamentId: string): Promise<Player[]> {
+  const { data: inscricoes, error } = await supabase
+    .from('inscricoes')
+    .select('blader_id, blader_temp_id, inscrito_em')
+    .eq('torneio_id', tournamentId)
+    .eq('status', 'confirmado')
+    .order('inscrito_em', { ascending: true });
+
+  if (error) { console.error('getTournamentParticipants error:', error); return []; }
+
+  const profileIds = (inscricoes || []).map(row => row.blader_id).filter(Boolean) as string[];
+  const tempIds = (inscricoes || []).map(row => row.blader_temp_id).filter(Boolean) as string[];
+  const [profilesRes, tempRes] = await Promise.all([
+    profileIds.length
+      ? supabase.from('profiles').select('id, nome_blader, avatar_blader_url').in('id', profileIds)
+      : Promise.resolve({ data: [] }),
+    tempIds.length
+      ? supabase.from('bladers_temp').select('id, nome, apelido, avatar_url').in('id', tempIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const profilesById = new Map((profilesRes.data || []).map(row => [row.id, row]));
+  const tempById = new Map((tempRes.data || []).map(row => [row.id, row]));
+
+  const participants = new Map<string, Player>();
+  for (const row of inscricoes || []) {
+    const id = row.blader_id || row.blader_temp_id;
+    if (!id || participants.has(id)) continue;
+    const profile = row.blader_id ? profilesById.get(row.blader_id) : null;
+    const temp = row.blader_temp_id ? tempById.get(row.blader_temp_id) : null;
+    const name = profile?.nome_blader || temp?.nome || temp?.apelido || 'Blader';
+    participants.set(id, {
+      id,
+      name,
+      nickname: temp?.apelido || '',
+      avatar: profile?.avatar_blader_url || temp?.avatar_url || '🔵',
+      xp: 0,
+      createdAt: row.inscrito_em || new Date().toISOString(),
+    });
+  }
+  return Array.from(participants.values());
 }
 
 export async function saveTournaments(tournaments: Tournament[]) {
