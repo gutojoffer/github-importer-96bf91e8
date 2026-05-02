@@ -43,7 +43,6 @@ export default function TournamentHub() {
   const players = usePlayerStore(s => s.players);
   const loadPlayers = usePlayerStore(s => s.load);
   const addPlayerToStore = usePlayerStore(s => s.add);
-  const setPlayersInStore = usePlayerStore(s => s.bulkSet);
 
   const {
     tournaments, activeTournament, load: loadTournaments,
@@ -219,7 +218,7 @@ export default function TournamentHub() {
     const participants = await getTournamentParticipants(t.id);
     const participantIds = participants.map(p => p.id);
     if (participantIds.length < 2) { toast.error('Mínimo 2 jogadores inscritos!'); return; }
-    setPlayersInStore([...players.filter(p => !participantIds.includes(p.id)), ...participants]);
+    usePlayerStore.setState({ players: [...players.filter(p => !participantIds.includes(p.id)), ...participants], loaded: true });
     const firstRound = generateFirstRound(participantIds, arenaCount);
     const active: Tournament = {
       ...t, playerIds: participantIds, status: 'active', arenaCount, totalRounds: rounds,
@@ -233,7 +232,7 @@ export default function TournamentHub() {
     setStartingTournament(null);
     setView('active');
     toast.success('🌀 Torneio iniciado! Let it rip!');
-  }, [startingTournament, arenaCount, rounds, pointsToWin, startEliminationSize, tournaments, setActiveTournament, setPlayersInStore, players]);
+  }, [startingTournament, arenaCount, rounds, pointsToWin, startEliminationSize, tournaments, setActiveTournament, players]);
 
   // ─── Match Scoring (OPTIMISTIC) ───
   const handleScorePoint = useCallback((matchId: string, winnerId: string, finishType: FinishType, isElimination = false) => {
