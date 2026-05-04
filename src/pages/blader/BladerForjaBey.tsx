@@ -893,15 +893,22 @@ function PartSelector({
     return () => document.removeEventListener('mousedown', handler);
   }, [aberto]);
 
-  // Fechar / reposicionar em scroll/resize
+  // Reposicionar dropdown ao scrollar/redimensionar (sem fechar)
   useEffect(() => {
     if (!aberto) return;
-    const close = () => setAberto(false);
-    window.addEventListener('resize', close);
-    window.addEventListener('scroll', close, true);
+    const reposicionar = () => {
+      const rect = botaoRef.current?.getBoundingClientRect();
+      if (rect) {
+        setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+      }
+    };
+    const fechar = () => setAberto(false);
+    window.addEventListener('resize', fechar);
+    // Scroll na página: reposiciona; scroll dentro do dropdown não dispara aqui (stopPropagation no onWheel)
+    window.addEventListener('scroll', reposicionar, true);
     return () => {
-      window.removeEventListener('resize', close);
-      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', fechar);
+      window.removeEventListener('scroll', reposicionar, true);
     };
   }, [aberto]);
 
@@ -984,6 +991,8 @@ function PartSelector({
       {aberto && createPortal(
         <div
           ref={dropdownRef}
+          onWheel={e => e.stopPropagation()}
+          onTouchMove={e => e.stopPropagation()}
           style={{
             position: 'fixed',
             top: dropdownPos.top,
@@ -994,6 +1003,12 @@ function PartSelector({
             borderRadius: 12, boxShadow: '0 16px 40px rgba(0,0,0,.7)',
             display: 'flex', flexDirection: 'column', maxHeight: 280, overflow: 'hidden',
           }}>
+          <style>{`
+            .forjabey-dropdown::-webkit-scrollbar { width: 3px; }
+            .forjabey-dropdown::-webkit-scrollbar-track { background: transparent; }
+            .forjabey-dropdown::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+            .forjabey-dropdown::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }
+          `}</style>
           <div style={{ padding: '8px 10px', borderBottom: '1px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
             <input
               autoFocus value={busca}
@@ -1006,7 +1021,7 @@ function PartSelector({
               }}
             />
           </div>
-          <div style={{ overflowY: 'auto', flex: 1 }}>
+          <div className="forjabey-dropdown" style={{ overflowY: 'auto', flex: 1, scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,.1) transparent' }}>
             {valor && (
               <div
                 onClick={() => { onSelecionar(null); setAberto(false); setBusca(''); }}
