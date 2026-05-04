@@ -94,6 +94,19 @@ export function BladerSidebar() {
               >
                 <item.icon size={18} strokeWidth={1.4} className="shrink-0" style={{ color: active ? '#FBBF24' : '#64748B', opacity: active ? 1 : 0.35 }} />
                 <span className="font-body flex-1" style={{ fontSize: 13, color: active ? '#FBBF24' : '#64748B', fontWeight: active ? 700 : 500 }}>{item.title}</span>
+                {(item as any).showBadge && naoLidas > 0 && (
+                  <span
+                    className="font-body shrink-0"
+                    style={{
+                      minWidth: 18, height: 18, padding: '0 5px',
+                      borderRadius: 999, background: '#EF4444',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 10, fontWeight: 700, color: '#fff', lineHeight: 1,
+                    }}
+                  >
+                    {naoLidas > 99 ? '99+' : naoLidas}
+                  </span>
+                )}
               </Link>
             );
           })}
