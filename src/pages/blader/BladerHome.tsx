@@ -15,6 +15,7 @@ import {
   PolarGrid, PolarAngleAxis, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
+import { ELOS, getElo, getProximoElo } from '@/lib/elo';
 
 interface TournamentRow {
   id: string;
