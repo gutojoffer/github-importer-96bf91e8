@@ -346,12 +346,15 @@ export default function BladerNotificacoes() {
         { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `user_id=eq.${userId}` },
         (payload: any) => {
           const novo = payload.new as Notificacao;
+          if (!(TIPOS_BLADER as readonly string[]).includes(novo.tipo)) return;
           setNotificacoes(prev => {
             if (prev.some(p => p.id === novo.id)) return prev;
             return [novo, ...prev];
           });
           if (novo.tipo === 'resultado_torneio') {
             toast.success(novo.mensagem.split(' · ')[0], { duration: 5000 });
+          } else if (novo.tipo === 'torneio_publicado') {
+            toast.info(novo.mensagem, { duration: 4000 });
           }
         },
       )
