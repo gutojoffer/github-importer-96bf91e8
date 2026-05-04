@@ -502,6 +502,7 @@ export type Database = {
       notificacoes: {
         Row: {
           created_at: string
+          dados: Json | null
           id: string
           lida: boolean
           mensagem: string
@@ -510,6 +511,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          dados?: Json | null
           id?: string
           lida?: boolean
           mensagem: string
@@ -518,6 +520,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          dados?: Json | null
           id?: string
           lida?: boolean
           mensagem?: string

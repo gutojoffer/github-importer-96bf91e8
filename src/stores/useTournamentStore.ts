@@ -6,6 +6,7 @@ import {
   calculateStandings, awardXP, saveTournaments, applyTournamentResults,
 } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
+import { enviarNotificacoesResultado, enviarNotificacoesInicio } from '@/lib/notificacoes';
 
 interface TournamentStore {
   tournaments: Tournament[];
@@ -48,6 +49,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   },
 
   setActiveTournament: (t: Tournament | null) => {
+    const prev = get().activeTournament;
+    const isNewlyActive = !!t && t.status === 'active' && (!prev || prev.id !== t.id);
     set(s => ({
       activeTournament: t,
       tournaments: t
@@ -58,6 +61,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     }));
     if (t) {
       saveActiveTournament(t).catch(console.error);
+      if (isNewlyActive) enviarNotificacoesInicio(t.id).catch(console.error);
     }
   },
 
@@ -75,6 +79,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     await saveCompletedTournament(completed);
     await applyTournamentResults(completed.id, standings);
     awardXP(standings).catch(console.error);
+    enviarNotificacoesResultado(completed.id).catch(console.error);
 
     set(s => ({
       activeTournament: null,

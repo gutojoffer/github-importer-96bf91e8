@@ -1,0 +1,1 @@
+ALTER TABLE public.notificacoes ADD COLUMN IF NOT EXISTS dados JSONB;
