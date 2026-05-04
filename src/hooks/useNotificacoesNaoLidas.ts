@@ -2,6 +2,15 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
+const TIPOS_BLADER = [
+  'resultado_torneio',
+  'torneio_publicado',
+  'torneio_iniciado',
+  'torneio_amanha',
+  'conquista',
+  'vinculacao',
+];
+
 /** Realtime hook para contar notificações não lidas do usuário atual. */
 export function useNotificacoesNaoLidas() {
   const { user } = useAuth();
@@ -20,7 +29,8 @@ export function useNotificacoesNaoLidas() {
         .from('notificacoes')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
-        .eq('lida', false);
+        .eq('lida', false)
+        .in('tipo', TIPOS_BLADER);
       if (!cancelled) setCount(c || 0);
     }
     load();
