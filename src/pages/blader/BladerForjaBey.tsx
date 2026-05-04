@@ -79,6 +79,46 @@ const BEY_INICIAL: Bey[] = [
   { slot: 3, aberta: false, linha: 'BX', blade: null, ratchet: null, bit: null, lockChip: null, mainBlade: null, assistBlade: null },
 ];
 
+const CAMPOS_PECA: { campo: keyof Bey; tabela: string; label: string }[] = [
+  { campo: 'blade',       tabela: 'bey_blades',        label: 'Blade' },
+  { campo: 'ratchet',     tabela: 'bey_ratchets',      label: 'Ratchet' },
+  { campo: 'bit',         tabela: 'bey_bits',          label: 'Bit' },
+  { campo: 'lockChip',    tabela: 'bey_lock_chips',    label: 'Lock Chip' },
+  { campo: 'mainBlade',   tabela: 'bey_main_blades',   label: 'Main Blade' },
+  { campo: 'assistBlade', tabela: 'bey_assist_blades', label: 'Assist Blade' },
+];
+
+function validarPecasRepetidas(beys: Bey[]): string[] {
+  const erros: string[] = [];
+  const vistos = new Map<string, number>(); // chave: tabela-id → slot
+  beys.forEach(bey => {
+    CAMPOS_PECA.forEach(({ campo, tabela, label }) => {
+      const peca = bey[campo] as Peca | null;
+      if (!peca) return;
+      const chave = `${tabela}-${peca.id}`;
+      if (vistos.has(chave)) {
+        erros.push(`${label} "${peca.nome}" está em Bey ${vistos.get(chave)} e Bey ${bey.slot}`);
+      } else {
+        vistos.set(chave, bey.slot);
+      }
+    });
+  });
+  return erros;
+}
+
+/** Retorna o número da Bey (1-3) onde a peça já está em uso, ou null. Ignora o slot atual. */
+function pecaEmUso(beys: Bey[], slotAtual: number, tabela: string, pecaId: number): number | null {
+  for (const bey of beys) {
+    if (bey.slot === slotAtual) continue;
+    for (const { campo, tabela: t } of CAMPOS_PECA) {
+      if (t !== tabela) continue;
+      const p = bey[campo] as Peca | null;
+      if (p?.id === pecaId) return bey.slot;
+    }
+  }
+  return null;
+}
+
 export default function BladerForjaBey() {
   const [beys, setBeys] = useState<Bey[]>(BEY_INICIAL);
   const [salvando, setSalvando] = useState(false);
