@@ -932,13 +932,15 @@ function CardBey({
 // ----------------- PART SELECTOR -----------------
 
 function PartSelector({
-  label, tabela, valor, onSelecionar, linha,
+  label, tabela, valor, onSelecionar, linha, todasBeys, slotAtual,
 }: {
   label: string;
   tabela: string;
   valor: Peca | null;
   onSelecionar: (p: Peca | null) => void;
   linha?: Linha;
+  todasBeys: Bey[];
+  slotAtual: number;
 }) {
   const [aberto, setAberto] = useState(false);
   const [pecas, setPecas] = useState<Peca[]>([]);
