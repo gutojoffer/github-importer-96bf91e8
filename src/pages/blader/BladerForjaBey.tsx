@@ -83,36 +83,61 @@ export default function BladerForjaBey() {
   const [beys, setBeys] = useState<Bey[]>(BEY_INICIAL);
   const [salvando, setSalvando] = useState(false);
   const [carregando, setCarregando] = useState(true);
+  const [decks, setDecks] = useState<DeckResumo[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [deckEditandoUuid, setDeckEditandoUuid] = useState<string | null>(null);
+  const [nomeDeck, setNomeDeck] = useState('Meu Deck');
+  const [modalSalvar, setModalSalvar] = useState(false);
+  const [renomeandoUuid, setRenomeandoUuid] = useState<string | null>(null);
+  const [novoNomeRen, setNovoNomeRen] = useState('');
+
+  const carregarDecks = useCallback(async (uid: string) => {
+    const lista = await fetchUserDecks(uid);
+    setDecks(lista);
+    return lista;
+  }, []);
 
   useEffect(() => {
-    async function carregar() {
+    async function init() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setCarregando(false); return; }
-      const { data } = await (supabase as any)
-        .from('bey_combos')
-        .select('slot, linha, bey_blades(*), bey_ratchets(*), bey_bits(*), bey_lock_chips(*), bey_main_blades(*), bey_assist_blades(*)')
-        .eq('user_id', user.id)
-        .order('slot');
-      if (data?.length) {
-        setBeys(prev => prev.map(b => {
-          const salvo = data.find((d: any) => d.slot === b.slot);
-          if (!salvo) return b;
-          return {
-            ...b,
-            linha: (salvo.linha as Linha) || 'BX',
-            blade: salvo.bey_blades || null,
-            ratchet: salvo.bey_ratchets || null,
-            bit: salvo.bey_bits || null,
-            lockChip: salvo.bey_lock_chips || null,
-            mainBlade: salvo.bey_main_blades || null,
-            assistBlade: salvo.bey_assist_blades || null,
-          };
-        }));
+      setUserId(user.id);
+      const lista = await carregarDecks(user.id);
+      // Carrega o deck mais recente como inicial, se existir
+      if (lista.length > 0) {
+        carregarDeckParaEdicao(lista[0]);
       }
       setCarregando(false);
     }
-    carregar();
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function carregarDeckParaEdicao(deck: DeckResumo) {
+    setDeckEditandoUuid(deck.deck_uuid);
+    setNomeDeck(deck.nome);
+    setBeys(BEY_INICIAL.map(base => {
+      const salvo = deck.beys.find(b => b.slot === base.slot);
+      if (!salvo) return base;
+      return {
+        ...base,
+        aberta: false,
+        linha: (salvo.linha as Linha) || 'BX',
+        blade: salvo.blade,
+        ratchet: salvo.ratchet,
+        bit: salvo.bit,
+        lockChip: salvo.lock_chip,
+        mainBlade: salvo.main_blade,
+        assistBlade: salvo.assist_blade,
+      };
+    }));
+  }
+
+  function novoDeck() {
+    setDeckEditandoUuid(null);
+    setNomeDeck('Novo Deck');
+    setBeys(BEY_INICIAL.map(b => ({ ...b, aberta: b.slot === 1 })));
+  }
 
   function atualizar(slot: number, patch: Partial<Bey>) {
     setBeys(prev => prev.map(b => b.slot === slot ? { ...b, ...patch } : b));
@@ -134,16 +159,36 @@ export default function BladerForjaBey() {
       : b));
   }
 
+  function abrirSalvar() {
+    if (beys.every(beyVazia)) {
+      toast.error('Monte pelo menos uma bey antes de salvar.');
+      return;
+    }
+    setModalSalvar(true);
+  }
+
   async function salvarDeck() {
     setSalvando(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { toast.error('Faça login para salvar.'); return; }
-      await supabase.from('bey_combos').delete().eq('user_id', user.id);
-      for (const bey of beys) {
-        if (beyVazia(bey)) continue;
-        await (supabase as any).from('bey_combos').insert({
+      const nome = nomeDeck.trim() || 'Meu Deck';
+
+      // Se editando um deck existente, apaga slots desse deck e reinsere
+      // Se é deck novo, gera novo deck_uuid
+      let deckUuid = deckEditandoUuid;
+      if (deckUuid) {
+        await supabase.from('bey_combos').delete().eq('deck_uuid', deckUuid);
+      } else {
+        deckUuid = crypto.randomUUID();
+      }
+
+      const linhas = beys
+        .filter(b => !beyVazia(b))
+        .map(bey => ({
           user_id: user.id,
+          deck_uuid: deckUuid,
+          nome,
           slot: bey.slot,
           linha: bey.linha,
           blade_id: bey.blade?.id || null,
@@ -157,9 +202,17 @@ export default function BladerForjaBey() {
           endr_total: calcEndr(bey),
           xdash_total: calcXdash(bey),
           br_total: calcBr(bey),
-        });
+        }));
+
+      if (linhas.length > 0) {
+        const { error } = await (supabase as any).from('bey_combos').insert(linhas);
+        if (error) throw error;
       }
-      toast.success('Deck salvo!');
+
+      setDeckEditandoUuid(deckUuid);
+      setModalSalvar(false);
+      toast.success(`Deck "${nome}" salvo!`);
+      await carregarDecks(user.id);
     } catch (err) {
       console.error(err);
       toast.error('Erro ao salvar deck');
@@ -167,6 +220,39 @@ export default function BladerForjaBey() {
       setSalvando(false);
     }
   }
+
+  async function deletarDeck(uuid: string, nome: string) {
+    if (!window.confirm(`Excluir o deck "${nome}"? Essa ação não pode ser desfeita.`)) return;
+    try {
+      await apiDeleteDeck(uuid);
+      toast.success('Deck excluído');
+      if (deckEditandoUuid === uuid) {
+        novoDeck();
+      }
+      if (userId) await carregarDecks(userId);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao excluir deck');
+    }
+  }
+
+  async function confirmarRenomear() {
+    if (!renomeandoUuid || !userId) return;
+    const nome = novoNomeRen.trim();
+    if (!nome) { toast.error('Nome não pode ficar vazio'); return; }
+    try {
+      await apiRenameDeck(renomeandoUuid, nome);
+      if (deckEditandoUuid === renomeandoUuid) setNomeDeck(nome);
+      setRenomeandoUuid(null);
+      setNovoNomeRen('');
+      toast.success('Deck renomeado');
+      await carregarDecks(userId);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao renomear');
+    }
+  }
+
 
   // Trava scroll do body enquanto a ForjaBey estiver montada (desktop)
   useEffect(() => {
