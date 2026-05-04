@@ -4,7 +4,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Calendar, MapPin, Users, Trophy, ChevronDown, X, Search, Check } from 'lucide-react';
+import { Calendar, MapPin, Users, Trophy, ChevronDown, X, Search } from 'lucide-react';
+import { fetchUserDecks, type DeckResumo } from '@/lib/decks';
 
 interface TournamentData {
   id: string;
