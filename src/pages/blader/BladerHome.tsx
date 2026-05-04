@@ -502,8 +502,18 @@ function HistoricoTab({ historico }: { historico: any[] }) {
               <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 16, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {torneio?.name || 'Torneio'}
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 2 }}>
-                {dataStr}
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <span>{dataStr}</span>
+                {Array.isArray(insc.deck_snapshot) && insc.deck_snapshot.length > 0 && (
+                  <span style={{
+                    padding: '2px 7px', borderRadius: 6,
+                    background: 'rgba(139,92,246,.12)',
+                    border: '1px solid rgba(139,92,246,.3)',
+                    color: '#C4B5FD', fontSize: 9, fontWeight: 700, letterSpacing: 1,
+                  }}>
+                    ⚙ DECK · {insc.deck_snapshot.length}
+                  </span>
+                )}
               </div>
             </div>
             <div style={{ display: 'flex', gap: 12, flexShrink: 0 }}>
