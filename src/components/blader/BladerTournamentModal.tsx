@@ -95,6 +95,8 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
   const [abaAtiva, setAbaAtiva] = useState<'Informações' | 'Inscritos'>('Informações');
   const [inscritos, setInscritos] = useState<InscritoRow[]>([]);
   const [confirmandoDesistencia, setConfirmandoDesistencia] = useState(false);
+  const [decks, setDecks] = useState<DeckResumo[]>([]);
+  const [deckSelecionadoUuid, setDeckSelecionadoUuid] = useState<string | null>(null);
 
   // Organizer enrollment management state
   // null = lista de inscritos visível; 'buscar' ou 'rapido' = sub-painel de inscrição aberto
