@@ -328,11 +328,11 @@ export default function BladerForjaBey() {
               ⚙️ ForjaBey
             </div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,.35)', marginTop: 2 }}>
-              Monte seu deck de 3 beys
+              {deckEditandoUuid ? `Editando: ${nomeDeck}` : 'Novo deck'}
             </div>
           </div>
           <button
-            onClick={salvarDeck}
+            onClick={abrirSalvar}
             disabled={salvando}
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
@@ -348,6 +348,132 @@ export default function BladerForjaBey() {
             <Save size={13} />
             {salvando ? 'Salvando' : 'Salvar'}
           </button>
+        </div>
+
+        {/* Lista de decks salvos */}
+        {!carregando && (decks.length > 0 || deckEditandoUuid !== null) && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              marginBottom: 8,
+            }}>
+              <div style={{
+                fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
+                color: 'rgba(255,255,255,.35)', fontWeight: 700,
+              }}>
+                Meus Decks ({decks.length})
+              </div>
+              <button
+                onClick={novoDeck}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  padding: '5px 9px', borderRadius: 7,
+                  background: 'rgba(0,220,255,.08)',
+                  border: '1px solid rgba(0,220,255,.2)',
+                  color: '#00DCFF', fontSize: 10, fontWeight: 700,
+                  letterSpacing: 1, cursor: 'pointer',
+                }}
+              >
+                <Plus size={11} /> Novo
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {decks.map(deck => {
+                const ativo = deck.deck_uuid === deckEditandoUuid;
+                return (
+                  <div
+                    key={deck.deck_uuid}
+                    onClick={() => carregarDeckParaEdicao(deck)}
+                    style={{
+                      background: '#08091a',
+                      border: `1px solid ${ativo ? 'rgba(0,220,255,.3)' : 'rgba(255,255,255,.07)'}`,
+                      borderRadius: 12,
+                      padding: '10px 12px',
+                      cursor: 'pointer',
+                      transition: 'all .15s',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{
+                          fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 14, color: '#fff',
+                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        }}>
+                          {deck.nome}
+                        </div>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', marginTop: 1 }}>
+                          {deck.beys.length} bey{deck.beys.length !== 1 ? 's' : ''} · {formatarDataRelativa(deck.updated_at)}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRenomeandoUuid(deck.deck_uuid);
+                            setNovoNomeRen(deck.nome);
+                          }}
+                          title="Renomear"
+                          style={{
+                            width: 24, height: 24, borderRadius: 6,
+                            background: 'rgba(255,255,255,.04)',
+                            border: '1px solid rgba(255,255,255,.08)',
+                            color: 'rgba(255,255,255,.6)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Pencil size={11} />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); deletarDeck(deck.deck_uuid, deck.nome); }}
+                          title="Excluir"
+                          style={{
+                            width: 24, height: 24, borderRadius: 6,
+                            background: 'rgba(239,68,68,.06)',
+                            border: '1px solid rgba(239,68,68,.18)',
+                            color: '#F87171',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                      {deck.beys.map((bey, i) => {
+                        const nome = bey.blade?.nome || bey.main_blade?.nome || '—';
+                        return (
+                          <span key={i} style={{
+                            padding: '2px 7px', borderRadius: 5,
+                            background: `${CORES_BEY[i]}15`,
+                            border: `1px solid ${CORES_BEY[i]}33`,
+                            color: CORES_BEY[i], fontSize: 10, fontWeight: 600,
+                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                            maxWidth: 100,
+                          }}>
+                            {nome.split(' ')[0]}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+              {decks.length === 0 && (
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,.3)', padding: 8, textAlign: 'center' }}>
+                  Nenhum deck salvo ainda
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div style={{
+          fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
+          color: 'rgba(255,255,255,.35)', fontWeight: 700, marginBottom: 8,
+        }}>
+          Beys do deck
         </div>
 
         {carregando ? (
@@ -368,6 +494,132 @@ export default function BladerForjaBey() {
           ))
         )}
       </div>
+
+      {/* Modal: nomear deck ao salvar */}
+      {modalSalvar && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 9998,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+          }}
+          onClick={() => setModalSalvar(false)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#0d1120', border: '1px solid rgba(0,220,255,.18)',
+              borderRadius: 14, padding: 24, maxWidth: 380, width: '100%',
+            }}
+          >
+            <div style={{
+              fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 18,
+              color: '#fff', marginBottom: 6,
+            }}>
+              Nomear deck
+            </div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginBottom: 14 }}>
+              Dê um nome para encontrar fácil depois.
+            </div>
+            <input
+              value={nomeDeck}
+              onChange={e => setNomeDeck(e.target.value)}
+              autoFocus
+              placeholder="Ex: Deck Competitivo"
+              onKeyDown={e => { if (e.key === 'Enter') salvarDeck(); }}
+              style={{
+                width: '100%', padding: '10px 12px',
+                background: '#111827', border: '1px solid rgba(255,255,255,.1)',
+                borderRadius: 9, color: '#E2E8F0', fontSize: 13, outline: 'none',
+                marginBottom: 16,
+              }}
+            />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => setModalSalvar(false)}
+                style={{
+                  flex: 1, padding: 10, borderRadius: 9,
+                  background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.1)',
+                  color: '#9CA3AF', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={salvarDeck}
+                disabled={salvando}
+                style={{
+                  flex: 1, padding: 10, borderRadius: 9,
+                  background: 'linear-gradient(135deg,#F59E0B,#EF4444)',
+                  border: 'none', color: '#0a0d18', fontSize: 12, fontWeight: 700,
+                  cursor: salvando ? 'wait' : 'pointer', letterSpacing: 1,
+                }}
+              >
+                {salvando ? 'Salvando...' : 'Salvar deck'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: renomear deck */}
+      {renomeandoUuid && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 9998,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+          }}
+          onClick={() => setRenomeandoUuid(null)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#0d1120', border: '1px solid rgba(0,220,255,.18)',
+              borderRadius: 14, padding: 24, maxWidth: 380, width: '100%',
+            }}
+          >
+            <div style={{
+              fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 18,
+              color: '#fff', marginBottom: 14,
+            }}>
+              Renomear deck
+            </div>
+            <input
+              value={novoNomeRen}
+              onChange={e => setNovoNomeRen(e.target.value)}
+              autoFocus
+              onKeyDown={e => { if (e.key === 'Enter') confirmarRenomear(); }}
+              style={{
+                width: '100%', padding: '10px 12px',
+                background: '#111827', border: '1px solid rgba(255,255,255,.1)',
+                borderRadius: 9, color: '#E2E8F0', fontSize: 13, outline: 'none',
+                marginBottom: 16,
+              }}
+            />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => setRenomeandoUuid(null)}
+                style={{
+                  flex: 1, padding: 10, borderRadius: 9,
+                  background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.1)',
+                  color: '#9CA3AF', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarRenomear}
+                style={{
+                  flex: 1, padding: 10, borderRadius: 9,
+                  background: '#2563EB', border: 'none', color: '#fff',
+                  fontSize: 12, fontWeight: 700, cursor: 'pointer', letterSpacing: 1,
+                }}
+              >
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Coluna direita */}
       <div className="forjabey-right forjabey-col-right" style={{
