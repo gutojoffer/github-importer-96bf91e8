@@ -780,9 +780,10 @@ export default function BladerForjaBey() {
 // ----------------- CARD DE BEY -----------------
 
 function CardBey({
-  bey, cor, onToggle, onLimpar, onLinha, onPeca,
+  bey, todasBeys, cor, onToggle, onLimpar, onLinha, onPeca,
 }: {
   bey: Bey;
+  todasBeys: Bey[];
   cor: string;
   onToggle: () => void;
   onLimpar: () => void;
