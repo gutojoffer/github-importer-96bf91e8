@@ -321,6 +321,7 @@ export default function BladerNotificacoes() {
         .from('notificacoes')
         .select('*')
         .eq('user_id', userId)
+        .in('tipo', TIPOS_BLADER as unknown as string[])
         .order('created_at', { ascending: false })
         .limit(200);
       if (!cancelled) {
