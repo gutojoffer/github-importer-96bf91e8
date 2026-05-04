@@ -8,7 +8,6 @@ import { useState, useRef, useEffect } from 'react';
 import { Settings, LogOut, ChevronDown, LayoutGrid, Repeat } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import BladerAvatar from '@/components/BladerAvatar';
-import SinoNotificacoes from '@/components/SinoNotificacoes';
 
 const BREADCRUMB_MAP: Record<string, string> = {
   '/home': 'Home',
