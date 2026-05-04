@@ -162,7 +162,7 @@ export default function AdminForjaBey() {
   const tiposDisponiveis = Array.from(new Set(pecas.map(p => p.tipo_ataque).filter(Boolean))) as string[];
 
   return (
-    <div style={{ padding: 24, background: '#0a0d18', minHeight: '100vh', color: '#fff' }}>
+    <div style={{ padding: 24, background: '#0a0d18', minHeight: '100dvh', color: '#fff' }}>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 28, letterSpacing: 1 }}>
           ForjaBey · Gerenciamento de Peças
