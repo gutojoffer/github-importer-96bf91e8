@@ -690,3 +690,128 @@ function EmptyState({ message }: { message: string }) {
     </div>
   );
 }
+
+function CardElo({ userId }: { userId: string }) {
+  const [elo, setElo] = useState<{ pontos: number; elo: string; temporada: string } | null>(null);
+  const [historico, setHistorico] = useState<Array<{ variacao: number; motivo: string; created_at: string }>>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: temporada } = await supabase
+        .from('temporadas').select('id, nome').eq('ativa', true).maybeSingle();
+      if (!temporada || cancelled) return;
+
+      const { data: eloData } = await supabase
+        .from('elo_bladers')
+        .select('pontos, elo')
+        .eq('user_id', userId)
+        .eq('temporada_id', temporada.id)
+        .maybeSingle();
+
+      const { data: hist } = await supabase
+        .from('historico_elo')
+        .select('variacao, motivo, created_at')
+        .eq('user_id', userId)
+        .eq('temporada_id', temporada.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (cancelled) return;
+      setElo({
+        pontos: eloData?.pontos ?? 0,
+        elo: eloData?.elo ?? 'Ferro',
+        temporada: temporada.nome,
+      });
+      setHistorico((hist as any) || []);
+    })();
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  if (!elo) return null;
+
+  const eloConfig = getElo(elo.pontos);
+  const proximoElo = getProximoElo(elo.pontos);
+  const progresso = proximoElo
+    ? Math.max(0, Math.min(100, ((elo.pontos - eloConfig.min) / (eloConfig.max - eloConfig.min)) * 100))
+    : 100;
+
+  return (
+    <>
+      <div style={{ background: '#0d1120', border: `1px solid ${eloConfig.border}`, borderRadius: 14, padding: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,.3)', marginBottom: 4 }}>
+              {elo.temporada}
+            </div>
+            <div style={{ display: 'inline-flex', padding: '4px 12px', borderRadius: 7, background: eloConfig.bg, border: `1px solid ${eloConfig.border}`, color: eloConfig.cor, fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 16, letterSpacing: 1 }}>
+              {elo.elo}
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontFamily: 'Orbitron,sans-serif', fontWeight: 900, fontSize: 28, color: eloConfig.cor, lineHeight: 1 }}>
+              {elo.pontos}
+            </div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', marginTop: 2 }}>pontos</div>
+          </div>
+        </div>
+
+        {proximoElo && (
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'rgba(255,255,255,.3)', marginBottom: 5 }}>
+              <span>{eloConfig.nome}</span>
+              <span>Faltam {Math.max(0, proximoElo.min - elo.pontos)} pts para {proximoElo.nome}</span>
+            </div>
+            <div style={{ height: 5, background: 'rgba(255,255,255,.06)', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ height: '100%', borderRadius: 3, width: `${progresso}%`, background: `linear-gradient(90deg, ${eloConfig.cor}88, ${eloConfig.cor})`, transition: 'width .6s ease' }} />
+            </div>
+          </div>
+        )}
+
+        {historico.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '10px 12px', background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 9 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,.25)', marginBottom: 4 }}>
+              Últimas variações
+            </div>
+            {historico.map((h, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'rgba(255,255,255,.45)' }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: 8 }}>{h.motivo}</span>
+                <span style={{ fontWeight: 700, color: h.variacao > 0 ? '#34D399' : '#F87171' }}>
+                  {h.variacao > 0 ? '+' : ''}{h.variacao}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8, marginTop: 12 }}>
+        {ELOS.map(e => {
+          const ativo = elo.elo === e.nome;
+          const bloqueado = elo.pontos < e.min;
+          return (
+            <div key={e.nome} style={{
+              padding: '10px 12px',
+              background: ativo ? e.bg : 'rgba(255,255,255,.02)',
+              border: `1px solid ${ativo ? e.border : 'rgba(255,255,255,.06)'}`,
+              borderRadius: 10,
+              opacity: bloqueado ? .4 : 1,
+            }}>
+              <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 14, color: e.cor, marginBottom: 2 }}>
+                {e.nome}
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,.3)' }}>
+                {e.min} – {e.max === 99999 ? '∞' : e.max} pts
+              </div>
+              {ativo && (
+                <div style={{ marginTop: 5, fontSize: 9, fontWeight: 700, color: e.cor, letterSpacing: 1 }}>
+                  ← ATUAL
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
