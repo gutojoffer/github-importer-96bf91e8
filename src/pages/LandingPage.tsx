@@ -148,7 +148,13 @@ export default function LandingPage() {
 
   const [tournamentIdx, setTournamentIdx] = useState(0);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div style={{ background: '#060912', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
   if (user) return <Navigate to="/home" replace />;
 
   return (
