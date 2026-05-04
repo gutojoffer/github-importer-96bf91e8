@@ -7,6 +7,7 @@ import {
 } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
 import { enviarNotificacoesResultado, enviarNotificacoesInicio } from '@/lib/notificacoes';
+import { atualizarEloAposTorneio } from '@/lib/elo';
 
 interface TournamentStore {
   tournaments: Tournament[];
