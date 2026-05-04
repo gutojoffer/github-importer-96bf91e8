@@ -105,31 +105,38 @@ export default function BladerHome() {
     queryKey: ['blader-profile-stats', user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const { data } = await supabase
-        .from('profiles')
-        .select('torneios_total, vitorias_total, xp_total, nivel, melhor_posicao, streak_max')
-        .eq('id', user.id)
-        .single();
+      // Buscar profile + agregados de inscricoes em paralelo (tabela 'partidas' nao existe)
+      const [profileRes, inscRes] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('torneios_total, vitorias_total, xp_total, nivel, melhor_posicao, streak_max')
+          .eq('id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('inscricoes')
+          .select('vitorias, derrotas')
+          .eq('blader_id', user.id),
+      ]);
 
-      const { count } = await (supabase as any)
-        .from('partidas')
-        .select('*', { count: 'exact', head: true })
-        .or(`blader1_id.eq.${user.id},blader2_id.eq.${user.id}`)
-        .eq('status', 'finalizado');
+      const d = profileRes.data as any;
+      const inscricoes = (inscRes.data ?? []) as Array<{ vitorias: number | null; derrotas: number | null }>;
+      const totalV = inscricoes.reduce((acc, r) => acc + (r.vitorias ?? 0), 0);
+      const totalD = inscricoes.reduce((acc, r) => acc + (r.derrotas ?? 0), 0);
+      const totalPartidas = totalV + totalD;
+      const vitorias = d?.vitorias_total ?? totalV;
 
-      const totalPartidas = count ?? 0;
-      const d = data as any;
       return {
         torneios_total: d?.torneios_total ?? 0,
-        vitorias_total: d?.vitorias_total ?? 0,
+        vitorias_total: vitorias,
         xp_total: d?.xp_total ?? 0,
         nivel: d?.nivel ?? 'Rookie',
         melhor_posicao: d?.melhor_posicao ?? null,
         streak_max: d?.streak_max ?? 0,
-        winrate: totalPartidas > 0 ? Math.round(((d?.vitorias_total || 0) / totalPartidas) * 100) : 0,
+        winrate: totalPartidas > 0 ? Math.round((vitorias / totalPartidas) * 100) : 0,
       };
     },
     enabled: !!user,
+    staleTime: 30_000,
   });
 
   const { data: myInscricoes = [], refetch: refetchInscricoes } = useQuery({
