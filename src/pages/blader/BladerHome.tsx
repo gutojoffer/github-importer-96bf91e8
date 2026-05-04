@@ -175,7 +175,7 @@ export default function BladerHome() {
       if (!user) return [];
       const { data } = await (supabase as any)
         .from('inscricoes')
-        .select('id, posicao_final, vitorias, derrotas, xp_ganho, streak_max, inscrito_em, torneio_id, tournaments:torneio_id(id, name, horario_inicio, status, imagem_url, liga_id)')
+        .select('id, posicao_final, vitorias, derrotas, xp_ganho, streak_max, inscrito_em, torneio_id, deck_id, deck_snapshot, tournaments:torneio_id(id, name, horario_inicio, status, imagem_url, liga_id)')
         .eq('blader_id', user.id)
         .order('inscrito_em', { ascending: false });
       return (data ?? []) as any[];
