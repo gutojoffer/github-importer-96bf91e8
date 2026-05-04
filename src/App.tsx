@@ -55,7 +55,16 @@ const AdminLigas = lazy(() => import("@/pages/admin/AdminLigas"));
 const AdminConfig = lazy(() => import("@/pages/admin/AdminConfig"));
 const AdminForjaBey = lazy(() => import("@/pages/admin/AdminForjaBey"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const LazyFallback = () => (
   <div className="p-8 space-y-4">

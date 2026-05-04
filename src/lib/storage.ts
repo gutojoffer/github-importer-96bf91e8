@@ -258,7 +258,13 @@ function tournamentToRow(t: Tournament, ligaId: string) {
 }
 
 export async function getTournaments(): Promise<Tournament[]> {
-  const { data, error } = await supabase.from('tournaments').select('*, inscricoes(blader_id, blader_temp_id)').order('created_at', { ascending: false });
+  const ligaId = await getLigaId();
+  // Selecionar apenas colunas necessarias e filtrar pela liga do organizador
+  const { data, error } = await supabase
+    .from('tournaments')
+    .select('id, name, date, signup_deadline, player_ids, rounds, current_round, arena_count, total_rounds, points_to_win, status, created_at, final_standings, max_players, liga_id, local_nome, local_endereco, local_cidade, local_estado, horario_inicio, horario_fim, descricao, imagem_url, premio, regras, inscricoes(blader_id, blader_temp_id)')
+    .eq('liga_id', ligaId)
+    .order('created_at', { ascending: false });
   if (error) { console.error('getTournaments error:', error); return []; }
   return (data || []).map(tournamentFromRow);
 }
