@@ -588,49 +588,55 @@ export default function BladerForjaBey() {
               />
             </div>
 
-            {/* Grid: beys (esquerda) + análise (direita) */}
-            <div className="forjabey-montador-grid" style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 420px) minmax(0, 1fr)',
-              gap: 18,
-              alignItems: 'start',
-            }}>
-              <style>{`
-                @media (max-width: 900px) {
-                  .forjabey-montador-grid {
-                    grid-template-columns: 1fr !important;
-                  }
-                }
-              `}</style>
-
-              {/* Coluna beys */}
-              <div>
-                <div style={{
-                  fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
-                  color: 'rgba(255,255,255,.35)', fontWeight: 700, marginBottom: 8,
-                }}>
-                  Beys do deck
-                </div>
-                {beys.map(bey => (
-                  <CardBey
-                    key={bey.slot}
-                    bey={bey}
-                    cor={CORES_BEY[bey.slot - 1]}
-                    onToggle={() => toggleAberta(bey.slot)}
-                    onLimpar={() => limparBey(bey.slot)}
-                    onLinha={l => atualizarLinha(bey.slot, l)}
-                    onPeca={(campo, peca) => atualizar(bey.slot, { [campo]: peca } as Partial<Bey>)}
-                  />
-                ))}
+            {/* Coluna beys (lado esquerdo) */}
+            <div>
+              <div style={{
+                fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
+                color: 'rgba(255,255,255,.35)', fontWeight: 700, marginBottom: 8,
+              }}>
+                Beys do deck
               </div>
-
-              {/* Coluna análise */}
-              <div>
-                <PainelAnalise beys={beys} />
-              </div>
+              {beys.map(bey => (
+                <CardBey
+                  key={bey.slot}
+                  bey={bey}
+                  cor={CORES_BEY[bey.slot - 1]}
+                  onToggle={() => toggleAberta(bey.slot)}
+                  onLimpar={() => limparBey(bey.slot)}
+                  onLinha={l => atualizarLinha(bey.slot, l)}
+                  onPeca={(campo, peca) => atualizar(bey.slot, { [campo]: peca } as Partial<Bey>)}
+                />
+              ))}
             </div>
           </div>
         )}
+      </div>
+      {/* ============ COLUNA DIREITA — radar / análise ============ */}
+      {montadorVisivel && (
+        <div
+          className="forjabey-right"
+          style={{
+            flex: 1,
+            minWidth: 0,
+            height: '100%',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            padding: '18px 20px 80px',
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(139,92,246,.18) transparent',
+          }}
+        >
+          <div style={{
+            fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
+            color: 'rgba(255,255,255,.35)', fontWeight: 700, marginBottom: 12,
+            display: 'flex', alignItems: 'center', gap: 7,
+          }}>
+            <div style={{ width: 3, height: 12, background: 'linear-gradient(180deg,#A78BFA,#EC4899)' }} />
+            Análise do deck
+          </div>
+          <PainelAnalise beys={beys} />
+        </div>
+      )}
       </div>
 
       {/* Modal: renomear deck */}
