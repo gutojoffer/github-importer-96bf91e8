@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -6,7 +6,8 @@ import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
   ResponsiveContainer, Legend, Tooltip,
 } from 'recharts';
-import { ChevronDown, ChevronUp, X, Save } from 'lucide-react';
+import { ChevronDown, ChevronUp, X, Save, Plus, Pencil, Trash2 } from 'lucide-react';
+import { fetchUserDecks, deleteDeck as apiDeleteDeck, renameDeck as apiRenameDeck, formatarDataRelativa, type DeckResumo } from '@/lib/decks';
 
 type Linha = 'BX' | 'UX' | 'CX';
 
