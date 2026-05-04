@@ -185,6 +185,7 @@ const App = () => {
                           <Route path="/tournaments" element={<BladerTournaments />} />
                           <Route path="/forjabey" element={<BladerForjaBey />} />
                           <Route path="/profile" element={<BladerProfile />} />
+                          <Route path="/notificacoes" element={<BladerNotificacoes />} />
                           <Route path="/profile/:userId" element={<BladerProfile />} />
                           <Route path="/profile/by-name/:name" element={<BladerProfile />} />
                           <Route path="/settings" element={<Settings />} />
