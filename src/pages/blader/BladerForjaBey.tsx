@@ -596,22 +596,48 @@ export default function BladerForjaBey() {
               </button>
               <button
                 onClick={salvarDeck}
-                disabled={salvando}
+                disabled={salvando || temRepeticao}
+                title={temRepeticao ? 'Corrija as peças repetidas antes de salvar' : ''}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
                   padding: '7px 14px', borderRadius: 9,
-                  background: 'linear-gradient(135deg,#F59E0B,#EF4444)',
-                  border: 'none', color: '#0a0d18',
+                  background: temRepeticao
+                    ? 'rgba(255,255,255,.04)'
+                    : 'linear-gradient(135deg,#F59E0B,#EF4444)',
+                  border: temRepeticao ? '1px solid rgba(239,68,68,.25)' : 'none',
+                  color: temRepeticao ? '#F87171' : '#0a0d18',
                   fontFamily: 'Rajdhani,sans-serif', fontWeight: 700,
                   fontSize: 12, letterSpacing: 1, textTransform: 'uppercase',
-                  cursor: salvando ? 'wait' : 'pointer',
+                  cursor: (salvando || temRepeticao) ? 'not-allowed' : 'pointer',
                   opacity: salvando ? 0.6 : 1,
                 }}
               >
                 <Save size={13} />
-                {salvando ? 'Salvando' : 'Salvar'}
+                {salvando ? 'Salvando' : temRepeticao ? 'Peças repetidas' : 'Salvar'}
               </button>
             </div>
+
+            {/* Aviso de peças repetidas */}
+            {temRepeticao && (
+              <div style={{
+                padding: '10px 14px', borderRadius: 10, marginBottom: 14,
+                background: 'rgba(239,68,68,.08)',
+                border: '1px solid rgba(239,68,68,.2)',
+                display: 'flex', flexDirection: 'column', gap: 4,
+              }}>
+                <div style={{
+                  fontSize: 10, fontWeight: 700, color: '#F87171',
+                  letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 2,
+                }}>
+                  ⚠️ Peças repetidas
+                </div>
+                {errosRepeticao.map((erro, i) => (
+                  <div key={i} style={{ fontSize: 11, color: 'rgba(248,113,113,.85)' }}>
+                    · {erro}
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Nome do deck */}
             <div style={{ marginBottom: 16 }}>
