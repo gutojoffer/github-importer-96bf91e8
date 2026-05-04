@@ -434,7 +434,19 @@ async function aggregateStats(filter: (s: PlayerStats) => boolean) {
 export async function createUpcomingTournament(t: Tournament) {
   const ligaId = await getLigaId();
   const { error } = await supabase.from('tournaments').insert(tournamentToRow(t, ligaId));
-  if (error) console.error('createUpcomingTournament error:', error);
+  if (error) {
+    console.error('createUpcomingTournament error:', error);
+    return;
+  }
+  // Notificar todos os bladers sobre o novo torneio publicado
+  enviarNotificacoesTorneioPublicado({
+    id: t.id,
+    name: t.name,
+    horario_inicio: (t as any).horario_inicio ?? (t as any).date ?? null,
+    local_cidade: (t as any).local_cidade ?? null,
+    local_estado: (t as any).local_estado ?? null,
+    local_nome: (t as any).local_nome ?? null,
+  }).catch(() => {});
 }
 
 export async function registerPlayerToTournament(tournamentId: string, playerId: string) {
