@@ -991,6 +991,8 @@ function PartSelector({
       {aberto && createPortal(
         <div
           ref={dropdownRef}
+          onWheel={e => e.stopPropagation()}
+          onTouchMove={e => e.stopPropagation()}
           style={{
             position: 'fixed',
             top: dropdownPos.top,
@@ -1001,6 +1003,12 @@ function PartSelector({
             borderRadius: 12, boxShadow: '0 16px 40px rgba(0,0,0,.7)',
             display: 'flex', flexDirection: 'column', maxHeight: 280, overflow: 'hidden',
           }}>
+          <style>{`
+            .forjabey-dropdown::-webkit-scrollbar { width: 3px; }
+            .forjabey-dropdown::-webkit-scrollbar-track { background: transparent; }
+            .forjabey-dropdown::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+            .forjabey-dropdown::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }
+          `}</style>
           <div style={{ padding: '8px 10px', borderBottom: '1px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
             <input
               autoFocus value={busca}
