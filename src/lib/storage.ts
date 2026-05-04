@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Player, PlayerStats, Tournament, TournamentStanding, getRankingPoints, getTournamentXP } from '@/types/tournament';
+import { enviarNotificacoesTorneioPublicado } from '@/lib/notificacoes';
 
 async function getLigaId(): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
