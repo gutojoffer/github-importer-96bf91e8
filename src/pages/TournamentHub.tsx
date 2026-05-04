@@ -1035,18 +1035,18 @@ export default function TournamentHub() {
       )}
 
       {/* Page Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-4 min-w-0">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/15 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(79,142,247,0.1)]">
+      <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/15 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(79,142,247,0.1)]">
             <Swords className="h-5 w-5 text-primary" />
           </div>
-          <div>
-            <h1 className="font-heading text-2xl font-bold tracking-[0.08em] text-foreground">Torneios</h1>
-            <p className="text-sm text-muted-foreground font-body mt-0.5">Gerencie campeonatos, inscrições e rodadas da sua liga</p>
+          <div className="min-w-0">
+            <h1 className="font-heading text-xl sm:text-2xl font-bold tracking-[0.08em] text-foreground">Torneios</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground font-body mt-0.5">Gerencie campeonatos, inscrições e rodadas da sua liga</p>
           </div>
         </div>
-        <Button onClick={() => setShowCreate(!showCreate)} className="font-heading tracking-wider gap-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-5 shadow-[0_0_15px_rgba(79,142,247,0.2)]">
-          <Plus className="h-4 w-4" /> Criar Torneio
+        <Button onClick={() => setShowCreate(!showCreate)} className="font-heading tracking-wider gap-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 sm:px-5 shrink-0 shadow-[0_0_15px_rgba(79,142,247,0.2)]">
+          <Plus className="h-4 w-4" /> <span className="hidden xs:inline">Criar Torneio</span><span className="xs:hidden">Criar</span>
         </Button>
       </div>
 
@@ -1344,11 +1344,11 @@ export default function TournamentHub() {
                   {/* Top accent */}
                   <div className="h-[2px] w-full bg-gradient-to-r from-primary to-transparent" />
                   
-                  <div className="p-5 flex items-start gap-5">
+                  <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-5">
                     {/* Left: Info */}
                     <div className="flex-1 min-w-0 space-y-3">
-                      <div className="flex items-center gap-3">
-                        <h3 className="font-heading text-lg font-bold text-foreground tracking-wide truncate">{t.name}</h3>
+                      <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                        <h3 className="font-heading text-base sm:text-lg font-bold text-foreground tracking-wide truncate min-w-0">{t.name}</h3>
                         {t.eliminationSize && (
                           <span className="badge-status badge-upcoming text-[10px] py-0.5">TOP {t.eliminationSize}</span>
                         )}
@@ -1359,7 +1359,7 @@ export default function TournamentHub() {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-5 text-xs text-muted-foreground font-body">
+                      <div className="flex items-center gap-3 sm:gap-5 text-xs text-muted-foreground font-body flex-wrap">
                         <span className="flex items-center gap-1.5">
                           <Calendar className="h-3.5 w-3.5" />
                           {new Date(t.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
@@ -1398,21 +1398,21 @@ export default function TournamentHub() {
                     </div>
 
                     {/* Right: Actions */}
-                    <div className="flex items-center gap-2 shrink-0 pt-1">
+                    <div className="flex items-center gap-2 shrink-0 sm:pt-1 flex-wrap">
                       <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setEnrollTournament(t); }}
-                        className="font-heading tracking-wider gap-1.5 border-accent/40 text-accent hover:bg-accent/10 h-9 px-3.5">
+                        className="font-heading tracking-wider gap-1.5 border-accent/40 text-accent hover:bg-accent/10 h-9 px-3 sm:px-3.5 flex-1 sm:flex-none">
                         <UserPlus className="h-3.5 w-3.5" /> Inscrever
                       </Button>
                       <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setStartingTournament(t); setStartEliminationSize(t.eliminationSize || null); }}
-                        className="font-heading tracking-wider gap-1.5 border-primary/30 text-primary hover:bg-primary/10 h-9 px-3.5" disabled={!canStart}>
+                        className="font-heading tracking-wider gap-1.5 border-primary/30 text-primary hover:bg-primary/10 h-9 px-3 sm:px-3.5 flex-1 sm:flex-none" disabled={!canStart}>
                         <Play className="h-3.5 w-3.5" /> Iniciar
                       </Button>
                       <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); openEditModal(t); }}
-                        className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted/30">
+                        className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted/30">
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setConfirmDeleteTournament(t.id); }}
-                        className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                        className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -1438,19 +1438,19 @@ export default function TournamentHub() {
             completedTournaments.map((t, i) => (
               <div key={t.id} className="surface-card p-0 anim-fade-up overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
                 <div className="h-[2px] w-full bg-gradient-to-r from-muted-foreground/30 to-transparent" />
-                <div className="p-5 flex items-center gap-5">
+                <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3">
-                      <h3 className="font-heading text-lg font-bold text-foreground/70 tracking-wide truncate">{t.name}</h3>
+                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                      <h3 className="font-heading text-base sm:text-lg font-bold text-foreground/70 tracking-wide truncate min-w-0">{t.name}</h3>
                       <span className="badge-status badge-completed text-[10px] py-0.5">Finalizado</span>
                     </div>
-                    <div className="flex items-center gap-5 text-xs text-muted-foreground font-body mt-1.5">
+                    <div className="flex items-center gap-3 sm:gap-5 text-xs text-muted-foreground font-body mt-1.5 flex-wrap">
                       <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" />{new Date(t.date).toLocaleDateString('pt-BR')}</span>
                       <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" />{t.playerIds.length} participantes</span>
                     </div>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => navigate(`/history/${t.id}`)}
-                    className="font-heading tracking-wider gap-1.5 h-9 px-3.5 text-muted-foreground hover:text-foreground">
+                    className="font-heading tracking-wider gap-1.5 h-9 px-3.5 text-muted-foreground hover:text-foreground w-full sm:w-auto">
                     <Award className="h-3.5 w-3.5" /> Ver Resultado
                   </Button>
                 </div>
