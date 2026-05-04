@@ -1035,18 +1035,18 @@ export default function TournamentHub() {
       )}
 
       {/* Page Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-4 min-w-0">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/15 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(79,142,247,0.1)]">
+      <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/15 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(79,142,247,0.1)]">
             <Swords className="h-5 w-5 text-primary" />
           </div>
-          <div>
-            <h1 className="font-heading text-2xl font-bold tracking-[0.08em] text-foreground">Torneios</h1>
-            <p className="text-sm text-muted-foreground font-body mt-0.5">Gerencie campeonatos, inscrições e rodadas da sua liga</p>
+          <div className="min-w-0">
+            <h1 className="font-heading text-xl sm:text-2xl font-bold tracking-[0.08em] text-foreground">Torneios</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground font-body mt-0.5">Gerencie campeonatos, inscrições e rodadas da sua liga</p>
           </div>
         </div>
-        <Button onClick={() => setShowCreate(!showCreate)} className="font-heading tracking-wider gap-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-5 shadow-[0_0_15px_rgba(79,142,247,0.2)]">
-          <Plus className="h-4 w-4" /> Criar Torneio
+        <Button onClick={() => setShowCreate(!showCreate)} className="font-heading tracking-wider gap-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 sm:px-5 shrink-0 shadow-[0_0_15px_rgba(79,142,247,0.2)]">
+          <Plus className="h-4 w-4" /> <span className="hidden xs:inline">Criar Torneio</span><span className="xs:hidden">Criar</span>
         </Button>
       </div>
 
