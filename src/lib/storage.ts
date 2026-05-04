@@ -187,7 +187,10 @@ export async function applyTournamentResults(tournamentId: string, standings: To
     _torneio_id: tournamentId,
     _standings: standings,
   });
-  if (error) console.error('applyTournamentResults error:', error);
+  if (error) {
+    console.error('applyTournamentResults error:', error);
+    throw error;
+  }
 }
 
 // ──────────── Tournaments ────────────
