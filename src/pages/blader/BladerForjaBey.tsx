@@ -273,8 +273,69 @@ export default function BladerForjaBey() {
   };
 
   return (
-    <div style={{ minHeight: 'calc(100dvh - 54px)', background: '#050714', padding: '20px 22px 80px' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+    <div
+      className="forjabey-root"
+      style={{
+        height: 'calc(100dvh - 54px)',
+        background: '#050714',
+        overflow: 'hidden',
+        display: 'flex',
+      }}
+    >
+      <style>{`
+        @media (min-width: 768px) {
+          .forjabey-root { height: 100dvh; }
+        }
+        .forjabey-left::-webkit-scrollbar,
+        .forjabey-right::-webkit-scrollbar { width: 3px; }
+        .forjabey-left::-webkit-scrollbar-track,
+        .forjabey-right::-webkit-scrollbar-track { background: transparent; }
+        .forjabey-left::-webkit-scrollbar-thumb {
+          background: rgba(0, 220, 255, 0.18);
+          border-radius: 2px;
+        }
+        .forjabey-right::-webkit-scrollbar-thumb {
+          background: rgba(139, 92, 246, 0.18);
+          border-radius: 2px;
+        }
+        .forjabey-left::-webkit-scrollbar-thumb:hover { background: rgba(0,220,255,.3); }
+        .forjabey-right::-webkit-scrollbar-thumb:hover { background: rgba(139,92,246,.3); }
+        @media (max-width: 900px) {
+          .forjabey-cols { flex-direction: column !important; }
+          .forjabey-left {
+            width: 100% !important;
+            max-width: 100% !important;
+            border-right: none !important;
+            border-bottom: 1px solid rgba(255,255,255,.05);
+            height: ${montadorVisivel ? '60%' : '100%'} !important;
+          }
+          .forjabey-right {
+            display: ${montadorVisivel ? 'block' : 'none'} !important;
+            height: 40% !important;
+          }
+        }
+      `}</style>
+      <div
+        className="forjabey-cols"
+        style={{ display: 'flex', flex: 1, minWidth: 0, minHeight: 0 }}
+      >
+      {/* ============ COLUNA ESQUERDA — lista + montador ============ */}
+      <div
+        className="forjabey-left"
+        style={{
+          width: montadorVisivel ? 460 : '100%',
+          maxWidth: montadorVisivel ? 460 : 1100,
+          margin: montadorVisivel ? 0 : '0 auto',
+          flexShrink: 0,
+          height: '100%',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          padding: '18px 18px 80px',
+          borderRight: montadorVisivel ? '1px solid rgba(255,255,255,.05)' : 'none',
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgba(0,220,255,.18) transparent',
+        }}
+      >
         {/* Header da seção lista */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -527,49 +588,55 @@ export default function BladerForjaBey() {
               />
             </div>
 
-            {/* Grid: beys (esquerda) + análise (direita) */}
-            <div className="forjabey-montador-grid" style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 420px) minmax(0, 1fr)',
-              gap: 18,
-              alignItems: 'start',
-            }}>
-              <style>{`
-                @media (max-width: 900px) {
-                  .forjabey-montador-grid {
-                    grid-template-columns: 1fr !important;
-                  }
-                }
-              `}</style>
-
-              {/* Coluna beys */}
-              <div>
-                <div style={{
-                  fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
-                  color: 'rgba(255,255,255,.35)', fontWeight: 700, marginBottom: 8,
-                }}>
-                  Beys do deck
-                </div>
-                {beys.map(bey => (
-                  <CardBey
-                    key={bey.slot}
-                    bey={bey}
-                    cor={CORES_BEY[bey.slot - 1]}
-                    onToggle={() => toggleAberta(bey.slot)}
-                    onLimpar={() => limparBey(bey.slot)}
-                    onLinha={l => atualizarLinha(bey.slot, l)}
-                    onPeca={(campo, peca) => atualizar(bey.slot, { [campo]: peca } as Partial<Bey>)}
-                  />
-                ))}
+            {/* Coluna beys (lado esquerdo) */}
+            <div>
+              <div style={{
+                fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
+                color: 'rgba(255,255,255,.35)', fontWeight: 700, marginBottom: 8,
+              }}>
+                Beys do deck
               </div>
-
-              {/* Coluna análise */}
-              <div>
-                <PainelAnalise beys={beys} />
-              </div>
+              {beys.map(bey => (
+                <CardBey
+                  key={bey.slot}
+                  bey={bey}
+                  cor={CORES_BEY[bey.slot - 1]}
+                  onToggle={() => toggleAberta(bey.slot)}
+                  onLimpar={() => limparBey(bey.slot)}
+                  onLinha={l => atualizarLinha(bey.slot, l)}
+                  onPeca={(campo, peca) => atualizar(bey.slot, { [campo]: peca } as Partial<Bey>)}
+                />
+              ))}
             </div>
           </div>
         )}
+      </div>
+      {/* ============ COLUNA DIREITA — radar / análise ============ */}
+      {montadorVisivel && (
+        <div
+          className="forjabey-right"
+          style={{
+            flex: 1,
+            minWidth: 0,
+            height: '100%',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            padding: '18px 20px 80px',
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(139,92,246,.18) transparent',
+          }}
+        >
+          <div style={{
+            fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
+            color: 'rgba(255,255,255,.35)', fontWeight: 700, marginBottom: 12,
+            display: 'flex', alignItems: 'center', gap: 7,
+          }}>
+            <div style={{ width: 3, height: 12, background: 'linear-gradient(180deg,#A78BFA,#EC4899)' }} />
+            Análise do deck
+          </div>
+          <PainelAnalise beys={beys} />
+        </div>
+      )}
       </div>
 
       {/* Modal: renomear deck */}
