@@ -554,6 +554,6 @@ export default function BladerNotificacoes() {
           </div>
         )}
       </div>
-    </BladerLayout>
+    </>
   );
 }
