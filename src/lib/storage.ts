@@ -395,8 +395,9 @@ export function calculateStandings(tournament: Tournament): TournamentStanding[]
     wins: entry.wins,
     losses: entry.losses,
     placement: i + 1,
-    xpAwarded: entry.dropped ? 0 : (PLACEMENT_XP[i + 1] ?? PLACEMENT_XP_DEFAULT),
+    xpAwarded: getTournamentXP(i + 1, entry.wins, entry.dropped),
     rankingPoints: getRankingPoints(i + 1, entry.dropped),
+    streakMax: maxStreakMap.get(entry.playerId) || 0,
     dropped: entry.dropped,
   }));
 }
