@@ -673,6 +673,7 @@ export default function BladerForjaBey() {
                 <CardBey
                   key={bey.slot}
                   bey={bey}
+                  todasBeys={beys}
                   cor={CORES_BEY[bey.slot - 1]}
                   onToggle={() => toggleAberta(bey.slot)}
                   onLimpar={() => limparBey(bey.slot)}
