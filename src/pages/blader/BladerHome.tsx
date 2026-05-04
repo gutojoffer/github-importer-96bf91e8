@@ -150,6 +150,7 @@ export default function BladerHome() {
       return (data ?? []).map(r => r.torneio_id);
     },
     enabled: !!user,
+    staleTime: 30_000,
   });
 
   const myInscricoesSet = new Set(myInscricoes);
@@ -164,6 +165,7 @@ export default function BladerHome() {
       return (data ?? []) as TournamentRow[];
     },
     enabled: !!user,
+    staleTime: 30_000,
   });
 
   // Histórico detalhado para Histórico/Gráficos
@@ -179,24 +181,33 @@ export default function BladerHome() {
       return (data ?? []) as any[];
     },
     enabled: !!user,
+    staleTime: 60_000,
   });
 
+  // Verificacao de match: roda apenas uma vez por sessao do usuario (cacheado em sessionStorage)
   useEffect(() => {
-    async function verificarMatchPendente() {
-      if (!user) return;
+    if (!user) return;
+    const flagKey = `bladex.matchChecked.${user.id}`;
+    if (sessionStorage.getItem(flagKey)) return;
+
+    let cancelled = false;
+    (async () => {
       const { data: p } = await supabase
         .from('profiles')
         .select('match_verificado')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
+      if (cancelled) return;
+      sessionStorage.setItem(flagKey, '1');
       if (!(p as any)?.match_verificado) {
         await verificarEExecutarMatch(user.id, user.email);
+        if (cancelled) return;
         refetchStats();
         refetchInscricoes();
         refetch();
       }
-    }
-    verificarMatchPendente();
+    })();
+    return () => { cancelled = true; };
   }, [user, refetchStats, refetchInscricoes, refetch]);
 
   const torneiosTotal = stats?.torneios_total ?? 0;
