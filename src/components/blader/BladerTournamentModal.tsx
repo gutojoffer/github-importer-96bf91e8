@@ -134,6 +134,8 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
           blader_temp_id,
           inscrito_em,
           status,
+          deck_id,
+          deck_snapshot,
           profiles!inscricoes_blader_id_fkey (
             nome_blader, avatar_blader_url, cidade_blader,
             beyblade_favorita, nivel
