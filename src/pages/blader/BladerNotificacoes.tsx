@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import BladerLayout from '@/components/blader/BladerLayout';
 import { Notificacao } from '@/lib/notificacoes';
 import { Bell, CheckCheck } from 'lucide-react';
 import { toast } from 'sonner';
+
+const TIPOS_BLADER = [
+  'resultado_torneio',
+  'torneio_publicado',
+  'torneio_iniciado',
+  'torneio_amanha',
+  'conquista',
+  'vinculacao',
+] as const;
 
 type Filtro = 'Todas' | 'Torneios' | 'Conquistas' | 'Sistema';
 
