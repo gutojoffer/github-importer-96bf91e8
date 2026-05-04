@@ -6,6 +6,7 @@ import {
   calculateStandings, awardXP, saveTournaments, applyTournamentResults,
 } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
+import { enviarNotificacoesResultado, enviarNotificacoesInicio } from '@/lib/notificacoes';
 
 interface TournamentStore {
   tournaments: Tournament[];
