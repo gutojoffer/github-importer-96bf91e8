@@ -44,7 +44,7 @@ export default function BladerNotificacoes() {
     })();
 
     const channel = supabase
-      .channel(`notif-page-${userId}`)
+      .channel(`notif-page-${userId}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `user_id=eq.${userId}` },
