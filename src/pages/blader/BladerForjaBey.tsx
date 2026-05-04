@@ -1021,7 +1021,7 @@ function PartSelector({
               }}
             />
           </div>
-          <div style={{ overflowY: 'auto', flex: 1 }}>
+          <div className="forjabey-dropdown" style={{ overflowY: 'auto', flex: 1, scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,.1) transparent' }}>
             {valor && (
               <div
                 onClick={() => { onSelecionar(null); setAberto(false); setBusca(''); }}
