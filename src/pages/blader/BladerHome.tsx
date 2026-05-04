@@ -175,7 +175,7 @@ export default function BladerHome() {
       if (!user) return [];
       const { data } = await (supabase as any)
         .from('inscricoes')
-        .select('id, posicao_final, vitorias, derrotas, xp_ganho, streak_max, inscrito_em, torneio_id, tournaments:torneio_id(id, name, horario_inicio, status, imagem_url, liga_id)')
+        .select('id, posicao_final, vitorias, derrotas, xp_ganho, streak_max, inscrito_em, torneio_id, deck_id, deck_snapshot, tournaments:torneio_id(id, name, horario_inicio, status, imagem_url, liga_id)')
         .eq('blader_id', user.id)
         .order('inscrito_em', { ascending: false });
       return (data ?? []) as any[];
@@ -502,8 +502,18 @@ function HistoricoTab({ historico }: { historico: any[] }) {
               <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 16, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {torneio?.name || 'Torneio'}
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 2 }}>
-                {dataStr}
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <span>{dataStr}</span>
+                {Array.isArray(insc.deck_snapshot) && insc.deck_snapshot.length > 0 && (
+                  <span style={{
+                    padding: '2px 7px', borderRadius: 6,
+                    background: 'rgba(139,92,246,.12)',
+                    border: '1px solid rgba(139,92,246,.3)',
+                    color: '#C4B5FD', fontSize: 9, fontWeight: 700, letterSpacing: 1,
+                  }}>
+                    ⚙ DECK · {insc.deck_snapshot.length}
+                  </span>
+                )}
               </div>
             </div>
             <div style={{ display: 'flex', gap: 12, flexShrink: 0 }}>
