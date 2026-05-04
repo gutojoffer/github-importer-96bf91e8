@@ -27,6 +27,7 @@ export function BladerSidebar() {
   const { signOut } = useAuth();
   const { profile } = useUserProfile();
   const { perfis, setMode } = useActiveMode();
+  const naoLidas = useNotificacoesNaoLidas();
 
   const bladerName = perfis.dadosBlader?.nome || profile?.nomeBlader || 'Blader';
   const bladerAvatar = perfis.dadosBlader?.avatar || profile?.avatarBladerUrl || null;
