@@ -121,8 +121,7 @@ export function AppTopbar() {
         </div>
       )}
 
-      <div className="flex items-center gap-2">
-        {currentMode === 'blader' && <SinoNotificacoes />}
+      <div className="flex items-center">
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
