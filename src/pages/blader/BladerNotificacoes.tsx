@@ -372,7 +372,7 @@ export default function BladerNotificacoes() {
     return notificacoes.filter(n => {
       if (filtro === 'Todas') return true;
       if (filtro === 'Torneios')
-        return ['resultado_torneio', 'torneio_iniciado', 'nova_inscricao', 'torneio_amanha'].includes(
+        return ['resultado_torneio', 'torneio_iniciado', 'torneio_publicado', 'torneio_amanha'].includes(
           n.tipo,
         );
       if (filtro === 'Conquistas') return n.tipo === 'conquista';
