@@ -395,7 +395,7 @@ export default function BladerNotificacoes() {
   const FILTROS: Filtro[] = ['Todas', 'Torneios', 'Conquistas', 'Sistema'];
 
   return (
-    <BladerLayout>
+    <>
       <div style={{ padding: '20px 24px 80px', maxWidth: 720, margin: '0 auto' }}>
         {/* Header */}
         <div
