@@ -259,9 +259,21 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
   async function handleInscrever() {
     if (!tournament || !user) return;
     setLoading(true);
+
+    const deckEscolhido = deckSelecionadoUuid
+      ? decks.find(d => d.deck_uuid === deckSelecionadoUuid) || null
+      : null;
+    const deckSnapshot = deckEscolhido ? deckEscolhido.beys : null;
+
     const { error } = await supabase
       .from('inscricoes')
-      .insert({ torneio_id: tournament.id, blader_id: user.id, status: 'confirmado' });
+      .insert({
+        torneio_id: tournament.id,
+        blader_id: user.id,
+        status: 'confirmado',
+        deck_id: deckSelecionadoUuid,
+        deck_snapshot: deckSnapshot as any,
+      } as any);
 
     if (error) {
       toast.error('Erro ao realizar inscrição');
