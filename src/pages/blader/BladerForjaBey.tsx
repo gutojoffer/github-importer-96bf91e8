@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -6,7 +6,8 @@ import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
   ResponsiveContainer, Legend, Tooltip,
 } from 'recharts';
-import { ChevronDown, ChevronUp, X, Save } from 'lucide-react';
+import { ChevronDown, ChevronUp, X, Save, Plus, Pencil, Trash2 } from 'lucide-react';
+import { fetchUserDecks, deleteDeck as apiDeleteDeck, renameDeck as apiRenameDeck, formatarDataRelativa, type DeckResumo } from '@/lib/decks';
 
 type Linha = 'BX' | 'UX' | 'CX';
 
@@ -82,36 +83,61 @@ export default function BladerForjaBey() {
   const [beys, setBeys] = useState<Bey[]>(BEY_INICIAL);
   const [salvando, setSalvando] = useState(false);
   const [carregando, setCarregando] = useState(true);
+  const [decks, setDecks] = useState<DeckResumo[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [deckEditandoUuid, setDeckEditandoUuid] = useState<string | null>(null);
+  const [nomeDeck, setNomeDeck] = useState('Meu Deck');
+  const [modalSalvar, setModalSalvar] = useState(false);
+  const [renomeandoUuid, setRenomeandoUuid] = useState<string | null>(null);
+  const [novoNomeRen, setNovoNomeRen] = useState('');
+
+  const carregarDecks = useCallback(async (uid: string) => {
+    const lista = await fetchUserDecks(uid);
+    setDecks(lista);
+    return lista;
+  }, []);
 
   useEffect(() => {
-    async function carregar() {
+    async function init() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setCarregando(false); return; }
-      const { data } = await (supabase as any)
-        .from('bey_combos')
-        .select('slot, linha, bey_blades(*), bey_ratchets(*), bey_bits(*), bey_lock_chips(*), bey_main_blades(*), bey_assist_blades(*)')
-        .eq('user_id', user.id)
-        .order('slot');
-      if (data?.length) {
-        setBeys(prev => prev.map(b => {
-          const salvo = data.find((d: any) => d.slot === b.slot);
-          if (!salvo) return b;
-          return {
-            ...b,
-            linha: (salvo.linha as Linha) || 'BX',
-            blade: salvo.bey_blades || null,
-            ratchet: salvo.bey_ratchets || null,
-            bit: salvo.bey_bits || null,
-            lockChip: salvo.bey_lock_chips || null,
-            mainBlade: salvo.bey_main_blades || null,
-            assistBlade: salvo.bey_assist_blades || null,
-          };
-        }));
+      setUserId(user.id);
+      const lista = await carregarDecks(user.id);
+      // Carrega o deck mais recente como inicial, se existir
+      if (lista.length > 0) {
+        carregarDeckParaEdicao(lista[0]);
       }
       setCarregando(false);
     }
-    carregar();
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function carregarDeckParaEdicao(deck: DeckResumo) {
+    setDeckEditandoUuid(deck.deck_uuid);
+    setNomeDeck(deck.nome);
+    setBeys(BEY_INICIAL.map(base => {
+      const salvo = deck.beys.find(b => b.slot === base.slot);
+      if (!salvo) return base;
+      return {
+        ...base,
+        aberta: false,
+        linha: (salvo.linha as Linha) || 'BX',
+        blade: salvo.blade,
+        ratchet: salvo.ratchet,
+        bit: salvo.bit,
+        lockChip: salvo.lock_chip,
+        mainBlade: salvo.main_blade,
+        assistBlade: salvo.assist_blade,
+      };
+    }));
+  }
+
+  function novoDeck() {
+    setDeckEditandoUuid(null);
+    setNomeDeck('Novo Deck');
+    setBeys(BEY_INICIAL.map(b => ({ ...b, aberta: b.slot === 1 })));
+  }
 
   function atualizar(slot: number, patch: Partial<Bey>) {
     setBeys(prev => prev.map(b => b.slot === slot ? { ...b, ...patch } : b));
@@ -133,16 +159,36 @@ export default function BladerForjaBey() {
       : b));
   }
 
+  function abrirSalvar() {
+    if (beys.every(beyVazia)) {
+      toast.error('Monte pelo menos uma bey antes de salvar.');
+      return;
+    }
+    setModalSalvar(true);
+  }
+
   async function salvarDeck() {
     setSalvando(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { toast.error('Faça login para salvar.'); return; }
-      await supabase.from('bey_combos').delete().eq('user_id', user.id);
-      for (const bey of beys) {
-        if (beyVazia(bey)) continue;
-        await (supabase as any).from('bey_combos').insert({
+      const nome = nomeDeck.trim() || 'Meu Deck';
+
+      // Se editando um deck existente, apaga slots desse deck e reinsere
+      // Se é deck novo, gera novo deck_uuid
+      let deckUuid = deckEditandoUuid;
+      if (deckUuid) {
+        await supabase.from('bey_combos').delete().eq('deck_uuid', deckUuid);
+      } else {
+        deckUuid = crypto.randomUUID();
+      }
+
+      const linhas = beys
+        .filter(b => !beyVazia(b))
+        .map(bey => ({
           user_id: user.id,
+          deck_uuid: deckUuid,
+          nome,
           slot: bey.slot,
           linha: bey.linha,
           blade_id: bey.blade?.id || null,
@@ -156,9 +202,17 @@ export default function BladerForjaBey() {
           endr_total: calcEndr(bey),
           xdash_total: calcXdash(bey),
           br_total: calcBr(bey),
-        });
+        }));
+
+      if (linhas.length > 0) {
+        const { error } = await (supabase as any).from('bey_combos').insert(linhas);
+        if (error) throw error;
       }
-      toast.success('Deck salvo!');
+
+      setDeckEditandoUuid(deckUuid);
+      setModalSalvar(false);
+      toast.success(`Deck "${nome}" salvo!`);
+      await carregarDecks(user.id);
     } catch (err) {
       console.error(err);
       toast.error('Erro ao salvar deck');
@@ -166,6 +220,39 @@ export default function BladerForjaBey() {
       setSalvando(false);
     }
   }
+
+  async function deletarDeck(uuid: string, nome: string) {
+    if (!window.confirm(`Excluir o deck "${nome}"? Essa ação não pode ser desfeita.`)) return;
+    try {
+      await apiDeleteDeck(uuid);
+      toast.success('Deck excluído');
+      if (deckEditandoUuid === uuid) {
+        novoDeck();
+      }
+      if (userId) await carregarDecks(userId);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao excluir deck');
+    }
+  }
+
+  async function confirmarRenomear() {
+    if (!renomeandoUuid || !userId) return;
+    const nome = novoNomeRen.trim();
+    if (!nome) { toast.error('Nome não pode ficar vazio'); return; }
+    try {
+      await apiRenameDeck(renomeandoUuid, nome);
+      if (deckEditandoUuid === renomeandoUuid) setNomeDeck(nome);
+      setRenomeandoUuid(null);
+      setNovoNomeRen('');
+      toast.success('Deck renomeado');
+      await carregarDecks(userId);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao renomear');
+    }
+  }
+
 
   // Trava scroll do body enquanto a ForjaBey estiver montada (desktop)
   useEffect(() => {
@@ -241,11 +328,11 @@ export default function BladerForjaBey() {
               ⚙️ ForjaBey
             </div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,.35)', marginTop: 2 }}>
-              Monte seu deck de 3 beys
+              {deckEditandoUuid ? `Editando: ${nomeDeck}` : 'Novo deck'}
             </div>
           </div>
           <button
-            onClick={salvarDeck}
+            onClick={abrirSalvar}
             disabled={salvando}
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
@@ -261,6 +348,132 @@ export default function BladerForjaBey() {
             <Save size={13} />
             {salvando ? 'Salvando' : 'Salvar'}
           </button>
+        </div>
+
+        {/* Lista de decks salvos */}
+        {!carregando && (decks.length > 0 || deckEditandoUuid !== null) && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              marginBottom: 8,
+            }}>
+              <div style={{
+                fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
+                color: 'rgba(255,255,255,.35)', fontWeight: 700,
+              }}>
+                Meus Decks ({decks.length})
+              </div>
+              <button
+                onClick={novoDeck}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  padding: '5px 9px', borderRadius: 7,
+                  background: 'rgba(0,220,255,.08)',
+                  border: '1px solid rgba(0,220,255,.2)',
+                  color: '#00DCFF', fontSize: 10, fontWeight: 700,
+                  letterSpacing: 1, cursor: 'pointer',
+                }}
+              >
+                <Plus size={11} /> Novo
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {decks.map(deck => {
+                const ativo = deck.deck_uuid === deckEditandoUuid;
+                return (
+                  <div
+                    key={deck.deck_uuid}
+                    onClick={() => carregarDeckParaEdicao(deck)}
+                    style={{
+                      background: '#08091a',
+                      border: `1px solid ${ativo ? 'rgba(0,220,255,.3)' : 'rgba(255,255,255,.07)'}`,
+                      borderRadius: 12,
+                      padding: '10px 12px',
+                      cursor: 'pointer',
+                      transition: 'all .15s',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{
+                          fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 14, color: '#fff',
+                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        }}>
+                          {deck.nome}
+                        </div>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', marginTop: 1 }}>
+                          {deck.beys.length} bey{deck.beys.length !== 1 ? 's' : ''} · {formatarDataRelativa(deck.updated_at)}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRenomeandoUuid(deck.deck_uuid);
+                            setNovoNomeRen(deck.nome);
+                          }}
+                          title="Renomear"
+                          style={{
+                            width: 24, height: 24, borderRadius: 6,
+                            background: 'rgba(255,255,255,.04)',
+                            border: '1px solid rgba(255,255,255,.08)',
+                            color: 'rgba(255,255,255,.6)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Pencil size={11} />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); deletarDeck(deck.deck_uuid, deck.nome); }}
+                          title="Excluir"
+                          style={{
+                            width: 24, height: 24, borderRadius: 6,
+                            background: 'rgba(239,68,68,.06)',
+                            border: '1px solid rgba(239,68,68,.18)',
+                            color: '#F87171',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                      {deck.beys.map((bey, i) => {
+                        const nome = bey.blade?.nome || bey.main_blade?.nome || '—';
+                        return (
+                          <span key={i} style={{
+                            padding: '2px 7px', borderRadius: 5,
+                            background: `${CORES_BEY[i]}15`,
+                            border: `1px solid ${CORES_BEY[i]}33`,
+                            color: CORES_BEY[i], fontSize: 10, fontWeight: 600,
+                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                            maxWidth: 100,
+                          }}>
+                            {nome.split(' ')[0]}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+              {decks.length === 0 && (
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,.3)', padding: 8, textAlign: 'center' }}>
+                  Nenhum deck salvo ainda
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div style={{
+          fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
+          color: 'rgba(255,255,255,.35)', fontWeight: 700, marginBottom: 8,
+        }}>
+          Beys do deck
         </div>
 
         {carregando ? (
@@ -281,6 +494,132 @@ export default function BladerForjaBey() {
           ))
         )}
       </div>
+
+      {/* Modal: nomear deck ao salvar */}
+      {modalSalvar && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 9998,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+          }}
+          onClick={() => setModalSalvar(false)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#0d1120', border: '1px solid rgba(0,220,255,.18)',
+              borderRadius: 14, padding: 24, maxWidth: 380, width: '100%',
+            }}
+          >
+            <div style={{
+              fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 18,
+              color: '#fff', marginBottom: 6,
+            }}>
+              Nomear deck
+            </div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginBottom: 14 }}>
+              Dê um nome para encontrar fácil depois.
+            </div>
+            <input
+              value={nomeDeck}
+              onChange={e => setNomeDeck(e.target.value)}
+              autoFocus
+              placeholder="Ex: Deck Competitivo"
+              onKeyDown={e => { if (e.key === 'Enter') salvarDeck(); }}
+              style={{
+                width: '100%', padding: '10px 12px',
+                background: '#111827', border: '1px solid rgba(255,255,255,.1)',
+                borderRadius: 9, color: '#E2E8F0', fontSize: 13, outline: 'none',
+                marginBottom: 16,
+              }}
+            />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => setModalSalvar(false)}
+                style={{
+                  flex: 1, padding: 10, borderRadius: 9,
+                  background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.1)',
+                  color: '#9CA3AF', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={salvarDeck}
+                disabled={salvando}
+                style={{
+                  flex: 1, padding: 10, borderRadius: 9,
+                  background: 'linear-gradient(135deg,#F59E0B,#EF4444)',
+                  border: 'none', color: '#0a0d18', fontSize: 12, fontWeight: 700,
+                  cursor: salvando ? 'wait' : 'pointer', letterSpacing: 1,
+                }}
+              >
+                {salvando ? 'Salvando...' : 'Salvar deck'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: renomear deck */}
+      {renomeandoUuid && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 9998,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+          }}
+          onClick={() => setRenomeandoUuid(null)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#0d1120', border: '1px solid rgba(0,220,255,.18)',
+              borderRadius: 14, padding: 24, maxWidth: 380, width: '100%',
+            }}
+          >
+            <div style={{
+              fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 18,
+              color: '#fff', marginBottom: 14,
+            }}>
+              Renomear deck
+            </div>
+            <input
+              value={novoNomeRen}
+              onChange={e => setNovoNomeRen(e.target.value)}
+              autoFocus
+              onKeyDown={e => { if (e.key === 'Enter') confirmarRenomear(); }}
+              style={{
+                width: '100%', padding: '10px 12px',
+                background: '#111827', border: '1px solid rgba(255,255,255,.1)',
+                borderRadius: 9, color: '#E2E8F0', fontSize: 13, outline: 'none',
+                marginBottom: 16,
+              }}
+            />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => setRenomeandoUuid(null)}
+                style={{
+                  flex: 1, padding: 10, borderRadius: 9,
+                  background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.1)',
+                  color: '#9CA3AF', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarRenomear}
+                style={{
+                  flex: 1, padding: 10, borderRadius: 9,
+                  background: '#2563EB', border: 'none', color: '#fff',
+                  fontSize: 12, fontWeight: 700, cursor: 'pointer', letterSpacing: 1,
+                }}
+              >
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Coluna direita */}
       <div className="forjabey-right forjabey-col-right" style={{

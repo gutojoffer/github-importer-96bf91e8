@@ -4,7 +4,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Calendar, MapPin, Users, Trophy, ChevronDown, X, Search, Check } from 'lucide-react';
+import { Calendar, MapPin, Users, Trophy, ChevronDown, X, Search } from 'lucide-react';
+import { fetchUserDecks, type DeckResumo } from '@/lib/decks';
 
 interface TournamentData {
   id: string;
@@ -39,6 +40,8 @@ interface InscritoRow {
   blader_temp_id: string | null;
   inscrito_em: string;
   status: string;
+  deck_id?: string | null;
+  deck_snapshot?: any;
   profiles: {
     nome_blader: string | null;
     avatar_blader_url: string | null;
@@ -94,6 +97,8 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
   const [abaAtiva, setAbaAtiva] = useState<'Informações' | 'Inscritos'>('Informações');
   const [inscritos, setInscritos] = useState<InscritoRow[]>([]);
   const [confirmandoDesistencia, setConfirmandoDesistencia] = useState(false);
+  const [decks, setDecks] = useState<DeckResumo[]>([]);
+  const [deckSelecionadoUuid, setDeckSelecionadoUuid] = useState<string | null>(null);
 
   // Organizer enrollment management state
   // null = lista de inscritos visível; 'buscar' ou 'rapido' = sub-painel de inscrição aberto
@@ -165,8 +170,12 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
     setModoInscricao(null);
     setBusca('');
     setNomeRapido(''); setApelidoRapido(''); setEmailRapido(''); setBeybladeRapido('');
+    setDeckSelecionadoUuid(null);
     refreshDetails();
-  }, [open, tournament?.id, user?.id]);
+    if (mode === 'blader' && user?.id) {
+      fetchUserDecks(user.id).then(setDecks).catch(() => setDecks([]));
+    }
+  }, [open, tournament?.id, user?.id, mode]);
 
   // Load eligible bladers for organizer search — lazy + cached per modal session
   useEffect(() => {
@@ -252,9 +261,21 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
   async function handleInscrever() {
     if (!tournament || !user) return;
     setLoading(true);
+
+    const deckEscolhido = deckSelecionadoUuid
+      ? decks.find(d => d.deck_uuid === deckSelecionadoUuid) || null
+      : null;
+    const deckSnapshot = deckEscolhido ? deckEscolhido.beys : null;
+
     const { error } = await supabase
       .from('inscricoes')
-      .insert({ torneio_id: tournament.id, blader_id: user.id, status: 'confirmado' });
+      .insert({
+        torneio_id: tournament.id,
+        blader_id: user.id,
+        status: 'confirmado',
+        deck_id: deckSelecionadoUuid,
+        deck_snapshot: deckSnapshot as any,
+      } as any);
 
     if (error) {
       toast.error('Erro ao realizar inscrição');
@@ -458,6 +479,57 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
             </>
           )}
         </div>
+
+        {/* Seletor de deck (apenas para blader, não inscrito ainda, com decks salvos) */}
+        {mode === 'blader' && !inscrito && !checking && !vagasEsgotadas && decks.length > 0 && (
+          <div style={{ padding: '12px 16px 0', flexShrink: 0 }}>
+            <div style={{
+              fontSize: 10, fontWeight: 700, letterSpacing: 2,
+              textTransform: 'uppercase', color: 'rgba(255,255,255,.35)',
+              marginBottom: 8,
+            }}>
+              Vincular deck (opcional)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 160, overflowY: 'auto' }}>
+              {decks.map(deck => {
+                const ativo = deckSelecionadoUuid === deck.deck_uuid;
+                return (
+                  <div
+                    key={deck.deck_uuid}
+                    onClick={() => setDeckSelecionadoUuid(ativo ? null : deck.deck_uuid)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '8px 10px', borderRadius: 9, cursor: 'pointer',
+                      background: ativo ? 'rgba(0,220,255,.06)' : 'rgba(255,255,255,.02)',
+                      border: `1px solid ${ativo ? 'rgba(0,220,255,.25)' : 'rgba(255,255,255,.07)'}`,
+                      transition: 'all .15s',
+                    }}
+                  >
+                    <div style={{
+                      width: 14, height: 14, borderRadius: '50%', flexShrink: 0,
+                      border: `1.5px solid ${ativo ? '#00DCFF' : 'rgba(255,255,255,.2)'}`,
+                      background: ativo ? 'rgba(0,220,255,.15)' : 'transparent',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      {ativo && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#00DCFF' }} />}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: '#E2E8F0' }}>
+                        {deck.nome}
+                      </div>
+                      <div style={{
+                        fontSize: 10, color: 'rgba(255,255,255,.3)', marginTop: 1,
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>
+                        {deck.beys.map(b => b.blade?.nome || b.main_blade?.nome).filter(Boolean).join(' · ') || 'Sem beys'}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div style={{ padding: 16, borderTop: '1px solid rgba(255,255,255,.06)', flexShrink: 0 }}>
           {mode === 'organizer' ? (

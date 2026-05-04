@@ -142,12 +142,14 @@ export type Database = {
           blade_id: number | null
           br_total: number | null
           created_at: string | null
+          deck_uuid: string
           def_total: number | null
           endr_total: number | null
           id: string
           linha: string
           lock_chip_id: number | null
           main_blade_id: number | null
+          nome: string
           ratchet_id: number | null
           slot: number
           updated_at: string | null
@@ -161,12 +163,14 @@ export type Database = {
           blade_id?: number | null
           br_total?: number | null
           created_at?: string | null
+          deck_uuid?: string
           def_total?: number | null
           endr_total?: number | null
           id?: string
           linha: string
           lock_chip_id?: number | null
           main_blade_id?: number | null
+          nome?: string
           ratchet_id?: number | null
           slot: number
           updated_at?: string | null
@@ -180,12 +184,14 @@ export type Database = {
           blade_id?: number | null
           br_total?: number | null
           created_at?: string | null
+          deck_uuid?: string
           def_total?: number | null
           endr_total?: number | null
           id?: string
           linha?: string
           lock_chip_id?: number | null
           main_blade_id?: number | null
+          nome?: string
           ratchet_id?: number | null
           slot?: number
           updated_at?: string | null
@@ -427,6 +433,8 @@ export type Database = {
         Row: {
           blader_id: string | null
           blader_temp_id: string | null
+          deck_id: string | null
+          deck_snapshot: Json | null
           derrotas: number
           id: string
           inscrito_em: string
@@ -440,6 +448,8 @@ export type Database = {
         Insert: {
           blader_id?: string | null
           blader_temp_id?: string | null
+          deck_id?: string | null
+          deck_snapshot?: Json | null
           derrotas?: number
           id?: string
           inscrito_em?: string
@@ -453,6 +463,8 @@ export type Database = {
         Update: {
           blader_id?: string | null
           blader_temp_id?: string | null
+          deck_id?: string | null
+          deck_snapshot?: Json | null
           derrotas?: number
           id?: string
           inscrito_em?: string
