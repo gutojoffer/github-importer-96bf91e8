@@ -8,7 +8,6 @@ import { useState, useRef, useEffect } from 'react';
 import { Settings, LogOut, ChevronDown, LayoutGrid, Repeat } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import BladerAvatar from '@/components/BladerAvatar';
-import SinoNotificacoes from '@/components/SinoNotificacoes';
 
 const BREADCRUMB_MAP: Record<string, string> = {
   '/home': 'Home',
@@ -121,8 +120,7 @@ export function AppTopbar() {
         </div>
       )}
 
-      <div className="flex items-center gap-2">
-        {currentMode === 'blader' && <SinoNotificacoes />}
+      <div className="flex items-center">
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}

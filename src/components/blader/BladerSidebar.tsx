@@ -2,13 +2,15 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useActiveMode } from '@/contexts/ActiveModeContext';
-import { Home, Trophy, Clock, Star, User, Settings, LogOut, ChevronRight, Repeat, Wrench } from 'lucide-react';
+import { Home, Trophy, Clock, Star, User, Settings, LogOut, ChevronRight, Repeat, Wrench, Bell } from 'lucide-react';
 import BladerAvatar from '@/components/BladerAvatar';
 import { getBladerPalette } from '@/lib/bladerColors';
+import { useNotificacoesNaoLidas } from '@/hooks/useNotificacoesNaoLidas';
 
 const NAV_ITEMS = [
   { title: 'Home', url: '/blader/home', icon: Home },
   { title: 'Torneios', url: '/blader/tournaments', icon: Trophy },
+  { title: 'Notificações', url: '/blader/notificacoes', icon: Bell, showBadge: true },
   { title: 'Meu histórico', url: '/blader/history', icon: Clock },
   { title: 'Rankings', url: '/blader/rankings', icon: Star },
   { title: 'ForjaBey', url: '/blader/forjabey', icon: Wrench },
@@ -25,6 +27,7 @@ export function BladerSidebar() {
   const { signOut } = useAuth();
   const { profile } = useUserProfile();
   const { perfis, setMode } = useActiveMode();
+  const naoLidas = useNotificacoesNaoLidas();
 
   const bladerName = perfis.dadosBlader?.nome || profile?.nomeBlader || 'Blader';
   const bladerAvatar = perfis.dadosBlader?.avatar || profile?.avatarBladerUrl || null;
@@ -91,6 +94,19 @@ export function BladerSidebar() {
               >
                 <item.icon size={18} strokeWidth={1.4} className="shrink-0" style={{ color: active ? '#FBBF24' : '#64748B', opacity: active ? 1 : 0.35 }} />
                 <span className="font-body flex-1" style={{ fontSize: 13, color: active ? '#FBBF24' : '#64748B', fontWeight: active ? 700 : 500 }}>{item.title}</span>
+                {(item as any).showBadge && naoLidas > 0 && (
+                  <span
+                    className="font-body shrink-0"
+                    style={{
+                      minWidth: 18, height: 18, padding: '0 5px',
+                      borderRadius: 999, background: '#EF4444',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 10, fontWeight: 700, color: '#fff', lineHeight: 1,
+                    }}
+                  >
+                    {naoLidas > 99 ? '99+' : naoLidas}
+                  </span>
+                )}
               </Link>
             );
           })}
