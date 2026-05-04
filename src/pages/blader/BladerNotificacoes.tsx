@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import BladerLayout from '@/components/blader/BladerLayout';
 import { Notificacao } from '@/lib/notificacoes';
 import { Bell, CheckCheck } from 'lucide-react';
 import { toast } from 'sonner';
+
+const TIPOS_BLADER = [
+  'resultado_torneio',
+  'torneio_publicado',
+  'torneio_iniciado',
+  'torneio_amanha',
+  'conquista',
+  'vinculacao',
+] as const;
 
 type Filtro = 'Todas' | 'Torneios' | 'Conquistas' | 'Sistema';
 
@@ -53,12 +61,12 @@ function configTipo(n: Notificacao): TipoConfig {
       icone: '⭐',
       titulo: 'Conquista desbloqueada',
     },
-    nova_inscricao: {
+    torneio_publicado: {
       cor: '#00DCFF',
       corBg: 'rgba(0,220,255,.06)',
       corBorder: 'rgba(0,220,255,.12)',
-      icone: '👤',
-      titulo: 'Nova inscrição',
+      icone: '🏟️',
+      titulo: 'Novo torneio disponível',
     },
     vinculacao: {
       cor: '#10B981',
@@ -313,6 +321,7 @@ export default function BladerNotificacoes() {
         .from('notificacoes')
         .select('*')
         .eq('user_id', userId)
+        .in('tipo', TIPOS_BLADER as unknown as string[])
         .order('created_at', { ascending: false })
         .limit(200);
       if (!cancelled) {
@@ -337,12 +346,15 @@ export default function BladerNotificacoes() {
         { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `user_id=eq.${userId}` },
         (payload: any) => {
           const novo = payload.new as Notificacao;
+          if (!(TIPOS_BLADER as readonly string[]).includes(novo.tipo)) return;
           setNotificacoes(prev => {
             if (prev.some(p => p.id === novo.id)) return prev;
             return [novo, ...prev];
           });
           if (novo.tipo === 'resultado_torneio') {
             toast.success(novo.mensagem.split(' · ')[0], { duration: 5000 });
+          } else if (novo.tipo === 'torneio_publicado') {
+            toast.info(novo.mensagem, { duration: 4000 });
           }
         },
       )
@@ -360,7 +372,7 @@ export default function BladerNotificacoes() {
     return notificacoes.filter(n => {
       if (filtro === 'Todas') return true;
       if (filtro === 'Torneios')
-        return ['resultado_torneio', 'torneio_iniciado', 'nova_inscricao', 'torneio_amanha'].includes(
+        return ['resultado_torneio', 'torneio_iniciado', 'torneio_publicado', 'torneio_amanha'].includes(
           n.tipo,
         );
       if (filtro === 'Conquistas') return n.tipo === 'conquista';
@@ -387,7 +399,7 @@ export default function BladerNotificacoes() {
   const FILTROS: Filtro[] = ['Todas', 'Torneios', 'Conquistas', 'Sistema'];
 
   return (
-    <BladerLayout>
+    <>
       <div style={{ padding: '20px 24px 80px', maxWidth: 720, margin: '0 auto' }}>
         {/* Header */}
         <div
@@ -546,6 +558,6 @@ export default function BladerNotificacoes() {
           </div>
         )}
       </div>
-    </BladerLayout>
+    </>
   );
 }
