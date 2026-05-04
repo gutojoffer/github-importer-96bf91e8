@@ -54,6 +54,22 @@ export function BladerSidebar() {
       className="shrink-0 h-screen flex-col sticky top-0 hidden md:flex"
       style={{ width: 240, background: '#080c18', borderRight: '1px solid rgba(255,255,255,.06)' }}
     >
+      <style>{`
+        .blader-sidebar-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255,255,255,0.08) transparent;
+        }
+        .blader-sidebar-scroll::-webkit-scrollbar { width: 3px; }
+        .blader-sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+        .blader-sidebar-scroll::-webkit-scrollbar-thumb {
+          background: rgba(255,255,255,0.08);
+          border-radius: 2px;
+        }
+        .blader-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(255,255,255,0.15);
+        }
+      `}</style>
+
       <div className="shrink-0" style={{ height: 2, background: 'linear-gradient(90deg, #F59E0B 0%, #EF4444 50%, transparent 100%)' }} />
 
       <div className="flex items-center gap-2.5" style={{ padding: '18px 16px 16px', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
@@ -70,7 +86,7 @@ export function BladerSidebar() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto blader-sidebar-scroll">
         <div style={{ padding: '16px 16px 6px' }}>
           <span className="font-body font-bold uppercase" style={{ fontSize: 10, letterSpacing: 2, color: 'rgba(255,255,255,.55)' }}>NAVEGAÇÃO</span>
         </div>
