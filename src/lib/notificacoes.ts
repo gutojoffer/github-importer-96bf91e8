@@ -165,3 +165,49 @@ export async function enviarNotificacoesInicio(torneioId: string) {
     console.error('enviarNotificacoesInicio:', err);
   }
 }
+
+/** Notifica todos os bladers cadastrados quando um novo torneio é publicado. */
+export async function enviarNotificacoesTorneioPublicado(torneio: {
+  id: string;
+  name: string;
+  horario_inicio?: string | null;
+  local_cidade?: string | null;
+  local_estado?: string | null;
+  local_nome?: string | null;
+}) {
+  try {
+    const { data: bladers } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('tem_perfil_blader', true);
+
+    if (!bladers?.length) return;
+
+    let dataFmt = '';
+    if (torneio.horario_inicio) {
+      try {
+        dataFmt = new Date(torneio.horario_inicio).toLocaleDateString('pt-BR', {
+          day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+        });
+      } catch {}
+    }
+    const local = torneio.local_cidade || torneio.local_estado || torneio.local_nome || 'a definir';
+    const sufData = dataFmt ? ` — ${dataFmt}` : '';
+    const mensagem = `🏟️ Novo torneio disponível: "${torneio.name}"${sufData} em ${local}`;
+
+    const notifs = (bladers as any[]).map(b => ({
+      user_id: b.id,
+      tipo: 'torneio_publicado',
+      mensagem,
+      lida: false,
+      dados: { torneio_id: torneio.id, torneio_nome: torneio.name } as any,
+    }));
+
+    // Inserir em chunks de 500 para evitar payloads gigantes
+    for (let i = 0; i < notifs.length; i += 500) {
+      await supabase.from('notificacoes').insert(notifs.slice(i, i + 500) as any);
+    }
+  } catch (err) {
+    console.error('enviarNotificacoesTorneioPublicado:', err);
+  }
+}
