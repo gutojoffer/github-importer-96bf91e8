@@ -58,14 +58,14 @@ export default function SetupAdmin() {
 
   if (loading) {
     return (
-      <div style={{ background: '#060912', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: '#060912', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div style={{ background: '#060912', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+    <div style={{ background: '#060912', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <form onSubmit={handleSubmit} style={{
         width: '100%', maxWidth: 420, background: '#111827',
         border: '1px solid rgba(255,255,255,.08)', borderRadius: 16, padding: 32,

@@ -26,12 +26,10 @@ export default function VincularBladersTempModal({ userId, email, onClose, onLin
     let cancelled = false;
     async function carregar() {
       if (!email) {
-        console.log('[VincularBladersTemp] Sem email do usuário, encerrando.');
         onClose();
         return;
       }
       const emailLower = email.toLowerCase().trim();
-      console.log('[VincularBladersTemp] Buscando bladers_temp com email:', emailLower);
 
       // Buscar bladers_temp não vinculados com mesmo email (case-insensitive)
       const { data: temps, error } = await (supabase as any)
@@ -41,12 +39,10 @@ export default function VincularBladersTempModal({ userId, email, onClose, onLin
         .is('vinculado_a', null);
 
       if (error) {
-        console.error('[VincularBladersTemp] Erro na busca:', error);
+        console.warn('[VincularBladersTemp] Erro na busca:', error.message);
         if (!cancelled) onClose();
         return;
       }
-
-      console.log('[VincularBladersTemp] Resultados encontrados:', temps?.length || 0, temps);
 
       if (!temps || temps.length === 0) {
         if (!cancelled) onClose();

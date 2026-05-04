@@ -14,17 +14,21 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return; // anti double-submit
     setError('');
     setLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setLoading(false);
       setError('Email ou senha incorretos.');
-    } else {
-      if (data.user) await verificarEExecutarMatch(data.user.id, data.user.email);
-      setLoading(false);
-      navigate('/select-mode');
+      return;
     }
+    // Match não pode bloquear o login se falhar
+    if (data.user) {
+      try { await verificarEExecutarMatch(data.user.id, data.user.email); } catch {}
+    }
+    setLoading(false);
+    navigate('/select-mode');
   };
 
   return (

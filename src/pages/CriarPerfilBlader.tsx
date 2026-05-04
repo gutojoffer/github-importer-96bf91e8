@@ -76,8 +76,6 @@ export default function CriarPerfilBlader() {
           bio_blader: bio.trim() || null,
         };
 
-        console.log('Salvando dados blader:', dadosParaSalvar, 'User:', user.id);
-
         // Try update first
         let { data, error } = await supabase
           .from('profiles')
@@ -85,18 +83,14 @@ export default function CriarPerfilBlader() {
           .eq('id', user.id)
           .select();
 
-        console.log('Resultado UPDATE:', { data, error });
-
         // Fallback to upsert if update returned no rows
         if (!error && (!data || data.length === 0)) {
-          console.warn('UPDATE retornou 0 rows, tentando upsert');
           const { data: upsertData, error: upsertError } = await supabase
             .from('profiles')
             .upsert({ id: user.id, ...dadosParaSalvar } as any, { onConflict: 'id' })
             .select();
           data = upsertData;
           error = upsertError;
-          console.log('Resultado UPSERT:', { data: upsertData, error: upsertError });
         }
 
         if (error) {

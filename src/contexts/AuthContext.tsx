@@ -24,21 +24,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let resolved = false;
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      resolved = true;
     });
 
-    // THEN check existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // THEN check existing session — sempre garante loading=false mesmo em erro (refresh token inválido etc.)
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+      })
+      .catch((err) => {
+        console.warn('[Auth] Falha ao recuperar sessão:', err?.message);
+      })
+      .finally(() => {
+        setLoading(false);
+        resolved = true;
+      });
 
-    return () => subscription.unsubscribe();
+    // Failsafe: se nada respondeu em 5s, libera a UI
+    const failsafe = setTimeout(() => {
+      if (!resolved) setLoading(false);
+    }, 5000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(failsafe);
+    };
   }, []);
 
   const signOut = async () => {
