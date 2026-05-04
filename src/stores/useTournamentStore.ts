@@ -7,6 +7,7 @@ import {
 } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
 import { enviarNotificacoesResultado, enviarNotificacoesInicio } from '@/lib/notificacoes';
+import { atualizarEloAposTorneio } from '@/lib/elo';
 
 interface TournamentStore {
   tournaments: Tournament[];
@@ -79,6 +80,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     await saveCompletedTournament(completed);
     await applyTournamentResults(completed.id, standings);
     awardXP(standings).catch(console.error);
+    atualizarEloAposTorneio(completed.id).catch(console.error);
     enviarNotificacoesResultado(completed.id).catch(console.error);
 
     set(s => ({
