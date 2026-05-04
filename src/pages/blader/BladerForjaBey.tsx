@@ -910,17 +910,17 @@ function CardBey({
 
           {bey.linha === 'CX' ? (
             <>
-              <PartSelector label="Lock Chip" tabela="bey_lock_chips" valor={bey.lockChip} onSelecionar={p => onPeca('lockChip', p)} />
-              <PartSelector label="Main Blade" tabela="bey_main_blades" valor={bey.mainBlade} onSelecionar={p => onPeca('mainBlade', p)} />
-              <PartSelector label="Assist Blade" tabela="bey_assist_blades" valor={bey.assistBlade} onSelecionar={p => onPeca('assistBlade', p)} />
-              <PartSelector label="Ratchet" tabela="bey_ratchets" valor={bey.ratchet} onSelecionar={p => onPeca('ratchet', p)} />
-              <PartSelector label="Bit" tabela="bey_bits" valor={bey.bit} onSelecionar={p => onPeca('bit', p)} />
+              <PartSelector label="Lock Chip" tabela="bey_lock_chips" valor={bey.lockChip} onSelecionar={p => onPeca('lockChip', p)} todasBeys={todasBeys} slotAtual={bey.slot} />
+              <PartSelector label="Main Blade" tabela="bey_main_blades" valor={bey.mainBlade} onSelecionar={p => onPeca('mainBlade', p)} todasBeys={todasBeys} slotAtual={bey.slot} />
+              <PartSelector label="Assist Blade" tabela="bey_assist_blades" valor={bey.assistBlade} onSelecionar={p => onPeca('assistBlade', p)} todasBeys={todasBeys} slotAtual={bey.slot} />
+              <PartSelector label="Ratchet" tabela="bey_ratchets" valor={bey.ratchet} onSelecionar={p => onPeca('ratchet', p)} todasBeys={todasBeys} slotAtual={bey.slot} />
+              <PartSelector label="Bit" tabela="bey_bits" valor={bey.bit} onSelecionar={p => onPeca('bit', p)} todasBeys={todasBeys} slotAtual={bey.slot} />
             </>
           ) : (
             <>
-              <PartSelector label="Blade" tabela="bey_blades" valor={bey.blade} onSelecionar={p => onPeca('blade', p)} linha={bey.linha} />
-              <PartSelector label="Ratchet" tabela="bey_ratchets" valor={bey.ratchet} onSelecionar={p => onPeca('ratchet', p)} />
-              <PartSelector label="Bit" tabela="bey_bits" valor={bey.bit} onSelecionar={p => onPeca('bit', p)} />
+              <PartSelector label="Blade" tabela="bey_blades" valor={bey.blade} onSelecionar={p => onPeca('blade', p)} linha={bey.linha} todasBeys={todasBeys} slotAtual={bey.slot} />
+              <PartSelector label="Ratchet" tabela="bey_ratchets" valor={bey.ratchet} onSelecionar={p => onPeca('ratchet', p)} todasBeys={todasBeys} slotAtual={bey.slot} />
+              <PartSelector label="Bit" tabela="bey_bits" valor={bey.bit} onSelecionar={p => onPeca('bit', p)} todasBeys={todasBeys} slotAtual={bey.slot} />
             </>
           )}
         </div>
