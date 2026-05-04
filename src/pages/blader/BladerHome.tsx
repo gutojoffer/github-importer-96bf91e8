@@ -358,27 +358,9 @@ export default function BladerHome() {
             </div>
           </div>
 
-          {/* Tabela de níveis */}
-          <div style={{ background: '#08091a', border: '1px solid rgba(255,255,255,.06)', borderRadius: 12, padding: 14 }}>
-            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 13, letterSpacing: 1.5, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', marginBottom: 10 }}>Níveis</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
-              {NIVEIS.map(n => {
-                const ativo = n.nome === nivelInfo.atual.nome;
-                return (
-                  <div key={n.nome} style={{
-                    padding: '8px 10px', borderRadius: 8,
-                    background: ativo ? 'rgba(0,220,255,.08)' : 'rgba(255,255,255,.02)',
-                    border: ativo ? '1px solid rgba(0,220,255,.3)' : '1px solid rgba(255,255,255,.04)',
-                  }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: ativo ? '#00DCFF' : '#fff' }}>{n.nome}</div>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', marginTop: 2 }}>
-                      {n.xpMax === Infinity ? `${n.xpMin}+ XP` : `${n.xpMin} – ${n.xpMax} XP`}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          {/* ELO da temporada */}
+          {user && <CardElo userId={user.id} />}
+
 
           {/* Próximos torneios */}
           <section>
