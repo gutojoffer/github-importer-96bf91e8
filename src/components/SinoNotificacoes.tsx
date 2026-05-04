@@ -40,7 +40,7 @@ export default function SinoNotificacoes() {
     })();
 
     const channel = supabase
-      .channel(`notif-${userId}`)
+      .channel(`notif-${userId}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
