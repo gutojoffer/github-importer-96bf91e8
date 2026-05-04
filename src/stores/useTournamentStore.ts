@@ -8,6 +8,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { enviarNotificacoesResultado, enviarNotificacoesInicio } from '@/lib/notificacoes';
 import { atualizarEloAposTorneio } from '@/lib/elo';
+import { atualizarConquistas } from '@/lib/conquistas';
 
 interface TournamentStore {
   tournaments: Tournament[];
@@ -82,6 +83,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     awardXP(standings).catch(console.error);
     atualizarEloAposTorneio(completed.id).catch(console.error);
     enviarNotificacoesResultado(completed.id).catch(console.error);
+    // Atualiza conquistas de todos os participantes
+    Promise.all((completed.playerIds || []).map(pid => atualizarConquistas(pid))).catch(console.error);
 
     set(s => ({
       activeTournament: null,

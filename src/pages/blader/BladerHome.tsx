@@ -16,6 +16,7 @@ import {
   Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import { ELOS, getElo, getProximoElo } from '@/lib/elo';
+import DashboardInsights from '@/components/blader/DashboardInsights';
 
 interface TournamentRow {
   id: string;
@@ -360,6 +361,9 @@ export default function BladerHome() {
 
           {/* ELO da temporada */}
           {user && <CardElo userId={user.id} />}
+
+          {/* Rivalidades · Comparativo · Decks · Conquistas */}
+          {user && <DashboardInsights userId={user.id} />}
 
 
           {/* Próximos torneios */}
