@@ -205,6 +205,9 @@ export default function BladerForjaBey() {
       : b));
   }
 
+  const errosRepeticao = useMemo(() => validarPecasRepetidas(beys), [beys]);
+  const temRepeticao = errosRepeticao.length > 0;
+
   async function salvarDeck() {
     if (beys.every(beyVazia)) {
       toast.error('Monte pelo menos uma bey antes de salvar.');
@@ -213,6 +216,10 @@ export default function BladerForjaBey() {
     const nome = nomeDeck.trim();
     if (!nome) {
       toast.error('Dê um nome ao deck.');
+      return;
+    }
+    if (temRepeticao) {
+      toast.error('Existem peças repetidas entre as beys. Corrija antes de salvar.');
       return;
     }
     setSalvando(true);
