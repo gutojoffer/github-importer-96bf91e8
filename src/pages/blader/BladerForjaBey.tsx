@@ -1112,42 +1112,67 @@ function PartSelector({
                 ✕ Remover seleção
               </div>
             )}
-            {filtradas.map(p => (
-              <div
-                key={p.id}
-                onClick={() => { onSelecionar(p); setAberto(false); setBusca(''); }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px',
-                  cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,.03)',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,220,255,.05)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-              >
-                <div style={{
-                  width: 36, height: 36, borderRadius: 8, flexShrink: 0,
-                  background: p.imagem_url ? `url(${p.imagem_url}) center/contain no-repeat` : '#090c18',
-                  border: '1px solid rgba(255,255,255,.08)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 10, color: 'rgba(255,255,255,.3)', fontWeight: 600,
-                }}>
-                  {!p.imagem_url && (p.abreviacao || p.nome?.charAt(0))}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.nome}</div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', marginTop: 1 }}>
-                    {p.tipo_ataque || p.tipo || ''}{p.linha ? ` · ${p.linha}` : ''}
-                  </div>
-                </div>
-                {p.linha && (
-                  <span style={{
-                    padding: '2px 6px', borderRadius: 4, fontSize: 8, fontWeight: 700,
-                    background: 'rgba(255,255,255,.05)', color: 'rgba(255,255,255,.4)',
+            {filtradas.map(p => {
+              const beyEmUso = pecaEmUso(todasBeys, slotAtual, tabela, p.id);
+              const emUso = beyEmUso !== null;
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => {
+                    if (emUso) {
+                      toast.error(`"${p.nome}" já está na Bey ${beyEmUso}. Cada peça só pode ser usada uma vez.`, { duration: 3500 });
+                      return;
+                    }
+                    onSelecionar(p); setAberto(false); setBusca('');
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px',
+                    cursor: emUso ? 'not-allowed' : 'pointer',
+                    borderBottom: '1px solid rgba(255,255,255,.03)',
+                    opacity: emUso ? 0.5 : 1,
+                  }}
+                  onMouseEnter={e => { if (!emUso) e.currentTarget.style.background = 'rgba(0,220,255,.05)'; }}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+                    background: p.imagem_url ? `url(${p.imagem_url}) center/contain no-repeat` : '#090c18',
+                    border: `1px solid ${emUso ? 'rgba(239,68,68,.2)' : 'rgba(255,255,255,.08)'}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 10, color: 'rgba(255,255,255,.3)', fontWeight: 600,
                   }}>
-                    {p.linha}
-                  </span>
-                )}
-              </div>
-            ))}
+                    {!p.imagem_url && (p.abreviacao || p.nome?.charAt(0))}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: 13, fontWeight: 600,
+                      color: emUso ? 'rgba(255,255,255,.45)' : '#E2E8F0',
+                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>{p.nome}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', marginTop: 1 }}>
+                      {p.tipo_ataque || p.tipo || ''}{p.linha ? ` · ${p.linha}` : ''}
+                    </div>
+                  </div>
+                  {emUso ? (
+                    <span style={{
+                      padding: '2px 7px', borderRadius: 6, flexShrink: 0,
+                      background: 'rgba(239,68,68,.1)',
+                      border: '1px solid rgba(239,68,68,.25)',
+                      color: '#F87171', fontSize: 9, fontWeight: 700, letterSpacing: 1,
+                    }}>
+                      BEY {beyEmUso}
+                    </span>
+                  ) : p.linha && (
+                    <span style={{
+                      padding: '2px 6px', borderRadius: 4, fontSize: 8, fontWeight: 700,
+                      background: 'rgba(255,255,255,.05)', color: 'rgba(255,255,255,.4)',
+                    }}>
+                      {p.linha}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
             {filtradas.length === 0 && (
               <div style={{ padding: 20, textAlign: 'center', color: 'rgba(255,255,255,.2)', fontSize: 12 }}>
                 Nenhuma peça encontrada
