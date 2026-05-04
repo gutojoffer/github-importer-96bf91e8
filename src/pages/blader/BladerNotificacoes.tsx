@@ -61,12 +61,12 @@ function configTipo(n: Notificacao): TipoConfig {
       icone: '⭐',
       titulo: 'Conquista desbloqueada',
     },
-    nova_inscricao: {
+    torneio_publicado: {
       cor: '#00DCFF',
       corBg: 'rgba(0,220,255,.06)',
       corBorder: 'rgba(0,220,255,.12)',
-      icone: '👤',
-      titulo: 'Nova inscrição',
+      icone: '🏟️',
+      titulo: 'Novo torneio disponível',
     },
     vinculacao: {
       cor: '#10B981',
