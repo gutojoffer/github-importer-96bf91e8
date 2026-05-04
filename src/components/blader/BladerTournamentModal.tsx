@@ -590,19 +590,55 @@ function InscritoItem({ inscricao, index }: { inscricao: InscritoRow; index: num
   const cidade = profile?.cidade_blader || temp?.cidade;
   const beyblade = profile?.beyblade_favorita || temp?.beyblade_favorita;
   const nivel = profile?.nivel;
+  const deckSnap: any[] = Array.isArray(inscricao.deck_snapshot) ? inscricao.deck_snapshot : [];
+  const temDeck = deckSnap.length > 0;
+  const [expandido, setExpandido] = useState(false);
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,.04)', transition: 'background .15s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,.03)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-      <div style={{ width: 24, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,.2)', textAlign: 'center', flexShrink: 0 }}>{index + 1}</div>
-      {avatar ? <img src={avatar} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(37,99,235,.3)', flexShrink: 0 }} /> : <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #1e3a8a, #2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 14, color: '#fff', flexShrink: 0, border: '1.5px solid rgba(37,99,235,.3)' }}>{initials(nome)}</div>}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nome}{temp?.apelido && <span style={{ color: 'rgba(255,255,255,.35)', fontWeight: 400 }}> · @{temp.apelido}</span>}</div>
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,.35)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cidade && `📍 ${cidade}`}{beyblade && ` · ⚡ ${beyblade}`}</div>
+    <div style={{ borderBottom: '1px solid rgba(255,255,255,.04)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', transition: 'background .15s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,.03)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+        <div style={{ width: 24, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,.2)', textAlign: 'center', flexShrink: 0 }}>{index + 1}</div>
+        {avatar ? <img src={avatar} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(37,99,235,.3)', flexShrink: 0 }} /> : <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #1e3a8a, #2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: 14, color: '#fff', flexShrink: 0, border: '1.5px solid rgba(37,99,235,.3)' }}>{initials(nome)}</div>}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nome}{temp?.apelido && <span style={{ color: 'rgba(255,255,255,.35)', fontWeight: 400 }}> · @{temp.apelido}</span>}</div>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,.35)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cidade && `📍 ${cidade}`}{beyblade && ` · ⚡ ${beyblade}`}</div>
+        </div>
+        {temDeck && (
+          <button
+            onClick={() => setExpandido(v => !v)}
+            style={{
+              padding: '3px 9px', borderRadius: 6, cursor: 'pointer',
+              background: 'rgba(139,92,246,.12)', border: '1px solid rgba(139,92,246,.3)',
+              color: '#C4B5FD', fontSize: 9, fontWeight: 700, letterSpacing: 1, flexShrink: 0,
+            }}
+          >
+            ⚙ DECK
+          </button>
+        )}
+        {isTemp && !vinculado && <div style={{ padding: '2px 7px', borderRadius: 6, background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.2)', color: '#FCD34D', fontSize: 9, fontWeight: 700, letterSpacing: 1, flexShrink: 0 }}>SEM CONTA</div>}
+        {isTemp && vinculado && <div style={{ padding: '2px 7px', borderRadius: 6, background: 'rgba(16,185,129,.1)', border: '1px solid rgba(16,185,129,.2)', color: '#34D399', fontSize: 9, fontWeight: 700, letterSpacing: 1, flexShrink: 0 }}>VINCULADO ✓</div>}
+        {!isTemp && nivel && <div style={{ padding: '2px 8px', borderRadius: 8, background: 'rgba(37,99,235,.12)', color: '#60A5FA', fontSize: 10, fontWeight: 700, letterSpacing: 1, flexShrink: 0 }}>{nivel}</div>}
+        <div style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', flexShrink: 0 }}>{formatarDataCurta(inscricao.inscrito_em)}</div>
       </div>
-      {isTemp && !vinculado && <div style={{ padding: '2px 7px', borderRadius: 6, background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.2)', color: '#FCD34D', fontSize: 9, fontWeight: 700, letterSpacing: 1, flexShrink: 0 }}>SEM CONTA</div>}
-      {isTemp && vinculado && <div style={{ padding: '2px 7px', borderRadius: 6, background: 'rgba(16,185,129,.1)', border: '1px solid rgba(16,185,129,.2)', color: '#34D399', fontSize: 9, fontWeight: 700, letterSpacing: 1, flexShrink: 0 }}>VINCULADO ✓</div>}
-      {!isTemp && nivel && <div style={{ padding: '2px 8px', borderRadius: 8, background: 'rgba(37,99,235,.12)', color: '#60A5FA', fontSize: 10, fontWeight: 700, letterSpacing: 1, flexShrink: 0 }}>{nivel}</div>}
-      <div style={{ fontSize: 10, color: 'rgba(255,255,255,.2)', flexShrink: 0 }}>{formatarDataCurta(inscricao.inscrito_em)}</div>
+      {temDeck && expandido && (
+        <div style={{ padding: '4px 20px 12px 56px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {deckSnap.map((bey: any, i: number) => {
+            const nome = bey?.blade?.nome || bey?.main_blade?.nome || bey?.bey_blades?.nome || `Bey ${i + 1}`;
+            const ratchet = bey?.ratchet?.nome || '';
+            const bit = bey?.bit?.nome || '';
+            return (
+              <span key={i} style={{
+                padding: '4px 10px', borderRadius: 7,
+                background: 'rgba(139,92,246,.08)',
+                border: '1px solid rgba(139,92,246,.18)',
+                color: '#DDD6FE', fontSize: 11, fontWeight: 600,
+              }}>
+                {nome}{ratchet && ` · ${ratchet}`}{bit && ` · ${bit}`}
+              </span>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
