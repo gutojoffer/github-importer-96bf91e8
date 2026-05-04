@@ -168,8 +168,12 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
     setModoInscricao(null);
     setBusca('');
     setNomeRapido(''); setApelidoRapido(''); setEmailRapido(''); setBeybladeRapido('');
+    setDeckSelecionadoUuid(null);
     refreshDetails();
-  }, [open, tournament?.id, user?.id]);
+    if (mode === 'blader' && user?.id) {
+      fetchUserDecks(user.id).then(setDecks).catch(() => setDecks([]));
+    }
+  }, [open, tournament?.id, user?.id, mode]);
 
   // Load eligible bladers for organizer search — lazy + cached per modal session
   useEffect(() => {
