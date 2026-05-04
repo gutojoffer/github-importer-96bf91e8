@@ -40,6 +40,8 @@ interface InscritoRow {
   blader_temp_id: string | null;
   inscrito_em: string;
   status: string;
+  deck_id?: string | null;
+  deck_snapshot?: any;
   profiles: {
     nome_blader: string | null;
     avatar_blader_url: string | null;
