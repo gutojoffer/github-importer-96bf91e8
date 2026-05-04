@@ -111,6 +111,7 @@ export interface TournamentStanding {
   losses: number;
   xpAwarded: number;
   rankingPoints: number;
+  streakMax?: number;
   dropped?: boolean;
 }
 
@@ -141,11 +142,16 @@ export function getRankingPoints(placement: number, dropped: boolean): number {
 
 /** XP awarded by placement */
 export const PLACEMENT_XP: Record<number, number> = {
-  1: 50,
-  2: 30,
-  3: 15,
+  1: 100,
+  2: 60,
+  3: 30,
 };
-export const PLACEMENT_XP_DEFAULT = 5;
+export const PLACEMENT_XP_DEFAULT = 10;
+
+export function getTournamentXP(placement: number, wins: number, dropped: boolean): number {
+  if (dropped) return 0;
+  return (PLACEMENT_XP[placement] ?? PLACEMENT_XP_DEFAULT) + wins * 15;
+}
 
 export const DEFAULT_AVATARS = [
   '🔵', '🔴', '🟢', '🟡', '🟣', '⚡', '🔥', '💎', '🌀', '⭐',

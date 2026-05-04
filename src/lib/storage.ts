@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { Player, PlayerStats, Tournament, TournamentStanding, PLACEMENT_XP, PLACEMENT_XP_DEFAULT, getRankingPoints } from '@/types/tournament';
+import { Player, PlayerStats, Tournament, TournamentStanding, getRankingPoints, getTournamentXP } from '@/types/tournament';
 
 async function getLigaId(): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
@@ -187,7 +187,10 @@ export async function applyTournamentResults(tournamentId: string, standings: To
     _torneio_id: tournamentId,
     _standings: standings,
   });
-  if (error) console.error('applyTournamentResults error:', error);
+  if (error) {
+    console.error('applyTournamentResults error:', error);
+    throw error;
+  }
 }
 
 // ──────────── Tournaments ────────────
@@ -347,8 +350,10 @@ export function calculateStandings(tournament: Tournament): TournamentStanding[]
   const winsMap = new Map<string, number>();
   const lossesMap = new Map<string, number>();
   const pointsMap = new Map<string, number>();
+  const streakMap = new Map<string, number>();
+  const maxStreakMap = new Map<string, number>();
   const droppedSet = new Set(tournament.droppedPlayerIds || []);
-  for (const pid of tournament.playerIds) { winsMap.set(pid, 0); lossesMap.set(pid, 0); pointsMap.set(pid, 0); }
+  for (const pid of tournament.playerIds) { winsMap.set(pid, 0); lossesMap.set(pid, 0); pointsMap.set(pid, 0); streakMap.set(pid, 0); maxStreakMap.set(pid, 0); }
 
   const processRounds = (rounds: typeof tournament.rounds) => {
     for (const round of rounds) {
@@ -362,6 +367,10 @@ export function calculateStandings(tournament: Tournament): TournamentStanding[]
           const loserId = match.player1Id === winnerId ? match.player2Id : match.player1Id;
           winsMap.set(winnerId, (winsMap.get(winnerId) || 0) + 1);
           lossesMap.set(loserId, (lossesMap.get(loserId) || 0) + 1);
+          const winnerStreak = (streakMap.get(winnerId) || 0) + 1;
+          streakMap.set(winnerId, winnerStreak);
+          maxStreakMap.set(winnerId, Math.max(maxStreakMap.get(winnerId) || 0, winnerStreak));
+          streakMap.set(loserId, 0);
         }
       }
     }
@@ -389,8 +398,9 @@ export function calculateStandings(tournament: Tournament): TournamentStanding[]
     wins: entry.wins,
     losses: entry.losses,
     placement: i + 1,
-    xpAwarded: entry.dropped ? 0 : (PLACEMENT_XP[i + 1] ?? PLACEMENT_XP_DEFAULT),
+    xpAwarded: getTournamentXP(i + 1, entry.wins, entry.dropped),
     rankingPoints: getRankingPoints(i + 1, entry.dropped),
+    streakMax: maxStreakMap.get(entry.playerId) || 0,
     dropped: entry.dropped,
   }));
 }

@@ -844,6 +844,14 @@ export type Database = {
         Args: { _email: string; _user_id: string }
         Returns: number
       }
+      rebuild_tournament_results_from_rounds: {
+        Args: { _torneio_id: string }
+        Returns: Json
+      }
+      recompute_blader_metrics: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "organizer"
