@@ -49,6 +49,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   },
 
   setActiveTournament: (t: Tournament | null) => {
+    const prev = get().activeTournament;
+    const isNewlyActive = !!t && t.status === 'active' && (!prev || prev.id !== t.id);
     set(s => ({
       activeTournament: t,
       tournaments: t
@@ -59,6 +61,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     }));
     if (t) {
       saveActiveTournament(t).catch(console.error);
+      if (isNewlyActive) enviarNotificacoesInicio(t.id).catch(console.error);
     }
   },
 
