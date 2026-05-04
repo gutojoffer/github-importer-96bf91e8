@@ -893,15 +893,22 @@ function PartSelector({
     return () => document.removeEventListener('mousedown', handler);
   }, [aberto]);
 
-  // Fechar / reposicionar em scroll/resize
+  // Reposicionar dropdown ao scrollar/redimensionar (sem fechar)
   useEffect(() => {
     if (!aberto) return;
-    const close = () => setAberto(false);
-    window.addEventListener('resize', close);
-    window.addEventListener('scroll', close, true);
+    const reposicionar = () => {
+      const rect = botaoRef.current?.getBoundingClientRect();
+      if (rect) {
+        setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+      }
+    };
+    const fechar = () => setAberto(false);
+    window.addEventListener('resize', fechar);
+    // Scroll na página: reposiciona; scroll dentro do dropdown não dispara aqui (stopPropagation no onWheel)
+    window.addEventListener('scroll', reposicionar, true);
     return () => {
-      window.removeEventListener('resize', close);
-      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', fechar);
+      window.removeEventListener('scroll', reposicionar, true);
     };
   }, [aberto]);
 
