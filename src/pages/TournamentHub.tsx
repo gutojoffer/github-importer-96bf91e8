@@ -1438,19 +1438,19 @@ export default function TournamentHub() {
             completedTournaments.map((t, i) => (
               <div key={t.id} className="surface-card p-0 anim-fade-up overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
                 <div className="h-[2px] w-full bg-gradient-to-r from-muted-foreground/30 to-transparent" />
-                <div className="p-5 flex items-center gap-5">
+                <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3">
-                      <h3 className="font-heading text-lg font-bold text-foreground/70 tracking-wide truncate">{t.name}</h3>
+                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                      <h3 className="font-heading text-base sm:text-lg font-bold text-foreground/70 tracking-wide truncate min-w-0">{t.name}</h3>
                       <span className="badge-status badge-completed text-[10px] py-0.5">Finalizado</span>
                     </div>
-                    <div className="flex items-center gap-5 text-xs text-muted-foreground font-body mt-1.5">
+                    <div className="flex items-center gap-3 sm:gap-5 text-xs text-muted-foreground font-body mt-1.5 flex-wrap">
                       <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" />{new Date(t.date).toLocaleDateString('pt-BR')}</span>
                       <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" />{t.playerIds.length} participantes</span>
                     </div>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => navigate(`/history/${t.id}`)}
-                    className="font-heading tracking-wider gap-1.5 h-9 px-3.5 text-muted-foreground hover:text-foreground">
+                    className="font-heading tracking-wider gap-1.5 h-9 px-3.5 text-muted-foreground hover:text-foreground w-full sm:w-auto">
                     <Award className="h-3.5 w-3.5" /> Ver Resultado
                   </Button>
                 </div>
