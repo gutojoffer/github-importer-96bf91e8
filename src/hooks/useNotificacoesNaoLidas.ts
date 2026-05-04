@@ -26,7 +26,7 @@ export function useNotificacoesNaoLidas() {
     load();
 
     const channel = supabase
-      .channel(`notif-count-${userId}`)
+      .channel(`notif-count-${userId}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'notificacoes', filter: `user_id=eq.${userId}` },
