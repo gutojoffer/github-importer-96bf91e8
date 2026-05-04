@@ -273,8 +273,69 @@ export default function BladerForjaBey() {
   };
 
   return (
-    <div style={{ minHeight: 'calc(100dvh - 54px)', background: '#050714', padding: '20px 22px 80px' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+    <div
+      className="forjabey-root"
+      style={{
+        height: 'calc(100dvh - 54px)',
+        background: '#050714',
+        overflow: 'hidden',
+        display: 'flex',
+      }}
+    >
+      <style>{`
+        @media (min-width: 768px) {
+          .forjabey-root { height: 100dvh; }
+        }
+        .forjabey-left::-webkit-scrollbar,
+        .forjabey-right::-webkit-scrollbar { width: 3px; }
+        .forjabey-left::-webkit-scrollbar-track,
+        .forjabey-right::-webkit-scrollbar-track { background: transparent; }
+        .forjabey-left::-webkit-scrollbar-thumb {
+          background: rgba(0, 220, 255, 0.18);
+          border-radius: 2px;
+        }
+        .forjabey-right::-webkit-scrollbar-thumb {
+          background: rgba(139, 92, 246, 0.18);
+          border-radius: 2px;
+        }
+        .forjabey-left::-webkit-scrollbar-thumb:hover { background: rgba(0,220,255,.3); }
+        .forjabey-right::-webkit-scrollbar-thumb:hover { background: rgba(139,92,246,.3); }
+        @media (max-width: 900px) {
+          .forjabey-cols { flex-direction: column !important; }
+          .forjabey-left {
+            width: 100% !important;
+            max-width: 100% !important;
+            border-right: none !important;
+            border-bottom: 1px solid rgba(255,255,255,.05);
+            height: ${montadorVisivel ? '60%' : '100%'} !important;
+          }
+          .forjabey-right {
+            display: ${montadorVisivel ? 'block' : 'none'} !important;
+            height: 40% !important;
+          }
+        }
+      `}</style>
+      <div
+        className="forjabey-cols"
+        style={{ display: 'flex', flex: 1, minWidth: 0, minHeight: 0 }}
+      >
+      {/* ============ COLUNA ESQUERDA — lista + montador ============ */}
+      <div
+        className="forjabey-left"
+        style={{
+          width: montadorVisivel ? 460 : '100%',
+          maxWidth: montadorVisivel ? 460 : 1100,
+          margin: montadorVisivel ? 0 : '0 auto',
+          flexShrink: 0,
+          height: '100%',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          padding: '18px 18px 80px',
+          borderRight: montadorVisivel ? '1px solid rgba(255,255,255,.05)' : 'none',
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgba(0,220,255,.18) transparent',
+        }}
+      >
         {/* Header da seção lista */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
