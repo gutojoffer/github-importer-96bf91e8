@@ -79,6 +79,46 @@ const BEY_INICIAL: Bey[] = [
   { slot: 3, aberta: false, linha: 'BX', blade: null, ratchet: null, bit: null, lockChip: null, mainBlade: null, assistBlade: null },
 ];
 
+const CAMPOS_PECA: { campo: keyof Bey; tabela: string; label: string }[] = [
+  { campo: 'blade',       tabela: 'bey_blades',        label: 'Blade' },
+  { campo: 'ratchet',     tabela: 'bey_ratchets',      label: 'Ratchet' },
+  { campo: 'bit',         tabela: 'bey_bits',          label: 'Bit' },
+  { campo: 'lockChip',    tabela: 'bey_lock_chips',    label: 'Lock Chip' },
+  { campo: 'mainBlade',   tabela: 'bey_main_blades',   label: 'Main Blade' },
+  { campo: 'assistBlade', tabela: 'bey_assist_blades', label: 'Assist Blade' },
+];
+
+function validarPecasRepetidas(beys: Bey[]): string[] {
+  const erros: string[] = [];
+  const vistos = new Map<string, number>(); // chave: tabela-id → slot
+  beys.forEach(bey => {
+    CAMPOS_PECA.forEach(({ campo, tabela, label }) => {
+      const peca = bey[campo] as Peca | null;
+      if (!peca) return;
+      const chave = `${tabela}-${peca.id}`;
+      if (vistos.has(chave)) {
+        erros.push(`${label} "${peca.nome}" está em Bey ${vistos.get(chave)} e Bey ${bey.slot}`);
+      } else {
+        vistos.set(chave, bey.slot);
+      }
+    });
+  });
+  return erros;
+}
+
+/** Retorna o número da Bey (1-3) onde a peça já está em uso, ou null. Ignora o slot atual. */
+function pecaEmUso(beys: Bey[], slotAtual: number, tabela: string, pecaId: number): number | null {
+  for (const bey of beys) {
+    if (bey.slot === slotAtual) continue;
+    for (const { campo, tabela: t } of CAMPOS_PECA) {
+      if (t !== tabela) continue;
+      const p = bey[campo] as Peca | null;
+      if (p?.id === pecaId) return bey.slot;
+    }
+  }
+  return null;
+}
+
 export default function BladerForjaBey() {
   const [beys, setBeys] = useState<Bey[]>(BEY_INICIAL);
   const [salvando, setSalvando] = useState(false);
@@ -165,6 +205,9 @@ export default function BladerForjaBey() {
       : b));
   }
 
+  const errosRepeticao = useMemo(() => validarPecasRepetidas(beys), [beys]);
+  const temRepeticao = errosRepeticao.length > 0;
+
   async function salvarDeck() {
     if (beys.every(beyVazia)) {
       toast.error('Monte pelo menos uma bey antes de salvar.');
@@ -173,6 +216,10 @@ export default function BladerForjaBey() {
     const nome = nomeDeck.trim();
     if (!nome) {
       toast.error('Dê um nome ao deck.');
+      return;
+    }
+    if (temRepeticao) {
+      toast.error('Existem peças repetidas entre as beys. Corrija antes de salvar.');
       return;
     }
     setSalvando(true);
@@ -549,22 +596,48 @@ export default function BladerForjaBey() {
               </button>
               <button
                 onClick={salvarDeck}
-                disabled={salvando}
+                disabled={salvando || temRepeticao}
+                title={temRepeticao ? 'Corrija as peças repetidas antes de salvar' : ''}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
                   padding: '7px 14px', borderRadius: 9,
-                  background: 'linear-gradient(135deg,#F59E0B,#EF4444)',
-                  border: 'none', color: '#0a0d18',
+                  background: temRepeticao
+                    ? 'rgba(255,255,255,.04)'
+                    : 'linear-gradient(135deg,#F59E0B,#EF4444)',
+                  border: temRepeticao ? '1px solid rgba(239,68,68,.25)' : 'none',
+                  color: temRepeticao ? '#F87171' : '#0a0d18',
                   fontFamily: 'Rajdhani,sans-serif', fontWeight: 700,
                   fontSize: 12, letterSpacing: 1, textTransform: 'uppercase',
-                  cursor: salvando ? 'wait' : 'pointer',
+                  cursor: (salvando || temRepeticao) ? 'not-allowed' : 'pointer',
                   opacity: salvando ? 0.6 : 1,
                 }}
               >
                 <Save size={13} />
-                {salvando ? 'Salvando' : 'Salvar'}
+                {salvando ? 'Salvando' : temRepeticao ? 'Peças repetidas' : 'Salvar'}
               </button>
             </div>
+
+            {/* Aviso de peças repetidas */}
+            {temRepeticao && (
+              <div style={{
+                padding: '10px 14px', borderRadius: 10, marginBottom: 14,
+                background: 'rgba(239,68,68,.08)',
+                border: '1px solid rgba(239,68,68,.2)',
+                display: 'flex', flexDirection: 'column', gap: 4,
+              }}>
+                <div style={{
+                  fontSize: 10, fontWeight: 700, color: '#F87171',
+                  letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 2,
+                }}>
+                  ⚠️ Peças repetidas
+                </div>
+                {errosRepeticao.map((erro, i) => (
+                  <div key={i} style={{ fontSize: 11, color: 'rgba(248,113,113,.85)' }}>
+                    · {erro}
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Nome do deck */}
             <div style={{ marginBottom: 16 }}>
@@ -600,6 +673,7 @@ export default function BladerForjaBey() {
                 <CardBey
                   key={bey.slot}
                   bey={bey}
+                  todasBeys={beys}
                   cor={CORES_BEY[bey.slot - 1]}
                   onToggle={() => toggleAberta(bey.slot)}
                   onLimpar={() => limparBey(bey.slot)}
@@ -706,9 +780,10 @@ export default function BladerForjaBey() {
 // ----------------- CARD DE BEY -----------------
 
 function CardBey({
-  bey, cor, onToggle, onLimpar, onLinha, onPeca,
+  bey, todasBeys, cor, onToggle, onLimpar, onLinha, onPeca,
 }: {
   bey: Bey;
+  todasBeys: Bey[];
   cor: string;
   onToggle: () => void;
   onLimpar: () => void;
@@ -835,17 +910,17 @@ function CardBey({
 
           {bey.linha === 'CX' ? (
             <>
-              <PartSelector label="Lock Chip" tabela="bey_lock_chips" valor={bey.lockChip} onSelecionar={p => onPeca('lockChip', p)} />
-              <PartSelector label="Main Blade" tabela="bey_main_blades" valor={bey.mainBlade} onSelecionar={p => onPeca('mainBlade', p)} />
-              <PartSelector label="Assist Blade" tabela="bey_assist_blades" valor={bey.assistBlade} onSelecionar={p => onPeca('assistBlade', p)} />
-              <PartSelector label="Ratchet" tabela="bey_ratchets" valor={bey.ratchet} onSelecionar={p => onPeca('ratchet', p)} />
-              <PartSelector label="Bit" tabela="bey_bits" valor={bey.bit} onSelecionar={p => onPeca('bit', p)} />
+              <PartSelector label="Lock Chip" tabela="bey_lock_chips" valor={bey.lockChip} onSelecionar={p => onPeca('lockChip', p)} todasBeys={todasBeys} slotAtual={bey.slot} />
+              <PartSelector label="Main Blade" tabela="bey_main_blades" valor={bey.mainBlade} onSelecionar={p => onPeca('mainBlade', p)} todasBeys={todasBeys} slotAtual={bey.slot} />
+              <PartSelector label="Assist Blade" tabela="bey_assist_blades" valor={bey.assistBlade} onSelecionar={p => onPeca('assistBlade', p)} todasBeys={todasBeys} slotAtual={bey.slot} />
+              <PartSelector label="Ratchet" tabela="bey_ratchets" valor={bey.ratchet} onSelecionar={p => onPeca('ratchet', p)} todasBeys={todasBeys} slotAtual={bey.slot} />
+              <PartSelector label="Bit" tabela="bey_bits" valor={bey.bit} onSelecionar={p => onPeca('bit', p)} todasBeys={todasBeys} slotAtual={bey.slot} />
             </>
           ) : (
             <>
-              <PartSelector label="Blade" tabela="bey_blades" valor={bey.blade} onSelecionar={p => onPeca('blade', p)} linha={bey.linha} />
-              <PartSelector label="Ratchet" tabela="bey_ratchets" valor={bey.ratchet} onSelecionar={p => onPeca('ratchet', p)} />
-              <PartSelector label="Bit" tabela="bey_bits" valor={bey.bit} onSelecionar={p => onPeca('bit', p)} />
+              <PartSelector label="Blade" tabela="bey_blades" valor={bey.blade} onSelecionar={p => onPeca('blade', p)} linha={bey.linha} todasBeys={todasBeys} slotAtual={bey.slot} />
+              <PartSelector label="Ratchet" tabela="bey_ratchets" valor={bey.ratchet} onSelecionar={p => onPeca('ratchet', p)} todasBeys={todasBeys} slotAtual={bey.slot} />
+              <PartSelector label="Bit" tabela="bey_bits" valor={bey.bit} onSelecionar={p => onPeca('bit', p)} todasBeys={todasBeys} slotAtual={bey.slot} />
             </>
           )}
         </div>
@@ -857,13 +932,15 @@ function CardBey({
 // ----------------- PART SELECTOR -----------------
 
 function PartSelector({
-  label, tabela, valor, onSelecionar, linha,
+  label, tabela, valor, onSelecionar, linha, todasBeys, slotAtual,
 }: {
   label: string;
   tabela: string;
   valor: Peca | null;
   onSelecionar: (p: Peca | null) => void;
   linha?: Linha;
+  todasBeys: Bey[];
+  slotAtual: number;
 }) {
   const [aberto, setAberto] = useState(false);
   const [pecas, setPecas] = useState<Peca[]>([]);
@@ -1035,42 +1112,67 @@ function PartSelector({
                 ✕ Remover seleção
               </div>
             )}
-            {filtradas.map(p => (
-              <div
-                key={p.id}
-                onClick={() => { onSelecionar(p); setAberto(false); setBusca(''); }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px',
-                  cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,.03)',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,220,255,.05)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-              >
-                <div style={{
-                  width: 36, height: 36, borderRadius: 8, flexShrink: 0,
-                  background: p.imagem_url ? `url(${p.imagem_url}) center/contain no-repeat` : '#090c18',
-                  border: '1px solid rgba(255,255,255,.08)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 10, color: 'rgba(255,255,255,.3)', fontWeight: 600,
-                }}>
-                  {!p.imagem_url && (p.abreviacao || p.nome?.charAt(0))}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#E2E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.nome}</div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', marginTop: 1 }}>
-                    {p.tipo_ataque || p.tipo || ''}{p.linha ? ` · ${p.linha}` : ''}
-                  </div>
-                </div>
-                {p.linha && (
-                  <span style={{
-                    padding: '2px 6px', borderRadius: 4, fontSize: 8, fontWeight: 700,
-                    background: 'rgba(255,255,255,.05)', color: 'rgba(255,255,255,.4)',
+            {filtradas.map(p => {
+              const beyEmUso = pecaEmUso(todasBeys, slotAtual, tabela, p.id);
+              const emUso = beyEmUso !== null;
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => {
+                    if (emUso) {
+                      toast.error(`"${p.nome}" já está na Bey ${beyEmUso}. Cada peça só pode ser usada uma vez.`, { duration: 3500 });
+                      return;
+                    }
+                    onSelecionar(p); setAberto(false); setBusca('');
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px',
+                    cursor: emUso ? 'not-allowed' : 'pointer',
+                    borderBottom: '1px solid rgba(255,255,255,.03)',
+                    opacity: emUso ? 0.5 : 1,
+                  }}
+                  onMouseEnter={e => { if (!emUso) e.currentTarget.style.background = 'rgba(0,220,255,.05)'; }}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+                    background: p.imagem_url ? `url(${p.imagem_url}) center/contain no-repeat` : '#090c18',
+                    border: `1px solid ${emUso ? 'rgba(239,68,68,.2)' : 'rgba(255,255,255,.08)'}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 10, color: 'rgba(255,255,255,.3)', fontWeight: 600,
                   }}>
-                    {p.linha}
-                  </span>
-                )}
-              </div>
-            ))}
+                    {!p.imagem_url && (p.abreviacao || p.nome?.charAt(0))}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: 13, fontWeight: 600,
+                      color: emUso ? 'rgba(255,255,255,.45)' : '#E2E8F0',
+                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>{p.nome}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', marginTop: 1 }}>
+                      {p.tipo_ataque || p.tipo || ''}{p.linha ? ` · ${p.linha}` : ''}
+                    </div>
+                  </div>
+                  {emUso ? (
+                    <span style={{
+                      padding: '2px 7px', borderRadius: 6, flexShrink: 0,
+                      background: 'rgba(239,68,68,.1)',
+                      border: '1px solid rgba(239,68,68,.25)',
+                      color: '#F87171', fontSize: 9, fontWeight: 700, letterSpacing: 1,
+                    }}>
+                      BEY {beyEmUso}
+                    </span>
+                  ) : p.linha && (
+                    <span style={{
+                      padding: '2px 6px', borderRadius: 4, fontSize: 8, fontWeight: 700,
+                      background: 'rgba(255,255,255,.05)', color: 'rgba(255,255,255,.4)',
+                    }}>
+                      {p.linha}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
             {filtradas.length === 0 && (
               <div style={{ padding: 20, textAlign: 'center', color: 'rgba(255,255,255,.2)', fontSize: 12 }}>
                 Nenhuma peça encontrada
