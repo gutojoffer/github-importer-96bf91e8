@@ -429,6 +429,178 @@ export type Database = {
         }
         Relationships: []
       }
+      conquistas_bladers: {
+        Row: {
+          concluida: boolean | null
+          concluida_em: string | null
+          conquista_id: number | null
+          id: string
+          notificado: boolean | null
+          progresso: number | null
+          user_id: string | null
+        }
+        Insert: {
+          concluida?: boolean | null
+          concluida_em?: string | null
+          conquista_id?: number | null
+          id?: string
+          notificado?: boolean | null
+          progresso?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          concluida?: boolean | null
+          concluida_em?: string | null
+          conquista_id?: number | null
+          id?: string
+          notificado?: boolean | null
+          progresso?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conquistas_bladers_conquista_id_fkey"
+            columns: ["conquista_id"]
+            isOneToOne: false
+            referencedRelation: "conquistas_definicoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conquistas_definicoes: {
+        Row: {
+          categoria: string | null
+          created_at: string | null
+          descricao: string | null
+          icone: string | null
+          id: number
+          meta: number | null
+          nome: string
+          slug: string
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          icone?: string | null
+          id?: number
+          meta?: number | null
+          nome: string
+          slug: string
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          icone?: string | null
+          id?: number
+          meta?: number | null
+          nome?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      elo_bladers: {
+        Row: {
+          created_at: string | null
+          elo: string | null
+          em_promocao: boolean | null
+          id: string
+          pontos: number | null
+          promocao_derrotas: number | null
+          promocao_vitorias: number | null
+          temporada_id: string | null
+          titulo_final: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          elo?: string | null
+          em_promocao?: boolean | null
+          id?: string
+          pontos?: number | null
+          promocao_derrotas?: number | null
+          promocao_vitorias?: number | null
+          temporada_id?: string | null
+          titulo_final?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          elo?: string | null
+          em_promocao?: boolean | null
+          id?: string
+          pontos?: number | null
+          promocao_derrotas?: number | null
+          promocao_vitorias?: number | null
+          temporada_id?: string | null
+          titulo_final?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "elo_bladers_temporada_id_fkey"
+            columns: ["temporada_id"]
+            isOneToOne: false
+            referencedRelation: "temporadas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      historico_elo: {
+        Row: {
+          created_at: string | null
+          id: string
+          motivo: string | null
+          pontos_antes: number | null
+          pontos_depois: number | null
+          temporada_id: string | null
+          torneio_id: string | null
+          user_id: string | null
+          variacao: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          motivo?: string | null
+          pontos_antes?: number | null
+          pontos_depois?: number | null
+          temporada_id?: string | null
+          torneio_id?: string | null
+          user_id?: string | null
+          variacao?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          motivo?: string | null
+          pontos_antes?: number | null
+          pontos_depois?: number | null
+          temporada_id?: string | null
+          torneio_id?: string | null
+          user_id?: string | null
+          variacao?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_elo_temporada_id_fkey"
+            columns: ["temporada_id"]
+            isOneToOne: false
+            referencedRelation: "temporadas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_elo_torneio_id_fkey"
+            columns: ["torneio_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inscricoes: {
         Row: {
           blader_id: string | null
@@ -729,6 +901,170 @@ export type Database = {
           tag?: string
           titulo?: string
           versao?: string
+        }
+        Relationships: []
+      }
+      temporadas: {
+        Row: {
+          ativa: boolean | null
+          created_at: string | null
+          fim: string
+          id: string
+          inicio: string
+          nome: string
+        }
+        Insert: {
+          ativa?: boolean | null
+          created_at?: string | null
+          fim: string
+          id?: string
+          inicio: string
+          nome: string
+        }
+        Update: {
+          ativa?: boolean | null
+          created_at?: string | null
+          fim?: string
+          id?: string
+          inicio?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      torre_x_desafios: {
+        Row: {
+          cidade: string | null
+          confirmado_desafiado: boolean | null
+          confirmado_desafiante: boolean | null
+          created_at: string | null
+          desafiado_id: string | null
+          desafiante_id: string | null
+          id: string
+          pontos_em_jogo: number | null
+          score_desafiado: number | null
+          score_desafiante: number | null
+          status: string | null
+          updated_at: string | null
+          vencedor_id: string | null
+        }
+        Insert: {
+          cidade?: string | null
+          confirmado_desafiado?: boolean | null
+          confirmado_desafiante?: boolean | null
+          created_at?: string | null
+          desafiado_id?: string | null
+          desafiante_id?: string | null
+          id?: string
+          pontos_em_jogo?: number | null
+          score_desafiado?: number | null
+          score_desafiante?: number | null
+          status?: string | null
+          updated_at?: string | null
+          vencedor_id?: string | null
+        }
+        Update: {
+          cidade?: string | null
+          confirmado_desafiado?: boolean | null
+          confirmado_desafiante?: boolean | null
+          created_at?: string | null
+          desafiado_id?: string | null
+          desafiante_id?: string | null
+          id?: string
+          pontos_em_jogo?: number | null
+          score_desafiado?: number | null
+          score_desafiante?: number | null
+          status?: string | null
+          updated_at?: string | null
+          vencedor_id?: string | null
+        }
+        Relationships: []
+      }
+      torre_x_historico: {
+        Row: {
+          andar_antes: number | null
+          andar_depois: number | null
+          created_at: string | null
+          desafio_id: string | null
+          id: string
+          oponente_id: string | null
+          pontos_antes: number | null
+          pontos_depois: number | null
+          resultado: string | null
+          user_id: string | null
+          variacao: number | null
+        }
+        Insert: {
+          andar_antes?: number | null
+          andar_depois?: number | null
+          created_at?: string | null
+          desafio_id?: string | null
+          id?: string
+          oponente_id?: string | null
+          pontos_antes?: number | null
+          pontos_depois?: number | null
+          resultado?: string | null
+          user_id?: string | null
+          variacao?: number | null
+        }
+        Update: {
+          andar_antes?: number | null
+          andar_depois?: number | null
+          created_at?: string | null
+          desafio_id?: string | null
+          id?: string
+          oponente_id?: string | null
+          pontos_antes?: number | null
+          pontos_depois?: number | null
+          resultado?: string | null
+          user_id?: string | null
+          variacao?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "torre_x_historico_desafio_id_fkey"
+            columns: ["desafio_id"]
+            isOneToOne: false
+            referencedRelation: "torre_x_desafios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      torre_x_pontos: {
+        Row: {
+          andar: number | null
+          cidade: string | null
+          created_at: string | null
+          estado: string | null
+          id: string
+          pontos: number | null
+          rejeicoes_seguidas: number | null
+          tier: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          andar?: number | null
+          cidade?: string | null
+          created_at?: string | null
+          estado?: string | null
+          id?: string
+          pontos?: number | null
+          rejeicoes_seguidas?: number | null
+          tier?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          andar?: number | null
+          cidade?: string | null
+          created_at?: string | null
+          estado?: string | null
+          id?: string
+          pontos?: number | null
+          rejeicoes_seguidas?: number | null
+          tier?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
