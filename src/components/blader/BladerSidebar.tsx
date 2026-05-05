@@ -127,6 +127,48 @@ export function BladerSidebar() {
                     {naoLidas > 99 ? '99+' : naoLidas}
                   </span>
                 )}
+                {(item as any).isNew && (
+                  <span
+                    className="font-body shrink-0"
+                    style={{
+                      padding: '1px 6px', borderRadius: 5,
+                      background: 'rgba(16,185,129,.12)',
+                      border: '1px solid rgba(16,185,129,.2)',
+                      color: '#34D399', fontSize: 8, fontWeight: 700, letterSpacing: 1,
+                    }}
+                  >
+                    NOVO
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent)', margin: '8px 16px' }} />
+
+        <div style={{ padding: '4px 16px 6px' }}>
+          <span className="font-body font-bold uppercase" style={{ fontSize: 10, letterSpacing: 2, color: 'rgba(255,255,255,.55)' }}>MEU ESPAÇO</span>
+        </div>
+        <nav className="flex flex-col gap-px">
+          {ESPACO_ITEMS.map((item) => {
+            const active = isActive(item.url);
+            return (
+              <Link
+                key={item.url} to={item.url}
+                className="relative flex items-center gap-3"
+                style={{
+                  padding: active ? '10px 14px 10px 11px' : '10px 14px',
+                  borderRadius: 10, margin: '1px 8px',
+                  borderLeft: active ? '3px solid #F59E0B' : '3px solid transparent',
+                  background: active ? 'linear-gradient(90deg, rgba(245,158,11,.15), rgba(245,158,11,.05))' : undefined,
+                  transition: 'all .15s',
+                }}
+                onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,.04)'; }}
+                onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = ''; }}
+              >
+                <item.icon size={18} strokeWidth={1.4} className="shrink-0" style={{ color: active ? '#FBBF24' : '#64748B', opacity: active ? 1 : 0.35 }} />
+                <span className="font-body flex-1" style={{ fontSize: 13, color: active ? '#FBBF24' : '#64748B', fontWeight: active ? 700 : 500 }}>{item.title}</span>
               </Link>
             );
           })}
