@@ -9,7 +9,7 @@ export default function BladerLayout({ children }: { children: ReactNode }) {
   return (
     <ProtectedRoute>
       <AccountRouter>
-        <div className="min-h-screen flex w-full" style={{ background: '#060912' }}>
+        <div className="h-screen flex w-full overflow-hidden" style={{ background: '#060912' }}>
           <BladerSidebar />
           <div className="flex-1 flex flex-col min-w-0">
             <BladerMobileTopbar />
