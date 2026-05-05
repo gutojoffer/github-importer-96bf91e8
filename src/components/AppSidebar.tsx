@@ -29,6 +29,7 @@ export function AppSidebar() {
   const { signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { perfis, setMode } = useActiveMode();
+  const naoLidas = useNotificacoesNaoLidas();
 
   const { data: activeTournaments } = useQuery({
     queryKey: ['active-tournament-count'],
