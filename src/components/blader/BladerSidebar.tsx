@@ -2,7 +2,7 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useActiveMode } from '@/contexts/ActiveModeContext';
-import { Home, Trophy, Clock, Star, User, Settings, LogOut, ChevronRight, Repeat, Wrench, Bell } from 'lucide-react';
+import { Home, Trophy, Clock, Star, User, Settings, LogOut, ChevronRight, Wrench, Bell, Building2 } from 'lucide-react';
 import BladerAvatar from '@/components/BladerAvatar';
 import { getBladerPalette } from '@/lib/bladerColors';
 import { useNotificacoesNaoLidas } from '@/hooks/useNotificacoesNaoLidas';
@@ -10,9 +10,13 @@ import { useNotificacoesNaoLidas } from '@/hooks/useNotificacoesNaoLidas';
 const NAV_ITEMS = [
   { title: 'Home', url: '/blader/home', icon: Home },
   { title: 'Torneios', url: '/blader/tournaments', icon: Trophy },
-  { title: 'Notificações', url: '/blader/notificacoes', icon: Bell, showBadge: true },
+  { title: 'Torre X', url: '/blader/torre-x', icon: Building2, isNew: true },
   { title: 'Meu histórico', url: '/blader/history', icon: Clock },
   { title: 'Rankings', url: '/blader/rankings', icon: Star },
+  { title: 'Notificações', url: '/blader/notificacoes', icon: Bell, showBadge: true },
+];
+
+const ESPACO_ITEMS = [
   { title: 'ForjaBey', url: '/blader/forjabey', icon: Wrench },
   { title: 'Meu perfil', url: '/blader/profile', icon: User },
 ];
