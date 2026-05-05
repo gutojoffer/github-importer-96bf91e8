@@ -330,7 +330,7 @@ export default function TorreX() {
                     <div style={{ width: 28, fontFamily: 'Rajdhani,sans-serif', fontWeight: 800, color: i < 3 ? '#FBBF24' : 'rgba(255,255,255,.45)', fontSize: 14, textAlign: 'center' }}>
                       {i + 1}
                     </div>
-                    <AvatarBlader url={r.avatar_blader_url} name={r.nome_blader} size={36} />
+                    <AvatarBlader url={r.avatar_blader_url} nome={r.nome_blader} size={36} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {r.nome_blader || 'Blader'}{isMe && <span style={{ color: '#00DCFF', fontSize: 10, marginLeft: 6 }}>(você)</span>}
@@ -422,7 +422,7 @@ function DesafioCard({
       display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px',
       borderRadius: 10, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)',
     }}>
-      <AvatarBlader url={oponenteAvatar || null} name={oponenteNome || null} size={36} />
+      <AvatarBlader url={oponenteAvatar || null} nome={oponenteNome || null} size={36} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>
           {oponenteNome || 'Blader'}
