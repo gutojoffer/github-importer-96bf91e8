@@ -5,15 +5,17 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useActiveMode } from '@/contexts/ActiveModeContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { Home, Trophy, Clock, Star, Users, Settings, LogOut, ChevronRight, Shield } from 'lucide-react';
+import { Home, Trophy, Clock, Star, Users, Settings, LogOut, ChevronRight, Shield, Bell, Wrench } from 'lucide-react';
 import BladerAvatar from '@/components/BladerAvatar';
+import { useNotificacoesNaoLidas } from '@/hooks/useNotificacoesNaoLidas';
 
 const NAV_ITEMS = [
-  { title: 'Home', url: '/home', icon: Home },
+  { title: 'Dashboard', url: '/home', icon: Home },
   { title: 'Torneios', url: '/tournament', icon: Trophy, badge: true },
-  { title: 'Histórico', url: '/history', icon: Clock },
-  { title: 'Rankings', url: '/rankings', icon: Star },
   { title: 'Bladers', url: '/players', icon: Users },
+  { title: 'Rankings', url: '/rankings', icon: Star },
+  { title: 'Histórico', url: '/history', icon: Clock },
+  { title: 'Notificações', url: '/notificacoes', icon: Bell, showNotifBadge: true },
 ];
 
 const SYSTEM_ITEMS = [
