@@ -114,10 +114,72 @@ export function AppSidebar() {
                     {activeTournaments}
                   </span>
                 ) : null}
+                {(item as any).showNotifBadge && naoLidas > 0 && (
+                  <span
+                    className="font-body shrink-0 ml-auto"
+                    style={{
+                      minWidth: 18, height: 18, padding: '0 5px',
+                      borderRadius: 999, background: '#EF4444',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 10, fontWeight: 700, color: '#fff', lineHeight: 1,
+                    }}
+                  >
+                    {naoLidas > 99 ? '99+' : naoLidas}
+                  </span>
+                )}
               </Link>
             );
           })}
         </nav>
+
+        {isAdmin && (
+          <>
+            <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent)', margin: '8px 16px' }} />
+            <div style={{ padding: '4px 16px 6px' }}>
+              <span className="font-body font-bold uppercase" style={{ fontSize: 10, letterSpacing: 2, color: 'rgba(255,255,255,.55)' }}>ADMIN</span>
+            </div>
+            <nav className="flex flex-col gap-px">
+              <Link
+                to="/admin/forjabey"
+                className="relative flex items-center gap-3"
+                style={{
+                  padding: isActive('/admin/forjabey') ? '10px 14px 10px 11px' : '10px 14px',
+                  borderRadius: 10, margin: '1px 8px',
+                  borderLeft: isActive('/admin/forjabey') ? '3px solid #2563EB' : '3px solid transparent',
+                  background: isActive('/admin/forjabey') ? 'linear-gradient(90deg, rgba(37,99,235,.15), rgba(37,99,235,.05))' : undefined,
+                  transition: 'all .15s',
+                }}
+                onMouseEnter={(e) => { if (!isActive('/admin/forjabey')) e.currentTarget.style.background = 'rgba(255,255,255,.04)'; }}
+                onMouseLeave={(e) => { if (!isActive('/admin/forjabey')) e.currentTarget.style.background = ''; }}
+              >
+                <Wrench size={18} strokeWidth={1.4} className="shrink-0" style={{ color: isActive('/admin/forjabey') ? '#60A5FA' : '#64748B', opacity: isActive('/admin/forjabey') ? 1 : 0.35 }} />
+                <span className="font-body flex-1" style={{ fontSize: 13, color: isActive('/admin/forjabey') ? '#60A5FA' : '#64748B', fontWeight: isActive('/admin/forjabey') ? 700 : 500 }}>ForjaBey · Peças</span>
+                <span className="font-body shrink-0" style={{
+                  padding: '1px 6px', borderRadius: 5,
+                  background: 'rgba(255,255,255,.05)',
+                  border: '1px solid rgba(255,255,255,.1)',
+                  color: 'rgba(255,255,255,.45)', fontSize: 8, fontWeight: 700, letterSpacing: 1,
+                }}>ADMIN</span>
+              </Link>
+              <Link
+                to="/admin"
+                className="relative flex items-center gap-3"
+                style={{
+                  padding: location.pathname === '/admin' ? '10px 14px 10px 11px' : '10px 14px',
+                  borderRadius: 10, margin: '1px 8px',
+                  borderLeft: location.pathname === '/admin' ? '3px solid #2563EB' : '3px solid transparent',
+                  background: location.pathname === '/admin' ? 'linear-gradient(90deg, rgba(37,99,235,.15), rgba(37,99,235,.05))' : undefined,
+                  transition: 'all .15s',
+                }}
+                onMouseEnter={(e) => { if (location.pathname !== '/admin') e.currentTarget.style.background = 'rgba(255,255,255,.04)'; }}
+                onMouseLeave={(e) => { if (location.pathname !== '/admin') e.currentTarget.style.background = ''; }}
+              >
+                <Shield size={18} strokeWidth={1.4} className="shrink-0" style={{ color: location.pathname === '/admin' ? '#60A5FA' : '#64748B', opacity: location.pathname === '/admin' ? 1 : 0.35 }} />
+                <span className="font-body flex-1" style={{ fontSize: 13, color: location.pathname === '/admin' ? '#60A5FA' : '#64748B', fontWeight: location.pathname === '/admin' ? 700 : 500 }}>Painel Admin</span>
+              </Link>
+            </nav>
+          </>
+        )}
 
         <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent)', margin: '8px 16px' }} />
 
@@ -147,24 +209,6 @@ export function AppSidebar() {
               </Link>
             );
           })}
-          {isAdmin && (
-            <Link
-              to="/admin"
-              className="relative flex items-center gap-3"
-              style={{
-                padding: isActive('/admin') ? '10px 14px 10px 11px' : '10px 14px',
-                borderRadius: 10, margin: '1px 8px',
-                borderLeft: isActive('/admin') ? '3px solid #2563EB' : '3px solid transparent',
-                background: isActive('/admin') ? 'linear-gradient(90deg, rgba(37,99,235,.15), rgba(37,99,235,.05))' : undefined,
-                transition: 'all .15s',
-              }}
-              onMouseEnter={(e) => { if (!isActive('/admin')) e.currentTarget.style.background = 'rgba(255,255,255,.04)'; }}
-              onMouseLeave={(e) => { if (!isActive('/admin')) e.currentTarget.style.background = ''; }}
-            >
-              <Shield size={18} strokeWidth={1.4} className="shrink-0" style={{ color: isActive('/admin') ? '#60A5FA' : '#64748B', opacity: isActive('/admin') ? 1 : 0.35 }} />
-              <span className="font-body flex-1" style={{ fontSize: 13, color: isActive('/admin') ? '#60A5FA' : '#64748B', fontWeight: isActive('/admin') ? 700 : 500 }}>Admin</span>
-            </Link>
-          )}
         </nav>
       </div>
 
