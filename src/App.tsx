@@ -39,6 +39,7 @@ const BladerTournaments = lazy(() => import("@/pages/blader/BladerTournaments"))
 const BladerProfile = lazy(() => import("@/pages/blader/BladerProfile"));
 const BladerForjaBey = lazy(() => import("@/pages/blader/BladerForjaBey"));
 const BladerNotificacoes = lazy(() => import("@/pages/blader/BladerNotificacoes"));
+const TorreX = lazy(() => import("@/pages/blader/TorreX"));
 import NotFound from "./pages/NotFound";
 
 // Lazy-loaded routes
@@ -183,6 +184,7 @@ const App = () => {
                         <Routes>
                           <Route path="/home" element={<BladerHome />} />
                           <Route path="/tournaments" element={<BladerTournaments />} />
+                          <Route path="/torre-x" element={<TorreX />} />
                           <Route path="/forjabey" element={<BladerForjaBey />} />
                           <Route path="/profile" element={<BladerProfile />} />
                           <Route path="/notificacoes" element={<BladerNotificacoes />} />
