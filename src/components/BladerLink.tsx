@@ -21,7 +21,7 @@ interface BladerLinkProps {
 export default function BladerLink({ name, cidade, userId, children, className }: BladerLinkProps) {
   if (!name) return <>{children}</>;
   const target = userId
-    ? `/blader/profile/${userId}`
+    ? `/blader/perfil/${userId}`
     : `/blader/profile/by-name/${encodeURIComponent(name)}`;
 
   const tooltipText = cidade ? `${name} · ${cidade}` : name;

@@ -40,6 +40,7 @@ const BladerProfile = lazy(() => import("@/pages/blader/BladerProfile"));
 const BladerForjaBey = lazy(() => import("@/pages/blader/BladerForjaBey"));
 const BladerNotificacoes = lazy(() => import("@/pages/blader/BladerNotificacoes"));
 const TorreX = lazy(() => import("@/pages/blader/TorreX"));
+const PerfilPublico = lazy(() => import("@/pages/blader/PerfilPublico"));
 import NotFound from "./pages/NotFound";
 
 // Lazy-loaded routes
@@ -190,6 +191,7 @@ const App = () => {
                           <Route path="/notificacoes" element={<BladerNotificacoes />} />
                           <Route path="/profile/:userId" element={<BladerProfile />} />
                           <Route path="/profile/by-name/:name" element={<BladerProfile />} />
+                          <Route path="/perfil/:id" element={<PerfilPublico />} />
                           <Route path="/settings" element={<Settings />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
