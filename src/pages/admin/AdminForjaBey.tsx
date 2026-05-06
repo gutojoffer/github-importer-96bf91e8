@@ -5,24 +5,30 @@ import { Loader2, Plus, Pencil, Trash2, Camera, X, Search } from 'lucide-react';
 
 type TabKey = 'blades' | 'ratchets' | 'bits' | 'lock_chips' | 'main_blades' | 'assist_blades';
 
+type StatKey = 'atk' | 'def' | 'endr' | 'xdash' | 'br';
+
 interface TabDef {
   key: TabKey;
   label: string;
   table: string;
   hasStats: boolean;
+  statKeys: StatKey[];
   hasLinha: boolean;
   hasTipo: boolean;
   hasSpin: boolean;
   hasPeso: boolean;
 }
 
+const FULL_STATS: StatKey[] = ['atk', 'def', 'endr', 'xdash', 'br'];
+const BASIC_STATS: StatKey[] = ['atk', 'def', 'endr'];
+
 const TABS: TabDef[] = [
-  { key: 'blades',        label: 'Blades',         table: 'bey_blades',        hasStats: true,  hasLinha: true,  hasTipo: true,  hasSpin: true,  hasPeso: true  },
-  { key: 'ratchets',      label: 'Ratchets',       table: 'bey_ratchets',      hasStats: true,  hasLinha: true,  hasTipo: false, hasSpin: false, hasPeso: false },
-  { key: 'bits',          label: 'Bits',           table: 'bey_bits',          hasStats: true,  hasLinha: true,  hasTipo: false, hasSpin: false, hasPeso: false },
-  { key: 'lock_chips',    label: 'Lock Chips (CX)',table: 'bey_lock_chips',    hasStats: false, hasLinha: false, hasTipo: false, hasSpin: false, hasPeso: false },
-  { key: 'main_blades',   label: 'Main Blades (CX)',table: 'bey_main_blades',  hasStats: true,  hasLinha: false, hasTipo: true,  hasSpin: false, hasPeso: false },
-  { key: 'assist_blades', label: 'Assist Blades (CX)',table: 'bey_assist_blades',hasStats: false,hasLinha: false,hasTipo: false, hasSpin: false, hasPeso: false },
+  { key: 'blades',        label: 'Blades',            table: 'bey_blades',        hasStats: true,  statKeys: FULL_STATS,  hasLinha: true,  hasTipo: true,  hasSpin: true,  hasPeso: true  },
+  { key: 'ratchets',      label: 'Ratchets',          table: 'bey_ratchets',      hasStats: true,  statKeys: BASIC_STATS, hasLinha: true,  hasTipo: false, hasSpin: false, hasPeso: false },
+  { key: 'bits',          label: 'Bits',              table: 'bey_bits',          hasStats: true,  statKeys: FULL_STATS,  hasLinha: true,  hasTipo: false, hasSpin: false, hasPeso: false },
+  { key: 'lock_chips',    label: 'Lock Chips (CX)',   table: 'bey_lock_chips',    hasStats: false, statKeys: [],          hasLinha: false, hasTipo: false, hasSpin: false, hasPeso: false },
+  { key: 'main_blades',   label: 'Main Blades (CX)',  table: 'bey_main_blades',   hasStats: true,  statKeys: BASIC_STATS, hasLinha: false, hasTipo: true,  hasSpin: false, hasPeso: false },
+  { key: 'assist_blades', label: 'Assist Blades (CX)',table: 'bey_assist_blades', hasStats: false, statKeys: [],          hasLinha: false, hasTipo: false, hasSpin: false, hasPeso: false },
 ];
 
 interface Peca {
