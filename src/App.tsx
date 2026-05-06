@@ -40,6 +40,7 @@ const BladerProfile = lazy(() => import("@/pages/blader/BladerProfile"));
 const BladerForjaBey = lazy(() => import("@/pages/blader/BladerForjaBey"));
 const BladerNotificacoes = lazy(() => import("@/pages/blader/BladerNotificacoes"));
 const TorreX = lazy(() => import("@/pages/blader/TorreX"));
+const PerfilPublico = lazy(() => import("@/pages/blader/PerfilPublico"));
 import NotFound from "./pages/NotFound";
 
 // Lazy-loaded routes
