@@ -135,7 +135,7 @@ export default function AdminForjaBey() {
     if (tabDef.hasSpin) payload.spin = editing.spin || 'Right';
     if (tabDef.hasPeso) payload.peso_g = editing.peso_g ? Number(editing.peso_g) : null;
     if (tabDef.hasStats) {
-      STAT_KEYS.forEach(k => { payload[k] = Number(editing[k] ?? 0); });
+      tabDef.statKeys.forEach(k => { payload[k] = Number(editing[k] ?? 0); });
     }
 
     // Upload da imagem se selecionada
@@ -318,7 +318,7 @@ function PecaCard({ peca, tabDef, onUpload, onEdit, onDelete }: {
           </div>
           {tabDef.hasStats && (
             <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {STAT_KEYS.map(k => (
+              {tabDef.statKeys.map(k => (
                 <StatBar key={k} label={k.toUpperCase()} val={Number(peca[k] ?? 0)} />
               ))}
             </div>
@@ -479,7 +479,7 @@ function PecaModal({ editing, setEditing, tabDef, onClose, onSave }: {
 
         {tabDef.hasStats && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginTop: 8 }}>
-            {STAT_KEYS.map(k => (
+            {tabDef.statKeys.map(k => (
               <Field key={k} label={k.toUpperCase()}>
                 <input type="number" min={0} max={100} value={editing[k] ?? 0}
                   onChange={e => upd(k, e.target.value)} style={inputStyle} />
