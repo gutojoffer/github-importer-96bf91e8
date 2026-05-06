@@ -191,6 +191,7 @@ const App = () => {
                           <Route path="/notificacoes" element={<BladerNotificacoes />} />
                           <Route path="/profile/:userId" element={<BladerProfile />} />
                           <Route path="/profile/by-name/:name" element={<BladerProfile />} />
+                          <Route path="/perfil/:id" element={<PerfilPublico />} />
                           <Route path="/settings" element={<Settings />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
