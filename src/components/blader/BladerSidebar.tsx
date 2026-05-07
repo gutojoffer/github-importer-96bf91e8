@@ -6,6 +6,7 @@ import { Home, Trophy, Clock, Star, User, Settings, LogOut, ChevronRight, Wrench
 import BladerAvatar from '@/components/BladerAvatar';
 import { getBladerPalette } from '@/lib/bladerColors';
 import { useNotificacoesNaoLidas } from '@/hooks/useNotificacoesNaoLidas';
+import { AmigosSidebar } from './AmigosSidebar';
 
 const NAV_ITEMS = [
   { title: 'Home', url: '/blader/home', icon: Home },
@@ -202,6 +203,8 @@ export function BladerSidebar() {
             );
           })}
         </nav>
+
+        <AmigosSidebar />
       </div>
 
       {/* Footer */}
