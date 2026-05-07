@@ -17,6 +17,7 @@ import {
 } from 'recharts';
 import { ELOS, getElo, getProximoElo } from '@/lib/elo';
 import DashboardInsights from '@/components/blader/DashboardInsights';
+import { PedidosAmizade } from '@/components/blader/PedidosAmizade';
 
 interface TournamentRow {
   id: string;
@@ -322,6 +323,8 @@ export default function BladerHome() {
 
       {abaAtiva === 'Visão Geral' && (
         <>
+          <PedidosAmizade />
+
           {/* Stats grid 3x2 */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {statsGrid.map(s => (
