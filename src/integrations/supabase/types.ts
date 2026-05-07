@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      amizades: {
+        Row: {
+          created_at: string | null
+          destinatario_id: string | null
+          id: string
+          solicitante_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          destinatario_id?: string | null
+          id?: string
+          solicitante_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          destinatario_id?: string | null
+          id?: string
+          solicitante_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       bey_assist_blades: {
         Row: {
           created_at: string | null
@@ -550,6 +577,30 @@ export type Database = {
           },
         ]
       }
+      feed_atividades: {
+        Row: {
+          created_at: string | null
+          dados: Json | null
+          id: string
+          tipo: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dados?: Json | null
+          id?: string
+          tipo: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dados?: Json | null
+          id?: string
+          tipo?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       historico_elo: {
         Row: {
           created_at: string | null
@@ -775,6 +826,24 @@ export type Database = {
           name?: string
           nickname?: string
           xp?: number
+        }
+        Relationships: []
+      }
+      presenca_online: {
+        Row: {
+          online: boolean | null
+          ultimo_visto: string | null
+          user_id: string
+        }
+        Insert: {
+          online?: boolean | null
+          ultimo_visto?: string | null
+          user_id: string
+        }
+        Update: {
+          online?: boolean | null
+          ultimo_visto?: string | null
+          user_id?: string
         }
         Relationships: []
       }
