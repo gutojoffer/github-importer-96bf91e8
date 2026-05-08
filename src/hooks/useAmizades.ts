@@ -242,6 +242,22 @@ export function useAmizades() {
     });
   }
 
+  async function amigosEmComum(outroUserId: string): Promise<BladerAmigo[]> {
+    if (!user) return [];
+    const meusIds = new Set(amigos.map(a => a.id));
+    const { data } = await supabase
+      .from('amizades')
+      .select('solicitante_id, destinatario_id, status')
+      .or(`solicitante_id.eq.${outroUserId},destinatario_id.eq.${outroUserId}`)
+      .eq('status', 'aceita');
+    const outrosIds = (data || [])
+      .map((r: any) => r.solicitante_id === outroUserId ? r.destinatario_id : r.solicitante_id)
+      .filter((id: string) => meusIds.has(id) && id !== user.id);
+    if (outrosIds.length === 0) return [];
+    const enriched = await fetchProfilesEnriched(outrosIds);
+    return Object.values(enriched);
+  }
+
   return {
     amigos,
     pendentes,
@@ -251,8 +267,10 @@ export function useAmizades() {
     recusarAmizade,
     removerAmigo,
     buscarBladers,
+    amigosEmComum,
     amigosOnline: amigos.filter(a => a.online),
     amigosOffline: amigos.filter(a => !a.online),
     recarregar: () => { carregarAmigos(); carregarPendentes(); },
   };
 }
+
