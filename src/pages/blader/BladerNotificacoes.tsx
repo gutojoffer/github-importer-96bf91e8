@@ -12,6 +12,11 @@ const TIPOS_BLADER = [
   'torneio_amanha',
   'conquista',
   'vinculacao',
+  'torre_x_resultado',
+  'torre_x_desafio',
+  'torre_x_aceito',
+  'pedido_amizade',
+  'amizade_aceita',
 ] as const;
 
 type Filtro = 'Todas' | 'Torneios' | 'Conquistas' | 'Sistema';
