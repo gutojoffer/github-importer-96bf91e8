@@ -18,6 +18,9 @@ import {
 import { ELOS, getElo, getProximoElo } from '@/lib/elo';
 import DashboardInsights from '@/components/blader/DashboardInsights';
 import { PedidosAmizade } from '@/components/blader/PedidosAmizade';
+import { FeedAmigos } from '@/components/blader/FeedAmigos';
+import { PainelAmigos } from '@/components/blader/PainelAmigos';
+import { useAmizades } from '@/hooks/useAmizades';
 
 interface TournamentRow {
   id: string;
@@ -99,6 +102,8 @@ export default function BladerHome() {
   const [selectedTournament, setSelectedTournament] = useState<TournamentRow | null>(null);
   const [confirmandoDesistencia, setConfirmandoDesistencia] = useState<TournamentRow | null>(null);
   const [abaAtiva, setAbaAtiva] = useState<Aba>('Visão Geral');
+  const { amigos } = useAmizades();
+  const temAmigos = amigos.length > 0;
 
   const bladerName = profile?.nomeBlader || profile?.nome || null;
   const bladerAvatar = profile?.avatarBladerUrl || profile?.avatarUrl || null;
@@ -247,7 +252,8 @@ export default function BladerHome() {
   ];
 
   return (
-    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-5">
+    <div className="p-4 md:p-6 mx-auto" style={{ maxWidth: temAmigos ? 1200 : 1024, display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+      <div className="space-y-5" style={{ flex: 1, minWidth: 0 }}>
       {/* Welcome / Hero */}
       <div
         className="rounded-2xl p-5 md:p-6 flex items-center gap-4 md:gap-5"
@@ -324,6 +330,7 @@ export default function BladerHome() {
       {abaAtiva === 'Visão Geral' && (
         <>
           <PedidosAmizade />
+          <FeedAmigos />
 
           {/* Stats grid 3x2 */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -447,6 +454,8 @@ export default function BladerHome() {
           </div>
         </div>
       )}
+      </div>
+      {temAmigos && <PainelAmigos />}
     </div>
   );
 }

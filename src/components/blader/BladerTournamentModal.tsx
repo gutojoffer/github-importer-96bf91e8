@@ -291,6 +291,16 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
     await refreshDetails();
     onInscrito?.();
 
+    // Feed de atividades
+    try {
+      const { registrarAtividadeFeed } = await import('@/utils/feedUtils');
+      await registrarAtividadeFeed(user.id, 'torneio_inscricao', {
+        torneio_nome: tournament.name,
+        torneio_id: tournament.id,
+        data: tournament.horario_inicio || tournament.date,
+      });
+    } catch {}
+
     if (tournament.liga_id) {
       const { data: profile } = await supabase.from('profiles').select('nome_blader').eq('id', user.id).maybeSingle();
       const bladerNome = (profile as any)?.nome_blader || 'Um blader';

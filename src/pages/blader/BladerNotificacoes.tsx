@@ -12,6 +12,11 @@ const TIPOS_BLADER = [
   'torneio_amanha',
   'conquista',
   'vinculacao',
+  'torre_x_resultado',
+  'torre_x_desafio',
+  'torre_x_aceito',
+  'pedido_amizade',
+  'amizade_aceita',
 ] as const;
 
 type Filtro = 'Todas' | 'Torneios' | 'Conquistas' | 'Sistema';
@@ -74,6 +79,20 @@ function configTipo(n: Notificacao): TipoConfig {
       corBorder: 'rgba(16,185,129,.12)',
       icone: '🔗',
       titulo: 'Perfil vinculado',
+    },
+    pedido_amizade: {
+      cor: '#00DCFF',
+      corBg: 'rgba(0,220,255,.06)',
+      corBorder: 'rgba(0,220,255,.12)',
+      icone: '👋',
+      titulo: 'Pedido de amizade',
+    },
+    amizade_aceita: {
+      cor: '#34D399',
+      corBg: 'rgba(16,185,129,.06)',
+      corBorder: 'rgba(16,185,129,.12)',
+      icone: '✅',
+      titulo: 'Amizade aceita',
     },
   };
   return (
