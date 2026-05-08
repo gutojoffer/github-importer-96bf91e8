@@ -454,6 +454,8 @@ export default function BladerHome() {
           </div>
         </div>
       )}
+      </div>
+      {temAmigos && <PainelAmigos />}
     </div>
   );
 }
