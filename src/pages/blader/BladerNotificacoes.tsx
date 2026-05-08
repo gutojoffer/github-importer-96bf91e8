@@ -80,6 +80,20 @@ function configTipo(n: Notificacao): TipoConfig {
       icone: '🔗',
       titulo: 'Perfil vinculado',
     },
+    pedido_amizade: {
+      cor: '#00DCFF',
+      corBg: 'rgba(0,220,255,.06)',
+      corBorder: 'rgba(0,220,255,.12)',
+      icone: '👋',
+      titulo: 'Pedido de amizade',
+    },
+    amizade_aceita: {
+      cor: '#34D399',
+      corBg: 'rgba(16,185,129,.06)',
+      corBorder: 'rgba(16,185,129,.12)',
+      icone: '✅',
+      titulo: 'Amizade aceita',
+    },
   };
   return (
     map[n.tipo] || {
