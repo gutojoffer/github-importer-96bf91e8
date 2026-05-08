@@ -330,6 +330,7 @@ export default function BladerHome() {
       {abaAtiva === 'Visão Geral' && (
         <>
           <PedidosAmizade />
+          <FeedAmigos />
 
           {/* Stats grid 3x2 */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
