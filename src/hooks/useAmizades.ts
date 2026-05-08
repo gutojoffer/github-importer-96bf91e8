@@ -125,7 +125,7 @@ export function useAmizades() {
 
     const interval = setInterval(atualizarPresenca, 30000);
 
-    const channel = supabase.channel(`amizades-${user.id}`)
+    const channel = supabase.channel(`amizades-${user.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'amizades', filter: `destinatario_id=eq.${user.id}` }, () => carregarPendentes())
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'amizades', filter: `solicitante_id=eq.${user.id}` }, () => carregarAmigos())
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'amizades', filter: `destinatario_id=eq.${user.id}` }, () => { carregarAmigos(); carregarPendentes(); })
