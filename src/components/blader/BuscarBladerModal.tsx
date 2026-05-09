@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAmizades } from '@/hooks/useAmizades';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const ELOS_COR: Record<string, string> = {
   Ferro: '#9CA3AF', Bronze: '#CD7F32', Prata: '#C0C0C0',
@@ -52,6 +53,7 @@ export function BuscarBladerModal({ aberto, onFechar }: { aberto: boolean; onFec
   const [loadingRec, setLoadingRec] = useState(true);
   const { enviarSolicitacao, amigos } = useAmizades();
   const inputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
   const carregarRecomendacoes = useCallback(async () => {
     setLoadingRec(true);
@@ -170,20 +172,22 @@ export function BuscarBladerModal({ aberto, onFechar }: { aberto: boolean; onFec
   return (
     <>
       <div onClick={onFechar} style={{
-        position: 'fixed', inset: 0, zIndex: 200,
-        background: 'rgba(0,0,0,.65)', backdropFilter: 'blur(4px)',
+        position: 'fixed', inset: 0, zIndex: 9998,
+        background: 'rgba(0,0,0,.75)', backdropFilter: 'blur(6px)',
+        WebkitBackdropFilter: 'blur(6px)',
       }} />
       <div style={{
         position: 'fixed', top: '50%', left: '50%',
         transform: 'translate(-50%,-50%)',
-        zIndex: 201, width: 'calc(100% - 32px)', maxWidth: 480,
+        zIndex: 9999, width: 'calc(100% - 32px)', maxWidth: 560,
         background: '#0d1120',
         border: '1px solid rgba(0,220,255,.2)',
         borderRadius: 16,
-        boxShadow: '0 24px 64px rgba(0,0,0,.7)',
+        boxShadow: '0 24px 64px rgba(0,0,0,.8)',
         overflow: 'hidden',
         display: 'flex', flexDirection: 'column',
         maxHeight: '80vh',
+        isolation: 'isolate',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -279,103 +283,124 @@ export function BuscarBladerModal({ aberto, onFechar }: { aberto: boolean; onFec
             </div>
           )}
 
-          {!loadingBusca && lista.map(blader => (
-            <BuscarBladerItem
-              key={blader.id}
-              blader={blader}
-              onAdicionar={() => handleAdicionar(blader.id)}
-            />
-          ))}
+          {!loadingBusca && lista.length > 0 && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+              gap: 8,
+              padding: '10px 14px 14px',
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(0,220,255,.1) transparent',
+            }}>
+              {lista.map(blader => (
+                <BuscarBladerCard
+                  key={blader.id}
+                  blader={blader}
+                  onAdicionar={() => handleAdicionar(blader.id)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>
   );
 }
 
-function BuscarBladerItem({ blader, onAdicionar }: { blader: any; onAdicionar: () => void }) {
+function BuscarBladerCard({ blader, onAdicionar }: { blader: any; onAdicionar: () => void }) {
   const eloCor = ELOS_COR[blader.elo?.elo || 'Ferro'] || '#9CA3AF';
-  const winrate = blader.torneios_total > 0
-    ? Math.round((blader.vitorias_total / blader.torneios_total) * 100) : 0;
 
   return (
-    <div
-      style={{
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: '11px 14px',
-        borderBottom: '1px solid rgba(255,255,255,.04)',
-        transition: 'background .1s',
-      }}
-      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.03)')}
-      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+    <div style={{
+      background: '#111827',
+      border: '1px solid rgba(255,255,255,.07)',
+      borderRadius: 12,
+      padding: '12px 10px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 7,
+      textAlign: 'center',
+      transition: 'border-color .15s',
+    }}
+    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,220,255,.18)'; }}
+    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,.07)'; }}
     >
       <div style={{
-        width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+        width: 52, height: 52, borderRadius: '50%',
         background: blader.avatar_blader_url
           ? `url(${blader.avatar_blader_url}) center/cover`
           : `${eloCor}15`,
-        border: `2px solid ${eloCor}30`,
+        border: `2px solid ${eloCor}35`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 16, fontWeight: 700, color: eloCor, overflow: 'hidden',
+        fontSize: 18, fontWeight: 700, color: eloCor, overflow: 'hidden',
+        flexShrink: 0,
       }}>
-        {!blader.avatar_blader_url && blader.nome_blader?.charAt(0)}
+        {!blader.avatar_blader_url && blader.nome_blader?.charAt(0)?.toUpperCase()}
       </div>
 
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          fontFamily: 'Rajdhani,sans-serif', fontWeight: 700,
-          fontSize: 15, color: '#fff', marginBottom: 3,
-          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-        }}>
-          {blader.nome_blader || 'Blader'}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-          {(blader.cidade_blader || blader.estado_blader) && (
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,.35)' }}>
-              📍 {[blader.cidade_blader, blader.estado_blader].filter(Boolean).join(' · ')}
-            </span>
-          )}
-          {blader.elo && (
-            <span style={{
-              padding: '1px 6px', borderRadius: 4,
-              background: `${eloCor}15`, color: eloCor,
-              border: `1px solid ${eloCor}25`,
-              fontSize: 9, fontWeight: 700,
-            }}>{blader.elo.elo}</span>
-          )}
-          {blader.torneios_total > 0 && (
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,.25)' }}>
-              {blader.torneios_total} torneios · {winrate}% WR
-            </span>
-          )}
-        </div>
+      <div style={{
+        fontFamily: 'Rajdhani, sans-serif', fontWeight: 700,
+        fontSize: 13, color: '#fff',
+        whiteSpace: 'nowrap', overflow: 'hidden',
+        textOverflow: 'ellipsis', width: '100%',
+      }}>
+        {blader.nome_blader}
       </div>
+
+      <div style={{
+        fontSize: 10, color: 'rgba(255,255,255,.35)',
+        whiteSpace: 'nowrap', overflow: 'hidden',
+        textOverflow: 'ellipsis', width: '100%',
+      }}>
+        {blader.cidade_blader ? `📍 ${blader.cidade_blader}` : '—'}
+      </div>
+
+      {blader.elo && (
+        <div style={{
+          padding: '2px 8px', borderRadius: 5,
+          background: `${eloCor}15`, color: eloCor,
+          border: `1px solid ${eloCor}25`,
+          fontSize: 9, fontWeight: 700, letterSpacing: 0.5,
+        }}>
+          {blader.elo.elo}
+        </div>
+      )}
 
       {blader.jaAmigo ? (
         <div style={{
-          padding: '5px 12px', borderRadius: 8, flexShrink: 0,
+          width: '100%', padding: '6px', borderRadius: 8, textAlign: 'center',
           background: 'rgba(16,185,129,.08)',
           border: '1px solid rgba(16,185,129,.15)',
           color: '#34D399', fontSize: 11, fontWeight: 700,
-        }}>✓ Amigos</div>
+        }}>
+          ✓ Amigos
+        </div>
       ) : blader.pendente ? (
         <div style={{
-          padding: '5px 12px', borderRadius: 8, flexShrink: 0,
+          width: '100%', padding: '6px', borderRadius: 8, textAlign: 'center',
           background: 'rgba(245,158,11,.08)',
           border: '1px solid rgba(245,158,11,.15)',
           color: '#FCD34D', fontSize: 11, fontWeight: 700,
-        }}>⏳ Enviado</div>
+        }}>
+          ⏳ Enviado
+        </div>
       ) : (
         <button
           onClick={onAdicionar}
           style={{
-            padding: '6px 14px', borderRadius: 8, flexShrink: 0,
+            width: '100%', padding: '6px', borderRadius: 8,
             background: 'rgba(0,220,255,.1)',
             border: '1px solid rgba(0,220,255,.25)',
-            color: '#00DCFF', fontSize: 12, fontWeight: 700,
-            fontFamily: 'Rajdhani,sans-serif', letterSpacing: 1,
-            cursor: 'pointer',
+            color: '#00DCFF', fontSize: 11, fontWeight: 700,
+            fontFamily: 'Rajdhani, sans-serif', letterSpacing: 1,
+            cursor: 'pointer', transition: 'background .15s',
           }}
-        >+ Adicionar</button>
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,220,255,.2)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,220,255,.1)'; }}
+        >
+          + Adicionar
+        </button>
       )}
     </div>
   );
