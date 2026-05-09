@@ -1,81 +1,214 @@
-import { useEffect, useRef, useState } from 'react';
-import { useAmizades, BladerAmigo } from '@/hooks/useAmizades';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAmizades } from '@/hooks/useAmizades';
 
 const ELOS_COR: Record<string, string> = {
   Ferro: '#9CA3AF', Bronze: '#CD7F32', Prata: '#C0C0C0',
   Ouro: '#F59E0B', Platina: '#00DCFF', Diamante: '#A78BFA',
 };
 
+const PROFILE_FIELDS = 'id, nome_blader, avatar_blader_url, cidade_blader, estado_blader, xp_total, vitorias_total, torneios_total';
+
+async function enrichWithStatusEElo(bladers: any[], userId: string) {
+  if (bladers.length === 0) return [];
+  const ids = bladers.map(b => b.id);
+
+  const { data: temp } = await supabase
+    .from('temporadas').select('id').eq('ativa', true).maybeSingle();
+
+  const [amizadesRes, elosRes] = await Promise.all([
+    supabase.from('amizades')
+      .select('solicitante_id, destinatario_id, status')
+      .or(`and(solicitante_id.eq.${userId},destinatario_id.in.(${ids.join(',')})),and(destinatario_id.eq.${userId},solicitante_id.in.(${ids.join(',')}))`),
+    temp?.id
+      ? supabase.from('elo_bladers').select('user_id, elo, pontos').in('user_id', ids).eq('temporada_id', temp.id)
+      : Promise.resolve({ data: [] as any[] }),
+  ]);
+
+  const amizades = (amizadesRes.data || []) as any[];
+  const eloMap = new Map<string, any>();
+  ((elosRes as any).data || []).forEach((e: any) => eloMap.set(e.user_id, e));
+
+  return bladers.map(b => {
+    const amizade = amizades.find(a =>
+      (a.solicitante_id === userId && a.destinatario_id === b.id) ||
+      (a.destinatario_id === userId && a.solicitante_id === b.id)
+    );
+    return {
+      ...b,
+      elo: eloMap.get(b.id) || null,
+      statusAmizade: amizade?.status || null,
+      jaAmigo: amizade?.status === 'aceita',
+      pendente: amizade?.status === 'pendente',
+    };
+  });
+}
+
 export function BuscarBladerModal({ aberto, onFechar }: { aberto: boolean; onFechar: () => void }) {
   const [busca, setBusca] = useState('');
-  const [resultados, setResultados] = useState<BladerAmigo[]>([]);
-  const [loading, setLoading] = useState(false);
-  const { enviarSolicitacao, buscarBladers } = useAmizades();
+  const [resultados, setResultados] = useState<any[]>([]);
+  const [recomendacoes, setRecomendacoes] = useState<any[]>([]);
+  const [loadingBusca, setLoadingBusca] = useState(false);
+  const [loadingRec, setLoadingRec] = useState(true);
+  const { enviarSolicitacao, amigos } = useAmizades();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (aberto) setTimeout(() => inputRef.current?.focus(), 100);
-    else { setBusca(''); setResultados([]); }
-  }, [aberto]);
+  const carregarRecomendacoes = useCallback(async () => {
+    setLoadingRec(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoadingRec(false); return; }
+
+      const { data: meuPerfil } = await supabase
+        .from('profiles')
+        .select('cidade_blader, estado_blader')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const amigosIds = new Set(amigos.map(a => a.id));
+      let lista: any[] = [];
+
+      if (meuPerfil?.cidade_blader) {
+        const { data } = await supabase
+          .from('profiles')
+          .select(PROFILE_FIELDS)
+          .eq('cidade_blader', meuPerfil.cidade_blader)
+          .eq('tem_perfil_blader', true)
+          .neq('id', user.id)
+          .limit(10);
+        lista = (data || []).filter(b => !amigosIds.has(b.id));
+      }
+
+      if (lista.length < 3 && meuPerfil?.estado_blader) {
+        const { data: doEstado } = await supabase
+          .from('profiles')
+          .select(PROFILE_FIELDS)
+          .eq('estado_blader', meuPerfil.estado_blader)
+          .eq('tem_perfil_blader', true)
+          .neq('id', user.id)
+          .limit(10);
+        const extras = (doEstado || []).filter(b =>
+          !amigosIds.has(b.id) && !lista.find(n => n.id === b.id)
+        );
+        lista.push(...extras);
+      }
+
+      if (lista.length < 3) {
+        const { data: quaisquer } = await supabase
+          .from('profiles')
+          .select(PROFILE_FIELDS)
+          .eq('tem_perfil_blader', true)
+          .neq('id', user.id)
+          .order('xp_total', { ascending: false })
+          .limit(10);
+        const extras = (quaisquer || []).filter(b =>
+          !amigosIds.has(b.id) && !lista.find(n => n.id === b.id)
+        );
+        lista.push(...extras);
+      }
+
+      const comStatus = await enrichWithStatusEElo(lista.slice(0, 10), user.id);
+      setRecomendacoes(comStatus);
+    } catch (e) {
+      console.error('Erro recomendacoes:', e);
+    } finally {
+      setLoadingRec(false);
+    }
+  }, [amigos]);
 
   useEffect(() => {
-    const timer = setTimeout(async () => {
-      if (busca.length < 2) { setResultados([]); return; }
-      setLoading(true);
-      const res = await buscarBladers(busca);
-      setResultados(res);
-      setLoading(false);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [busca, buscarBladers]);
+    if (aberto) {
+      carregarRecomendacoes();
+      setTimeout(() => inputRef.current?.focus(), 100);
+    } else {
+      setBusca('');
+      setResultados([]);
+    }
+  }, [aberto, carregarRecomendacoes]);
+
+  useEffect(() => {
+    if (busca.length < 2) { setResultados([]); return; }
+    const t = setTimeout(async () => {
+      setLoadingBusca(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { setResultados([]); return; }
+        const { data, error } = await supabase
+          .from('profiles')
+          .select(PROFILE_FIELDS)
+          .ilike('nome_blader', `%${busca}%`)
+          .eq('tem_perfil_blader', true)
+          .neq('id', user.id)
+          .limit(10);
+        if (error) { console.error('Erro busca:', error); setResultados([]); return; }
+        const comStatus = await enrichWithStatusEElo(data || [], user.id);
+        setResultados(comStatus);
+      } finally {
+        setLoadingBusca(false);
+      }
+    }, 350);
+    return () => clearTimeout(t);
+  }, [busca]);
 
   if (!aberto) return null;
 
-  async function handleAdicionar(id: string) {
-    const ok = await enviarSolicitacao(id);
-    if (ok) {
-      setResultados(prev => prev.map(b => b.id === id ? { ...b, pendente: true } : b));
-    }
+  const mostrarBusca = busca.length >= 2;
+  const lista = mostrarBusca ? resultados : recomendacoes;
+  const tituloLista = mostrarBusca
+    ? `${resultados.length} resultado${resultados.length !== 1 ? 's' : ''} para "${busca}"`
+    : 'Bladers da sua região';
+
+  function handleAdicionar(id: string) {
+    enviarSolicitacao(id).then(ok => {
+      if (!ok) return;
+      const upd = (arr: any[]) => arr.map(r => r.id === id ? { ...r, pendente: true } : r);
+      setResultados(upd);
+      setRecomendacoes(upd);
+    });
   }
 
   return (
     <>
       <div onClick={onFechar} style={{
         position: 'fixed', inset: 0, zIndex: 200,
-        background: 'rgba(0,0,0,.6)', backdropFilter: 'blur(4px)',
+        background: 'rgba(0,0,0,.65)', backdropFilter: 'blur(4px)',
       }} />
       <div style={{
         position: 'fixed', top: '50%', left: '50%',
         transform: 'translate(-50%,-50%)',
-        zIndex: 201, width: 'calc(100% - 32px)', maxWidth: 460,
+        zIndex: 201, width: 'calc(100% - 32px)', maxWidth: 480,
         background: '#0d1120',
         border: '1px solid rgba(0,220,255,.2)',
         borderRadius: 16,
-        boxShadow: '0 24px 64px rgba(0,0,0,.6)',
+        boxShadow: '0 24px 64px rgba(0,0,0,.7)',
         overflow: 'hidden',
+        display: 'flex', flexDirection: 'column',
+        maxHeight: '80vh',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '14px 16px',
           borderBottom: '1px solid rgba(255,255,255,.06)',
+          flexShrink: 0,
         }}>
           <div style={{
             fontFamily: 'Rajdhani,sans-serif', fontWeight: 700,
             fontSize: 16, color: '#fff', letterSpacing: 1,
-          }}>
-            Adicionar amigo
-          </div>
+          }}>Adicionar amigo</div>
           <button onClick={onFechar} style={{
-            background: 'none', border: 'none',
-            color: 'rgba(255,255,255,.4)', cursor: 'pointer', fontSize: 22, lineHeight: 1,
+            width: 28, height: 28, borderRadius: 8,
+            background: 'rgba(255,255,255,.06)',
+            border: '1px solid rgba(255,255,255,.1)',
+            color: 'rgba(255,255,255,.5)', cursor: 'pointer',
+            fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>×</button>
         </div>
 
-        <div style={{ padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
+        <div style={{ padding: '12px 14px', flexShrink: 0 }}>
           <div style={{ position: 'relative' }}>
             <span style={{
               position: 'absolute', left: 12, top: '50%',
-              transform: 'translateY(-50%)', fontSize: 15, opacity: .35,
+              transform: 'translateY(-50%)', fontSize: 15, color: 'rgba(255,255,255,.3)',
             }}>🔍</span>
             <input
               ref={inputRef}
@@ -83,125 +216,167 @@ export function BuscarBladerModal({ aberto, onFechar }: { aberto: boolean; onFec
               onChange={e => setBusca(e.target.value)}
               placeholder="Buscar pelo nick do blader..."
               style={{
-                width: '100%', padding: '10px 14px 10px 38px',
+                width: '100%', padding: '10px 34px 10px 38px',
                 background: '#111827',
                 border: '1px solid rgba(255,255,255,.1)',
-                borderRadius: 10, color: '#E2E8F0', fontSize: 13, outline: 'none',
+                borderRadius: 10, color: '#E2E8F0',
+                fontSize: 13, outline: 'none',
               }}
             />
+            {busca.length > 0 && (
+              <button onClick={() => setBusca('')} style={{
+                position: 'absolute', right: 10, top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none', border: 'none',
+                color: 'rgba(255,255,255,.3)', cursor: 'pointer', fontSize: 16,
+              }}>×</button>
+            )}
           </div>
-          {busca.length > 0 && busca.length < 2 && (
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.3)', marginTop: 6, paddingLeft: 4 }}>
-              Digite pelo menos 2 caracteres...
+          {busca.length === 1 && (
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.25)', marginTop: 5, paddingLeft: 2 }}>
+              Continue digitando...
             </div>
           )}
         </div>
 
-        <div style={{ maxHeight: 360, overflowY: 'auto' }}>
-          {loading && (
-            <div style={{ padding: 20, textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: 13 }}>
-              Buscando...
+        <div style={{
+          padding: '4px 14px 8px',
+          fontSize: 9, fontWeight: 700, letterSpacing: 2,
+          textTransform: 'uppercase',
+          color: 'rgba(255,255,255,.25)',
+          flexShrink: 0,
+        }}>
+          {loadingBusca ? 'Buscando...' : tituloLista}
+        </div>
+
+        <div style={{ overflowY: 'auto', flex: 1 }}>
+          {loadingBusca && (
+            <div style={{ padding: 24, textAlign: 'center', color: 'rgba(255,255,255,.25)', fontSize: 13 }}>
+              <div style={{ fontSize: 24, marginBottom: 8, opacity: .3 }}>🔍</div>
+              Buscando bladers...
             </div>
           )}
 
-          {!loading && busca.length >= 2 && resultados.length === 0 && (
-            <div style={{ padding: '32px 20px', textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: 13 }}>
-              <div style={{ fontSize: 28, opacity: .2, marginBottom: 8 }}>🔍</div>
-              Nenhum blader encontrado para "{busca}"
+          {!mostrarBusca && loadingRec && (
+            <div style={{ padding: 24, textAlign: 'center', color: 'rgba(255,255,255,.25)', fontSize: 13 }}>
+              Carregando sugestões...
             </div>
           )}
 
-          {resultados.map(blader => {
-            const eloCor = ELOS_COR[blader.elo?.elo || 'Ferro'] || '#9CA3AF';
-            return (
-              <div key={blader.id} style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: '12px 16px',
-                borderBottom: '1px solid rgba(255,255,255,.04)',
-              }}>
-                <div style={{
-                  width: 46, height: 46, borderRadius: '50%', flexShrink: 0,
-                  background: blader.avatar_blader_url
-                    ? `url(${blader.avatar_blader_url}) center/cover`
-                    : `${eloCor}20`,
-                  border: `2px solid ${eloCor}40`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 16, fontWeight: 700, color: eloCor, overflow: 'hidden',
-                }}>
-                  {!blader.avatar_blader_url && (blader.nome_blader?.charAt(0) || '?')}
-                </div>
-
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{
-                    fontFamily: 'Rajdhani,sans-serif', fontWeight: 700,
-                    fontSize: 15, color: '#fff', marginBottom: 2,
-                  }}>
-                    {blader.nome_blader}
-                  </div>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-                    {(blader.cidade_blader || blader.estado_blader) && (
-                      <span style={{ fontSize: 10, color: 'rgba(255,255,255,.35)' }}>
-                        📍 {[blader.cidade_blader, blader.estado_blader].filter(Boolean).join(' · ')}
-                      </span>
-                    )}
-                    {blader.elo && (
-                      <span style={{
-                        padding: '1px 6px', borderRadius: 4,
-                        background: `${eloCor}15`, color: eloCor,
-                        border: `1px solid ${eloCor}25`,
-                        fontSize: 9, fontWeight: 700, letterSpacing: .5,
-                      }}>
-                        {blader.elo.elo}
-                      </span>
-                    )}
-                    {blader.torre && (
-                      <span style={{
-                        padding: '1px 6px', borderRadius: 4,
-                        background: 'rgba(245,158,11,.1)', color: '#F59E0B',
-                        border: '1px solid rgba(245,158,11,.2)',
-                        fontSize: 9, fontWeight: 700,
-                      }}>
-                        🗼 Andar {blader.torre.andar}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,.25)', marginTop: 2 }}>
-                    {blader.torneios_total || 0} torneios · {blader.xp_total || 0} XP
-                  </div>
-                </div>
-
-                {blader.jaAmigo ? (
-                  <div style={{
-                    padding: '5px 12px', borderRadius: 8,
-                    background: 'rgba(16,185,129,.08)',
-                    border: '1px solid rgba(16,185,129,.15)',
-                    color: '#34D399', fontSize: 11, fontWeight: 700, flexShrink: 0,
-                  }}>✓ Amigos</div>
-                ) : blader.pendente ? (
-                  <div style={{
-                    padding: '5px 12px', borderRadius: 8,
-                    background: 'rgba(245,158,11,.08)',
-                    border: '1px solid rgba(245,158,11,.15)',
-                    color: '#FCD34D', fontSize: 11, fontWeight: 700, flexShrink: 0,
-                  }}>⏳ Pendente</div>
-                ) : (
-                  <button
-                    onClick={() => handleAdicionar(blader.id)}
-                    style={{
-                      padding: '6px 14px', borderRadius: 8,
-                      background: 'rgba(0,220,255,.1)',
-                      border: '1px solid rgba(0,220,255,.25)',
-                      color: '#00DCFF', fontSize: 12, fontWeight: 700,
-                      fontFamily: 'Rajdhani,sans-serif', letterSpacing: 1,
-                      cursor: 'pointer', flexShrink: 0,
-                    }}
-                  >+ Adicionar</button>
-                )}
+          {!loadingBusca && mostrarBusca && resultados.length === 0 && (
+            <div style={{ padding: '32px 20px', textAlign: 'center', color: 'rgba(255,255,255,.25)' }}>
+              <div style={{ fontSize: 28, marginBottom: 8, opacity: .2 }}>😕</div>
+              <div style={{ fontSize: 13, marginBottom: 4 }}>Nenhum blader encontrado</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,.2)' }}>
+                Verifique o nick e tente novamente
               </div>
-            );
-          })}
+            </div>
+          )}
+
+          {!mostrarBusca && !loadingRec && recomendacoes.length === 0 && (
+            <div style={{ padding: '32px 20px', textAlign: 'center', color: 'rgba(255,255,255,.25)', fontSize: 13 }}>
+              Sem sugestões por enquanto. Use a busca acima!
+            </div>
+          )}
+
+          {!loadingBusca && lista.map(blader => (
+            <BuscarBladerItem
+              key={blader.id}
+              blader={blader}
+              onAdicionar={() => handleAdicionar(blader.id)}
+            />
+          ))}
         </div>
       </div>
     </>
+  );
+}
+
+function BuscarBladerItem({ blader, onAdicionar }: { blader: any; onAdicionar: () => void }) {
+  const eloCor = ELOS_COR[blader.elo?.elo || 'Ferro'] || '#9CA3AF';
+  const winrate = blader.torneios_total > 0
+    ? Math.round((blader.vitorias_total / blader.torneios_total) * 100) : 0;
+
+  return (
+    <div
+      style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '11px 14px',
+        borderBottom: '1px solid rgba(255,255,255,.04)',
+        transition: 'background .1s',
+      }}
+      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.03)')}
+      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+    >
+      <div style={{
+        width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+        background: blader.avatar_blader_url
+          ? `url(${blader.avatar_blader_url}) center/cover`
+          : `${eloCor}15`,
+        border: `2px solid ${eloCor}30`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 16, fontWeight: 700, color: eloCor, overflow: 'hidden',
+      }}>
+        {!blader.avatar_blader_url && blader.nome_blader?.charAt(0)}
+      </div>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          fontFamily: 'Rajdhani,sans-serif', fontWeight: 700,
+          fontSize: 15, color: '#fff', marginBottom: 3,
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+        }}>
+          {blader.nome_blader || 'Blader'}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          {(blader.cidade_blader || blader.estado_blader) && (
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,.35)' }}>
+              📍 {[blader.cidade_blader, blader.estado_blader].filter(Boolean).join(' · ')}
+            </span>
+          )}
+          {blader.elo && (
+            <span style={{
+              padding: '1px 6px', borderRadius: 4,
+              background: `${eloCor}15`, color: eloCor,
+              border: `1px solid ${eloCor}25`,
+              fontSize: 9, fontWeight: 700,
+            }}>{blader.elo.elo}</span>
+          )}
+          {blader.torneios_total > 0 && (
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,.25)' }}>
+              {blader.torneios_total} torneios · {winrate}% WR
+            </span>
+          )}
+        </div>
+      </div>
+
+      {blader.jaAmigo ? (
+        <div style={{
+          padding: '5px 12px', borderRadius: 8, flexShrink: 0,
+          background: 'rgba(16,185,129,.08)',
+          border: '1px solid rgba(16,185,129,.15)',
+          color: '#34D399', fontSize: 11, fontWeight: 700,
+        }}>✓ Amigos</div>
+      ) : blader.pendente ? (
+        <div style={{
+          padding: '5px 12px', borderRadius: 8, flexShrink: 0,
+          background: 'rgba(245,158,11,.08)',
+          border: '1px solid rgba(245,158,11,.15)',
+          color: '#FCD34D', fontSize: 11, fontWeight: 700,
+        }}>⏳ Enviado</div>
+      ) : (
+        <button
+          onClick={onAdicionar}
+          style={{
+            padding: '6px 14px', borderRadius: 8, flexShrink: 0,
+            background: 'rgba(0,220,255,.1)',
+            border: '1px solid rgba(0,220,255,.25)',
+            color: '#00DCFF', fontSize: 12, fontWeight: 700,
+            fontFamily: 'Rajdhani,sans-serif', letterSpacing: 1,
+            cursor: 'pointer',
+          }}
+        >+ Adicionar</button>
+      )}
+    </div>
   );
 }
