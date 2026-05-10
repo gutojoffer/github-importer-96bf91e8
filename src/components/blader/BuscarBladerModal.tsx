@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAmizades } from '@/hooks/useAmizades';
 import { useIsMobile } from '@/hooks/use-mobile';
