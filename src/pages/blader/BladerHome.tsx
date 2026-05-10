@@ -104,7 +104,9 @@ export default function BladerHome() {
   const [confirmandoDesistencia, setConfirmandoDesistencia] = useState<TournamentRow | null>(null);
   const [abaAtiva, setAbaAtiva] = useState<Aba>('Visão Geral');
   const { amigos } = useAmizades();
+  const isMobile = useIsMobile();
   const temAmigos = amigos.length > 0;
+  const mostrarPainel = temAmigos && !isMobile;
 
   const bladerName = profile?.nomeBlader || profile?.nome || null;
   const bladerAvatar = profile?.avatarBladerUrl || profile?.avatarUrl || null;
