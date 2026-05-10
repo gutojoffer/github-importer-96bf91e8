@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom';
-import { Bell } from 'lucide-react';
+import { Bell, Users } from 'lucide-react';
+import { useState } from 'react';
 import { useNotificacoesNaoLidas } from '@/hooks/useNotificacoesNaoLidas';
+import { useAmizades } from '@/hooks/useAmizades';
+import { PainelAmigos } from './PainelAmigos';
 
 /**
  * Topbar exibida apenas no mobile dentro do BladerLayout.
@@ -8,6 +11,8 @@ import { useNotificacoesNaoLidas } from '@/hooks/useNotificacoesNaoLidas';
  */
 export function BladerMobileTopbar() {
   const naoLidas = useNotificacoesNaoLidas();
+  const { amigos, pendentes } = useAmizades();
+  const [amigosAberto, setAmigosAberto] = useState(false);
 
   return (
     <header
