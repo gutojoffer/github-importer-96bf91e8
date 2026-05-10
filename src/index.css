@@ -72,6 +72,32 @@
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: none;
   }
+  /* Prevenir zoom automático em inputs no iOS/Android Chrome (font-size < 16px dispara zoom) */
+  input, select, textarea {
+    font-size: 16px;
+  }
+  @media (min-width: 768px) {
+    input, select, textarea {
+      font-size: inherit;
+    }
+  }
+  /* Smooth touch scrolling em containers roláveis */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Utilitário de altura dinâmica considerando barra do browser mobile */
+  .full-height {
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+  /* Esconder scrollbar mantendo scroll funcional (tabs horizontais, etc) */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
   /* Tabelas em scroll-x devem ter aviso visual + comportamento mobile-friendly */
   .table-scroll-x {
     overflow-x: auto;
