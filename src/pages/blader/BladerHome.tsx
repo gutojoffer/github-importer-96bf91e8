@@ -21,6 +21,7 @@ import { PedidosAmizade } from '@/components/blader/PedidosAmizade';
 import { FeedAmigos } from '@/components/blader/FeedAmigos';
 import { PainelAmigos } from '@/components/blader/PainelAmigos';
 import { useAmizades } from '@/hooks/useAmizades';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TournamentRow {
   id: string;
@@ -103,7 +104,9 @@ export default function BladerHome() {
   const [confirmandoDesistencia, setConfirmandoDesistencia] = useState<TournamentRow | null>(null);
   const [abaAtiva, setAbaAtiva] = useState<Aba>('Visão Geral');
   const { amigos } = useAmizades();
+  const isMobile = useIsMobile();
   const temAmigos = amigos.length > 0;
+  const mostrarPainel = temAmigos && !isMobile;
 
   const bladerName = profile?.nomeBlader || profile?.nome || null;
   const bladerAvatar = profile?.avatarBladerUrl || profile?.avatarUrl || null;
@@ -252,8 +255,15 @@ export default function BladerHome() {
   ];
 
   return (
-    <div className="p-4 md:p-6 mx-auto" style={{ maxWidth: temAmigos ? 1200 : 1024, display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-      <div className="space-y-5" style={{ flex: 1, minWidth: 0 }}>
+    <div
+      className="p-4 md:p-6 mx-auto"
+      style={{
+        maxWidth: 1024,
+        paddingRight: mostrarPainel ? 264 : undefined,
+        transition: 'padding-right .2s ease',
+      }}
+    >
+      <div className="space-y-5" style={{ minWidth: 0 }}>
       {/* Welcome / Hero */}
       <div
         className="rounded-2xl p-5 md:p-6 flex items-center gap-4 md:gap-5"
@@ -455,7 +465,7 @@ export default function BladerHome() {
         </div>
       )}
       </div>
-      {temAmigos && <PainelAmigos />}
+      {mostrarPainel && <PainelAmigos />}
     </div>
   );
 }

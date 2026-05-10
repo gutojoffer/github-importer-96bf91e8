@@ -26,13 +26,16 @@ export function PainelAmigos() {
   return (
     <>
       <div style={{
-        width: 240, flexShrink: 0,
+        position: 'fixed',
+        top: 54,
+        right: 0,
+        width: 240,
+        height: 'calc(100vh - 54px)',
         background: '#08091a',
-        border: '1px solid rgba(255,255,255,.06)',
-        borderRadius: 14, overflow: 'hidden',
-        position: 'sticky', top: 14,
-        maxHeight: 'calc(100vh - 80px)',
-        display: 'flex', flexDirection: 'column',
+        borderLeft: '1px solid rgba(255,255,255,.06)',
+        display: 'flex',
+        flexDirection: 'column',
+        zIndex: 40,
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
