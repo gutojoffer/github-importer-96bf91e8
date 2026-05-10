@@ -302,7 +302,8 @@ export function BuscarBladerModal({ aberto, onFechar }: { aberto: boolean; onFec
           )}
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
 
