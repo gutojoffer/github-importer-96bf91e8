@@ -255,8 +255,15 @@ export default function BladerHome() {
   ];
 
   return (
-    <div className="p-4 md:p-6 mx-auto" style={{ maxWidth: temAmigos ? 1200 : 1024, display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-      <div className="space-y-5" style={{ flex: 1, minWidth: 0 }}>
+    <div
+      className="p-4 md:p-6 mx-auto"
+      style={{
+        maxWidth: 1024,
+        paddingRight: mostrarPainel ? 264 : undefined,
+        transition: 'padding-right .2s ease',
+      }}
+    >
+      <div className="space-y-5" style={{ minWidth: 0 }}>
       {/* Welcome / Hero */}
       <div
         className="rounded-2xl p-5 md:p-6 flex items-center gap-4 md:gap-5"
