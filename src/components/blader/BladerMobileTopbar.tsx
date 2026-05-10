@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom';
-import { Bell } from 'lucide-react';
+import { Bell, Users } from 'lucide-react';
+import { useState } from 'react';
 import { useNotificacoesNaoLidas } from '@/hooks/useNotificacoesNaoLidas';
+import { useAmizades } from '@/hooks/useAmizades';
+import { PainelAmigos } from './PainelAmigos';
 
 /**
  * Topbar exibida apenas no mobile dentro do BladerLayout.
@@ -8,6 +11,8 @@ import { useNotificacoesNaoLidas } from '@/hooks/useNotificacoesNaoLidas';
  */
 export function BladerMobileTopbar() {
   const naoLidas = useNotificacoesNaoLidas();
+  const { pendentes } = useAmizades();
+  const [amigosAberto, setAmigosAberto] = useState(false);
 
   return (
     <header
@@ -36,33 +41,65 @@ export function BladerMobileTopbar() {
         </span>
       </Link>
 
-      <Link
-        to="/blader/notificacoes"
-        aria-label="Notificações"
-        className="relative flex items-center justify-center"
-        style={{
-          width: 40, height: 40, borderRadius: 10,
-          background: 'rgba(255,255,255,.04)',
-          border: '1px solid rgba(255,255,255,.08)',
-        }}
-      >
-        <Bell size={18} strokeWidth={1.6} style={{ color: naoLidas > 0 ? '#FBBF24' : '#94A3B8' }} />
-        {naoLidas > 0 && (
-          <span
-            className="absolute font-body"
-            style={{
-              top: -4, right: -4,
-              minWidth: 18, height: 18, padding: '0 5px',
-              borderRadius: 999, background: '#EF4444',
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 10, fontWeight: 700, color: '#fff', lineHeight: 1,
-              border: '2px solid #080c18',
-            }}
-          >
-            {naoLidas > 99 ? '99+' : naoLidas}
-          </span>
-        )}
-      </Link>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setAmigosAberto(true)}
+          aria-label="Amigos"
+          className="relative flex items-center justify-center"
+          style={{
+            width: 40, height: 40, borderRadius: 10,
+            background: 'rgba(255,255,255,.04)',
+            border: '1px solid rgba(255,255,255,.08)',
+          }}
+        >
+          <Users size={18} strokeWidth={1.6} style={{ color: pendentes.length > 0 ? '#00DCFF' : '#94A3B8' }} />
+          {pendentes.length > 0 && (
+            <span
+              className="absolute font-body"
+              style={{
+                top: -4, right: -4,
+                minWidth: 18, height: 18, padding: '0 5px',
+                borderRadius: 999, background: '#00DCFF',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 10, fontWeight: 700, color: '#000', lineHeight: 1,
+                border: '2px solid #080c18',
+              }}
+            >
+              {pendentes.length}
+            </span>
+          )}
+        </button>
+
+        <Link
+          to="/blader/notificacoes"
+          aria-label="Notificações"
+          className="relative flex items-center justify-center"
+          style={{
+            width: 40, height: 40, borderRadius: 10,
+            background: 'rgba(255,255,255,.04)',
+            border: '1px solid rgba(255,255,255,.08)',
+          }}
+        >
+          <Bell size={18} strokeWidth={1.6} style={{ color: naoLidas > 0 ? '#FBBF24' : '#94A3B8' }} />
+          {naoLidas > 0 && (
+            <span
+              className="absolute font-body"
+              style={{
+                top: -4, right: -4,
+                minWidth: 18, height: 18, padding: '0 5px',
+                borderRadius: 999, background: '#EF4444',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 10, fontWeight: 700, color: '#fff', lineHeight: 1,
+                border: '2px solid #080c18',
+              }}
+            >
+              {naoLidas > 99 ? '99+' : naoLidas}
+            </span>
+          )}
+        </Link>
+      </div>
+
+      {amigosAberto && <PainelAmigos drawer onFechar={() => setAmigosAberto(false)} />}
     </header>
   );
 }

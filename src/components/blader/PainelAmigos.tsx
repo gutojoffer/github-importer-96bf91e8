@@ -10,7 +10,7 @@ const ELOS_COR: Record<string, string> = {
   Ouro: '#F59E0B', Platina: '#00DCFF', Diamante: '#A78BFA',
 };
 
-export function PainelAmigos() {
+export function PainelAmigos({ drawer = false, onFechar }: { drawer?: boolean; onFechar?: () => void } = {}) {
   const { amigos, amigosOnline, amigosOffline } = useAmizades();
   const [busca, setBusca] = useState('');
   const [selecionado, setSelecionado] = useState<BladerAmigo | null>(null);
@@ -25,17 +25,24 @@ export function PainelAmigos() {
 
   return (
     <>
+      {drawer && (
+        <div
+          onClick={onFechar}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 60 }}
+        />
+      )}
       <div style={{
         position: 'fixed',
-        top: 54,
+        top: drawer ? 0 : 54,
         right: 0,
-        width: 240,
-        height: 'calc(100vh - 54px)',
+        width: drawer ? 'min(86vw, 320px)' : 240,
+        height: drawer ? '100vh' : 'calc(100vh - 54px)',
         background: '#08091a',
         borderLeft: '1px solid rgba(255,255,255,.06)',
         display: 'flex',
         flexDirection: 'column',
-        zIndex: 40,
+        zIndex: drawer ? 70 : 40,
+        boxShadow: drawer ? '-8px 0 32px rgba(0,0,0,.5)' : 'none',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
