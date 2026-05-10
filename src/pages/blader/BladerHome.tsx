@@ -21,6 +21,7 @@ import { PedidosAmizade } from '@/components/blader/PedidosAmizade';
 import { FeedAmigos } from '@/components/blader/FeedAmigos';
 import { PainelAmigos } from '@/components/blader/PainelAmigos';
 import { useAmizades } from '@/hooks/useAmizades';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TournamentRow {
   id: string;
