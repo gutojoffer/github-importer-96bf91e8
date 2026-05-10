@@ -11,7 +11,7 @@ import { PainelAmigos } from './PainelAmigos';
  */
 export function BladerMobileTopbar() {
   const naoLidas = useNotificacoesNaoLidas();
-  const { amigos, pendentes } = useAmizades();
+  const { pendentes } = useAmizades();
   const [amigosAberto, setAmigosAberto] = useState(false);
 
   return (
