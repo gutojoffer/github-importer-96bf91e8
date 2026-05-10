@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAmizades } from '@/hooks/useAmizades';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -169,25 +170,23 @@ export function BuscarBladerModal({ aberto, onFechar }: { aberto: boolean; onFec
     });
   }
 
-  return (
+  return createPortal(
     <>
       <div onClick={onFechar} style={{
-        position: 'fixed', inset: 0, zIndex: 9998,
-        background: 'rgba(0,0,0,.75)', backdropFilter: 'blur(6px)',
-        WebkitBackdropFilter: 'blur(6px)',
+        position: 'fixed', inset: 0, zIndex: 99998,
+        background: 'rgba(0,0,0,.85)',
       }} />
       <div style={{
         position: 'fixed', top: '50%', left: '50%',
         transform: 'translate(-50%,-50%)',
-        zIndex: 9999, width: 'calc(100% - 32px)', maxWidth: 560,
+        zIndex: 99999, width: 'calc(100% - 32px)', maxWidth: 560,
         background: '#0d1120',
         border: '1px solid rgba(0,220,255,.2)',
         borderRadius: 16,
-        boxShadow: '0 24px 64px rgba(0,0,0,.8)',
+        boxShadow: '0 32px 80px rgba(0,0,0,.9)',
         overflow: 'hidden',
         display: 'flex', flexDirection: 'column',
         maxHeight: '80vh',
-        isolation: 'isolate',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -303,7 +302,8 @@ export function BuscarBladerModal({ aberto, onFechar }: { aberto: boolean; onFec
           )}
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
 
