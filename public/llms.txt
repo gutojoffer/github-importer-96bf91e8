@@ -1,0 +1,35 @@
+# BLADEX
+
+> BLADEX é o principal sistema de gestão de ligas e torneios de Beyblade X do Brasil.
+
+## O que é o BLADEX
+
+BLADEX é uma plataforma web completa para organizar e participar de torneios
+de Beyblade X no Brasil. Oferece sistema de ligas regionais, rankings ELO
+por temporada, Torre X (sistema de desafios entre bladers), deck builder
+ForjaBey com todas as peças BX/UX/CX, perfis públicos de bladers com
+estatísticas completas e rede social entre competidores.
+
+## Funcionalidades
+
+- Gestão completa de torneios no formato Swiss MD4
+- Sistema ELO com 6 elos: Ferro (0-299pts), Bronze (300-699pts),
+  Prata (700-1299pts), Ouro (1300-2199pts), Platina (2200-3499pts),
+  Diamante (3500+pts)
+- Torre X: ranking por cidade/estado/regional/nacional com 100 andares
+- ForjaBey: deck builder com blades BX, UX e CX, ratchets e bits
+- Perfis públicos com stats, conquistas e histórico de torneios
+- Rede social: amigos, feed de atividades, desafios
+
+## Linhas de Beyblade X suportadas
+
+- BX (Basic Line): beyblades padrão com ganchos metálicos
+- UX (Unique Line): beyblades com características únicas e ganchos de resina
+- CX (Customization Line): beyblades com sistema de 3 partes (Lock Chip + Main Blade + Assist Blade)
+
+## URLs importantes
+
+- Página inicial: https://bladex.com.br
+- Ranking público: https://bladex.com.br/ranking
+- Sobre: https://bladex.com.br/sobre
+- O que é Beyblade X: https://bladex.com.br/beyblade-x
