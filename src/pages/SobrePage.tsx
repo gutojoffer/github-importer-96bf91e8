@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import NavbarPublica from '@/components/public/NavbarPublica';
 
 const features = [
   { icone: '🏆', titulo: 'Gestão de torneios', desc: 'Sistema Swiss MD4 com arena ao vivo, marcação de pontos e geração automática de chaves' },
@@ -12,14 +13,7 @@ const features = [
 export default function SobrePage() {
   return (
     <div style={{ minHeight: '100vh', background: '#070a14', color: '#e7ecf3', fontFamily: 'Montserrat, sans-serif' }}>
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,.06)' }}>
-        <Link to="/" style={{ color: '#00DCFF', fontFamily: 'Rajdhani, sans-serif', fontWeight: 800, fontSize: 22, letterSpacing: 2, textDecoration: 'none' }}>BLADEX</Link>
-        <nav style={{ display: 'flex', gap: 18, fontSize: 14 }}>
-          <Link to="/ranking" style={{ color: '#cbd2dd', textDecoration: 'none' }}>Ranking</Link>
-          <Link to="/beyblade-x" style={{ color: '#cbd2dd', textDecoration: 'none' }}>O que é Beyblade X</Link>
-          <Link to="/login" style={{ color: '#00DCFF', textDecoration: 'none', fontWeight: 700 }}>Entrar</Link>
-        </nav>
-      </header>
+      <NavbarPublica />
 
       <main style={{ maxWidth: 1100, margin: '0 auto', padding: '48px 24px' }}>
         <section style={{ textAlign: 'center', marginBottom: 64 }}>
