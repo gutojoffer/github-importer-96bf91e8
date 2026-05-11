@@ -32,7 +32,7 @@ export default function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center bg-background p-4" style={{ minHeight: '100dvh' }}>
+    <div className="flex items-center justify-center bg-background p-4 relative" style={{ minHeight: '100dvh' }}>
       <div className="w-full max-w-[400px] surface-panel p-8 space-y-6">
         <div className="text-center">
           <h1 className="font-heading text-3xl font-bold tracking-[0.12em]">
@@ -81,6 +81,43 @@ export default function Login() {
             </Link>
           </p>
         </div>
+      </div>
+
+      {/* Links para páginas públicas */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 24,
+          left: 0,
+          right: 0,
+          display: 'flex',
+          gap: 18,
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+          padding: '0 16px',
+        }}
+      >
+        {[
+          { href: '/ranking', label: '🏅 Ranking' },
+          { href: '/torneios-publicos', label: '🏆 Torneios' },
+          { href: '/beyblade-x', label: '⚡ Beyblade X' },
+          { href: '/sobre', label: 'ℹ️ Sobre o BLADEX' },
+        ].map((l) => (
+          <Link
+            key={l.href}
+            to={l.href}
+            style={{
+              color: 'rgba(255,255,255,.4)',
+              textDecoration: 'none',
+              fontSize: 12,
+              transition: 'color .15s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#00DCFF')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,.4)')}
+          >
+            {l.label}
+          </Link>
+        ))}
       </div>
     </div>
   );

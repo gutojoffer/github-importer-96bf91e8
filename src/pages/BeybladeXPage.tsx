@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import NavbarPublica from '@/components/public/NavbarPublica';
 
 const ELOS_INFO = 'Ferro (0-299pts), Bronze (300-699pts), Prata (700-1299pts), Ouro (1300-2199pts), Platina (2200-3499pts), Diamante (3500+pts)';
 
@@ -36,14 +37,7 @@ const secoes = [
 export default function BeybladeXPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#070a14', color: '#e7ecf3', fontFamily: 'Montserrat, sans-serif' }}>
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,.06)' }}>
-        <Link to="/" style={{ color: '#00DCFF', fontFamily: 'Rajdhani, sans-serif', fontWeight: 800, fontSize: 22, letterSpacing: 2, textDecoration: 'none' }}>BLADEX</Link>
-        <nav style={{ display: 'flex', gap: 18, fontSize: 14 }}>
-          <Link to="/sobre" style={{ color: '#cbd2dd', textDecoration: 'none' }}>Sobre</Link>
-          <Link to="/ranking" style={{ color: '#cbd2dd', textDecoration: 'none' }}>Ranking</Link>
-          <Link to="/login" style={{ color: '#00DCFF', textDecoration: 'none', fontWeight: 700 }}>Entrar</Link>
-        </nav>
-      </header>
+      <NavbarPublica />
 
       <main style={{ maxWidth: 900, margin: '0 auto', padding: '48px 24px' }}>
         <h1 style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 44, color: '#00DCFF', margin: 0 }}>O que é Beyblade X?</h1>
@@ -71,7 +65,7 @@ export default function BeybladeXPage() {
         <section style={{ textAlign: 'center', padding: '40px 24px', background: 'linear-gradient(135deg, rgba(0,220,255,.08), rgba(167,139,250,.06))', borderRadius: 16, border: '1px solid rgba(0,220,255,.2)', marginTop: 32 }}>
           <h2 style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 28, color: '#fff', margin: '0 0 12px' }}>Compete em Beyblade X?</h2>
           <p style={{ color: '#cbd2dd', marginBottom: 24 }}>Entre para o BLADEX e apareça nos rankings oficiais do Brasil.</p>
-          <Link to="/cadastro" style={{ background: '#00DCFF', color: '#070a14', padding: '14px 32px', borderRadius: 10, fontWeight: 800, textDecoration: 'none', fontFamily: 'Rajdhani, sans-serif', letterSpacing: 1 }}>Criar conta grátis</Link>
+          <Link to="/login" style={{ background: '#00DCFF', color: '#070a14', padding: '14px 32px', borderRadius: 10, fontWeight: 800, textDecoration: 'none', fontFamily: 'Rajdhani, sans-serif', letterSpacing: 1 }}>Entrar / Criar conta</Link>
         </section>
       </main>
 

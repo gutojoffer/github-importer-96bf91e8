@@ -204,6 +204,27 @@ export function BladerSidebar() {
           })}
         </nav>
 
+        <div style={{ padding: '6px 12px 4px', marginTop: 2 }}>
+          <a
+            href="/ranking"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '7px 10px', borderRadius: 8,
+              color: 'rgba(255,255,255,.3)',
+              textDecoration: 'none', fontSize: 11,
+              transition: 'color .15s',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,.6)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,.3)'; }}
+          >
+            <span style={{ fontSize: 13 }}>🌐</span>
+            <span>Ver site público</span>
+            <span style={{ marginLeft: 'auto', fontSize: 9, color: 'rgba(255,255,255,.2)' }}>↗</span>
+          </a>
+        </div>
+
         <AmigosSidebar />
       </div>
 
