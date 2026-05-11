@@ -33,6 +33,9 @@ import BladerLayout from "@/components/blader/BladerLayout";
 import SelectMode from "@/pages/SelectMode";
 import CriarPerfilBlader from "@/pages/CriarPerfilBlader";
 import CriarPerfilOrganizador from "@/pages/CriarPerfilOrganizador";
+import SobrePage from "@/pages/SobrePage";
+import BeybladeXPage from "@/pages/BeybladeXPage";
+import RankingPublicoPage from "@/pages/RankingPublicoPage";
 
 const BladerHome = lazy(() => import("@/pages/blader/BladerHome"));
 const BladerTournaments = lazy(() => import("@/pages/blader/BladerTournaments"));
@@ -135,6 +138,9 @@ const App = () => {
               <ActiveModeProvider>
                 <Routes>
                   <Route path="/" element={<LandingPage />} />
+                  <Route path="/sobre" element={<SobrePage />} />
+                  <Route path="/beyblade-x" element={<BeybladeXPage />} />
+                  <Route path="/ranking" element={<RankingPublicoPage />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/cadastro" element={<Register />} />
                   <Route path="/setup-admin" element={<SetupAdmin />} />
