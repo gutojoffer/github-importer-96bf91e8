@@ -1,10 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
 
 const LINKS = [
-  { href: '/ranking', label: '🏅 Ranking' },
-  { href: '/torneios-publicos', label: '🏆 Torneios' },
-  { href: '/beyblade-x', label: '⚡ Beyblade X' },
-  { href: '/sobre', label: 'ℹ️ Sobre' },
+  { href: '/ranking', label: 'Ranking' },
+  { href: '/torneios-publicos', label: 'Torneios' },
+  { href: '/beyblade-x', label: 'Beyblade X' },
+  { href: '/sobre', label: 'Sobre' },
 ];
 
 export default function NavbarPublica() {
