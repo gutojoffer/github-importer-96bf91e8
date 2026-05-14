@@ -17,6 +17,9 @@ const TIPOS_BLADER = [
   'torre_x_aceito',
   'pedido_amizade',
   'amizade_aceita',
+  'convite_time',
+  'convite_aceito',
+  'resultado_time',
 ] as const;
 
 type Filtro = 'Todas' | 'Torneios' | 'Conquistas' | 'Sistema';
@@ -93,6 +96,27 @@ function configTipo(n: Notificacao): TipoConfig {
       corBorder: 'rgba(16,185,129,.12)',
       icone: '✅',
       titulo: 'Amizade aceita',
+    },
+    convite_time: {
+      cor: '#00DCFF',
+      corBg: 'rgba(0,220,255,.06)',
+      corBorder: 'rgba(0,220,255,.12)',
+      icone: '👥',
+      titulo: 'Convite para time',
+    },
+    convite_aceito: {
+      cor: '#34D399',
+      corBg: 'rgba(16,185,129,.06)',
+      corBorder: 'rgba(16,185,129,.12)',
+      icone: '✅',
+      titulo: 'Membro entrou no time',
+    },
+    resultado_time: {
+      cor: '#F59E0B',
+      corBg: 'rgba(245,158,11,.08)',
+      corBorder: 'rgba(245,158,11,.15)',
+      icone: '🏆',
+      titulo: 'Resultado do time',
     },
   };
   return (

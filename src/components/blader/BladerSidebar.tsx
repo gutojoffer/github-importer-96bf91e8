@@ -2,10 +2,11 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useActiveMode } from '@/contexts/ActiveModeContext';
-import { Home, Trophy, Clock, Star, User, Settings, LogOut, ChevronRight, Wrench, Bell, Building2 } from 'lucide-react';
+import { Home, Trophy, Clock, Star, User, Settings, LogOut, ChevronRight, Wrench, Bell, Building2, Users } from 'lucide-react';
 import BladerAvatar from '@/components/BladerAvatar';
 import { getBladerPalette } from '@/lib/bladerColors';
 import { useNotificacoesNaoLidas } from '@/hooks/useNotificacoesNaoLidas';
+import { useConvitesTimePendentes } from '@/hooks/useTimes';
 import { AmigosSidebar } from './AmigosSidebar';
 
 const NAV_ITEMS = [
@@ -14,6 +15,7 @@ const NAV_ITEMS = [
   { title: 'Torre X', url: '/blader/torre-x', icon: Building2, isNew: true },
   { title: 'Meu histórico', url: '/blader/history', icon: Clock },
   { title: 'Rankings', url: '/blader/rankings', icon: Star },
+  { title: 'Times', url: '/blader/times', icon: Users, showTimesBadge: true },
   { title: 'Notificações', url: '/blader/notificacoes', icon: Bell, showBadge: true },
 ];
 
@@ -33,6 +35,7 @@ export function BladerSidebar() {
   const { profile } = useUserProfile();
   const { perfis, setMode } = useActiveMode();
   const naoLidas = useNotificacoesNaoLidas();
+  const convitesTime = useConvitesTimePendentes();
 
   const bladerName = perfis.dadosBlader?.nome || profile?.nomeBlader || 'Blader';
   const bladerAvatar = perfis.dadosBlader?.avatar || profile?.avatarBladerUrl || null;
@@ -126,6 +129,19 @@ export function BladerSidebar() {
                     }}
                   >
                     {naoLidas > 99 ? '99+' : naoLidas}
+                  </span>
+                )}
+                {(item as any).showTimesBadge && convitesTime > 0 && (
+                  <span
+                    className="font-body shrink-0"
+                    style={{
+                      minWidth: 18, height: 18, padding: '0 5px',
+                      borderRadius: 999, background: '#00DCFF',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 10, fontWeight: 700, color: '#020617', lineHeight: 1,
+                    }}
+                  >
+                    {convitesTime > 99 ? '99+' : convitesTime}
                   </span>
                 )}
                 {(item as any).isNew && (
