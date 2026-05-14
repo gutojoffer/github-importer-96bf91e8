@@ -44,6 +44,9 @@ const BladerForjaBey = lazy(() => import("@/pages/blader/BladerForjaBey"));
 const BladerNotificacoes = lazy(() => import("@/pages/blader/BladerNotificacoes"));
 const TorreX = lazy(() => import("@/pages/blader/TorreX"));
 const PerfilPublico = lazy(() => import("@/pages/blader/PerfilPublico"));
+const TimesPage = lazy(() => import("@/pages/blader/TimesPage"));
+const CriarTimePage = lazy(() => import("@/pages/blader/CriarTimePage"));
+const TimePerfilPage = lazy(() => import("@/pages/blader/TimePerfilPage"));
 import NotFound from "./pages/NotFound";
 
 // Lazy-loaded routes
@@ -199,6 +202,9 @@ const App = () => {
                           <Route path="/profile/:userId" element={<BladerProfile />} />
                           <Route path="/profile/by-name/:name" element={<BladerProfile />} />
                           <Route path="/perfil/:id" element={<PerfilPublico />} />
+                          <Route path="/times" element={<TimesPage />} />
+                          <Route path="/times/criar" element={<CriarTimePage />} />
+                          <Route path="/times/:id" element={<TimePerfilPage />} />
                           <Route path="/settings" element={<Settings />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
