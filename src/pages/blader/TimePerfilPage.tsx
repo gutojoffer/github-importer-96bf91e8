@@ -177,18 +177,18 @@ export default function TimePerfilPage() {
 
       <ConfirmDialog
         open={confirmSair}
+        onOpenChange={(o) => !o && setConfirmSair(false)}
         title="Sair do time?"
         description={`Você deixará o time "${time.nome}". Pode entrar novamente apenas com novo convite.`}
-        confirmText="Sair"
-        onCancel={() => setConfirmSair(false)}
+        confirmLabel="Sair"
         onConfirm={async () => { setConfirmSair(false); await sairDoTime(time.id); navigate('/blader/times'); }}
       />
       <ConfirmDialog
         open={!!removerAlvo}
+        onOpenChange={(o) => !o && setRemoverAlvo(null)}
         title="Remover membro?"
         description="O blader será removido do time imediatamente."
-        confirmText="Remover"
-        onCancel={() => setRemoverAlvo(null)}
+        confirmLabel="Remover"
         onConfirm={async () => { if (removerAlvo) { await removerMembro(time.id, removerAlvo); setRemoverAlvo(null); } }}
       />
     </div>
