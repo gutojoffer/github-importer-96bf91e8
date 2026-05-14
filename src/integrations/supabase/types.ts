@@ -456,6 +456,67 @@ export type Database = {
         }
         Relationships: []
       }
+      confrontos_times: {
+        Row: {
+          created_at: string | null
+          id: string
+          pontos_time_a: number | null
+          pontos_time_b: number | null
+          rodada: number
+          status: string | null
+          time_a_id: string | null
+          time_b_id: string | null
+          torneio_id: string
+          vencedor_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          pontos_time_a?: number | null
+          pontos_time_b?: number | null
+          rodada: number
+          status?: string | null
+          time_a_id?: string | null
+          time_b_id?: string | null
+          torneio_id: string
+          vencedor_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          pontos_time_a?: number | null
+          pontos_time_b?: number | null
+          rodada?: number
+          status?: string | null
+          time_a_id?: string | null
+          time_b_id?: string | null
+          torneio_id?: string
+          vencedor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "confrontos_times_time_a_id_fkey"
+            columns: ["time_a_id"]
+            isOneToOne: false
+            referencedRelation: "times"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "confrontos_times_time_b_id_fkey"
+            columns: ["time_b_id"]
+            isOneToOne: false
+            referencedRelation: "times"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "confrontos_times_vencedor_id_fkey"
+            columns: ["vencedor_id"]
+            isOneToOne: false
+            referencedRelation: "times"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conquistas_bladers: {
         Row: {
           concluida: boolean | null
@@ -1000,6 +1061,274 @@ export type Database = {
         }
         Relationships: []
       }
+      time_convites: {
+        Row: {
+          convidado_id: string
+          convidado_por: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          status: string | null
+          time_id: string
+        }
+        Insert: {
+          convidado_id: string
+          convidado_por?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          status?: string | null
+          time_id: string
+        }
+        Update: {
+          convidado_id?: string
+          convidado_por?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          status?: string | null
+          time_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_convites_time_id_fkey"
+            columns: ["time_id"]
+            isOneToOne: false
+            referencedRelation: "times"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      time_historico_elo: {
+        Row: {
+          created_at: string | null
+          id: string
+          motivo: string | null
+          pontos_antes: number | null
+          pontos_depois: number | null
+          time_id: string
+          torneio_id: string | null
+          variacao: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          motivo?: string | null
+          pontos_antes?: number | null
+          pontos_depois?: number | null
+          time_id: string
+          torneio_id?: string | null
+          variacao?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          motivo?: string | null
+          pontos_antes?: number | null
+          pontos_depois?: number | null
+          time_id?: string
+          torneio_id?: string | null
+          variacao?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_historico_elo_time_id_fkey"
+            columns: ["time_id"]
+            isOneToOne: false
+            referencedRelation: "times"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      time_membros: {
+        Row: {
+          derrotas_pelo_time: number | null
+          id: string
+          joined_at: string | null
+          role: string | null
+          status: string | null
+          time_id: string
+          user_id: string
+          vitorias_pelo_time: number | null
+        }
+        Insert: {
+          derrotas_pelo_time?: number | null
+          id?: string
+          joined_at?: string | null
+          role?: string | null
+          status?: string | null
+          time_id: string
+          user_id: string
+          vitorias_pelo_time?: number | null
+        }
+        Update: {
+          derrotas_pelo_time?: number | null
+          id?: string
+          joined_at?: string | null
+          role?: string | null
+          status?: string | null
+          time_id?: string
+          user_id?: string
+          vitorias_pelo_time?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_membros_time_id_fkey"
+            columns: ["time_id"]
+            isOneToOne: false
+            referencedRelation: "times"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      times: {
+        Row: {
+          capitao_id: string
+          cidade: string | null
+          cor: string | null
+          created_at: string | null
+          derrotas_total: number | null
+          descricao: string | null
+          emoji: string | null
+          estado: string | null
+          id: string
+          liga_id: string | null
+          max_membros: number | null
+          nome: string
+          torneios_total: number | null
+          trofeus: number | null
+          updated_at: string | null
+          vitorias_total: number | null
+          xp_total: number | null
+        }
+        Insert: {
+          capitao_id: string
+          cidade?: string | null
+          cor?: string | null
+          created_at?: string | null
+          derrotas_total?: number | null
+          descricao?: string | null
+          emoji?: string | null
+          estado?: string | null
+          id?: string
+          liga_id?: string | null
+          max_membros?: number | null
+          nome: string
+          torneios_total?: number | null
+          trofeus?: number | null
+          updated_at?: string | null
+          vitorias_total?: number | null
+          xp_total?: number | null
+        }
+        Update: {
+          capitao_id?: string
+          cidade?: string | null
+          cor?: string | null
+          created_at?: string | null
+          derrotas_total?: number | null
+          descricao?: string | null
+          emoji?: string | null
+          estado?: string | null
+          id?: string
+          liga_id?: string | null
+          max_membros?: number | null
+          nome?: string
+          torneios_total?: number | null
+          trofeus?: number | null
+          updated_at?: string | null
+          vitorias_total?: number | null
+          xp_total?: number | null
+        }
+        Relationships: []
+      }
+      torneio_time_bladers: {
+        Row: {
+          confirmado: boolean | null
+          derrotas: number | null
+          id: string
+          posicao_na_ordem: number | null
+          time_id: string
+          torneio_id: string
+          user_id: string
+          vitorias: number | null
+        }
+        Insert: {
+          confirmado?: boolean | null
+          derrotas?: number | null
+          id?: string
+          posicao_na_ordem?: number | null
+          time_id: string
+          torneio_id: string
+          user_id: string
+          vitorias?: number | null
+        }
+        Update: {
+          confirmado?: boolean | null
+          derrotas?: number | null
+          id?: string
+          posicao_na_ordem?: number | null
+          time_id?: string
+          torneio_id?: string
+          user_id?: string
+          vitorias?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "torneio_time_bladers_time_id_fkey"
+            columns: ["time_id"]
+            isOneToOne: false
+            referencedRelation: "times"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      torneio_times: {
+        Row: {
+          derrotas: number | null
+          id: string
+          inscrito_em: string | null
+          pontos_totais: number | null
+          posicao_final: number | null
+          status: string | null
+          time_id: string
+          torneio_id: string
+          vitorias: number | null
+          xp_ganho: number | null
+        }
+        Insert: {
+          derrotas?: number | null
+          id?: string
+          inscrito_em?: string | null
+          pontos_totais?: number | null
+          posicao_final?: number | null
+          status?: string | null
+          time_id: string
+          torneio_id: string
+          vitorias?: number | null
+          xp_ganho?: number | null
+        }
+        Update: {
+          derrotas?: number | null
+          id?: string
+          inscrito_em?: string | null
+          pontos_totais?: number | null
+          posicao_final?: number | null
+          status?: string | null
+          time_id?: string
+          torneio_id?: string
+          vitorias?: number | null
+          xp_ganho?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "torneio_times_time_id_fkey"
+            columns: ["time_id"]
+            isOneToOne: false
+            referencedRelation: "times"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       torre_x_desafios: {
         Row: {
           cidade: string | null
@@ -1249,6 +1578,7 @@ export type Database = {
         Returns: undefined
       }
       calcular_nivel_blader: { Args: { _xp: number }; Returns: string }
+      calcular_stats_time: { Args: { p_time_id: string }; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
