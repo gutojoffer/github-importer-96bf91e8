@@ -166,8 +166,8 @@ export function useTimes() {
       id: r.id,
       created_at: r.created_at,
       time: (timeMap.get(r.time_id) as any) || null,
-      convidado_por_nome: r.convidado_por ? profMap.get(r.convidado_por) || null : null,
-    })));
+      convidado_por_nome: r.convidado_por ? ((profMap.get(r.convidado_por) as string | null) ?? null) : null,
+    })) as ConviteTime[]);
   }, [user]);
 
   useEffect(() => {
