@@ -1146,6 +1146,32 @@ export default function TournamentHub() {
             <p style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', textAlign: 'right', marginTop: 4 }}>{tDescricao.length}/200</p>
           </div>
 
+          {/* Modalidade */}
+          <div style={sectionStyle}>Modalidade{sectionLine}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {([
+              { v: 'individual' as const, icon: '👤', titulo: 'Individual', desc: 'Bladers competem sozinhos' },
+              { v: 'times' as const, icon: '👥', titulo: 'Em times', desc: 'Inscrição por equipe' },
+            ]).map(opt => {
+              const ativo = tModalidade === opt.v;
+              return (
+                <button key={opt.v} type="button" onClick={() => setTModalidade(opt.v)}
+                  style={{
+                    padding: '12px 14px', textAlign: 'left', borderRadius: 12, cursor: 'pointer',
+                    background: ativo ? 'rgba(37,99,235,.12)' : 'rgba(255,255,255,.02)',
+                    border: ativo ? '1px solid rgba(37,99,235,.45)' : '1px solid rgba(255,255,255,.08)',
+                    transition: 'all .15s', display: 'flex', gap: 10, alignItems: 'center',
+                  }}>
+                  <span style={{ fontSize: 22 }}>{opt.icon}</span>
+                  <span>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: ativo ? '#60A5FA' : '#fff' }}>{opt.titulo}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 2 }}>{opt.desc}</div>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
           {/* Data e horário */}
           <div style={sectionStyle}>Data e horário{sectionLine}</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
