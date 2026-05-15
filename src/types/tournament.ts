@@ -102,6 +102,8 @@ export interface Tournament {
   regras?: string;
   ligaId?: string;
   enrolledCount?: number;
+  /** Modalidade do torneio: individual (default) ou em times */
+  modalidade?: 'individual' | 'times';
 }
 
 export interface TournamentStanding {
