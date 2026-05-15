@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ChevronRight, ChevronLeft, Search, UserPlus, Bell } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAmizades, BladerAmigo } from '@/hooks/useAmizades';
@@ -10,108 +11,220 @@ const ELOS_COR: Record<string, string> = {
   Ouro: '#F59E0B', Platina: '#00DCFF', Diamante: '#A78BFA',
 };
 
+const STORAGE_KEY = 'blader.painelAmigos.colapsado';
+const WIDTH_OPEN = 264;
+const WIDTH_COLLAPSED = 60;
+
+/** Hook compartilhado: lê/escreve o estado de colapso em localStorage e dispara evento entre instâncias. */
+export function usePainelAmigosColapsado() {
+  const [colapsado, setColapsado] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem(STORAGE_KEY) === '1';
+  });
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) setColapsado(e.newValue === '1');
+    };
+    const onCustom = (e: Event) => {
+      setColapsado((e as CustomEvent<boolean>).detail);
+    };
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('blader:painelAmigos:toggle' as any, onCustom);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('blader:painelAmigos:toggle' as any, onCustom);
+    };
+  }, []);
+
+  const setAndPersist = useCallback((v: boolean) => {
+    setColapsado(v);
+    localStorage.setItem(STORAGE_KEY, v ? '1' : '0');
+    window.dispatchEvent(new CustomEvent('blader:painelAmigos:toggle', { detail: v }));
+  }, []);
+
+  return { colapsado, setColapsado: setAndPersist, larguraPainel: colapsado ? WIDTH_COLLAPSED : WIDTH_OPEN };
+}
+
 export function PainelAmigos({ drawer = false, onFechar }: { drawer?: boolean; onFechar?: () => void } = {}) {
-  const { amigos, amigosOnline, amigosOffline } = useAmizades();
+  const { amigos, amigosOnline, amigosOffline, pendentes } = useAmizades();
   const [busca, setBusca] = useState('');
   const [selecionado, setSelecionado] = useState<BladerAmigo | null>(null);
   const [modalBusca, setModalBusca] = useState(false);
   const navigate = useNavigate();
+  const { colapsado, setColapsado } = usePainelAmigosColapsado();
+
+  // No modo drawer (mobile) sempre abre expandido
+  const isCollapsed = drawer ? false : colapsado;
 
   const filtrar = (lista: BladerAmigo[]) =>
     !busca ? lista : lista.filter(a => (a.nome_blader || '').toLowerCase().includes(busca.toLowerCase()));
 
   const onOnline = filtrar(amigosOnline);
   const offOff = filtrar(amigosOffline);
+  const totalNotificacoes = pendentes.length;
 
   return (
     <>
       {drawer && (
-        <div
-          onClick={onFechar}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 60 }}
-        />
+        <div onClick={onFechar} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 60 }} />
       )}
-      <div style={{
+
+      <aside style={{
         position: 'fixed',
         top: drawer ? 0 : 54,
         right: 0,
-        width: drawer ? 'min(86vw, 320px)' : 240,
+        width: drawer ? 'min(86vw, 320px)' : (isCollapsed ? WIDTH_COLLAPSED : WIDTH_OPEN),
         height: drawer ? '100vh' : 'calc(100vh - 54px)',
-        background: '#08091a',
+        background: 'linear-gradient(180deg, #0a0d1a 0%, #07091a 100%)',
         borderLeft: '1px solid rgba(255,255,255,.06)',
-        display: 'flex',
-        flexDirection: 'column',
+        display: 'flex', flexDirection: 'column',
         zIndex: drawer ? 70 : 40,
         boxShadow: drawer ? '-8px 0 32px rgba(0,0,0,.5)' : 'none',
+        transition: 'width .22s cubic-bezier(.4,0,.2,1)',
+        overflow: 'hidden',
       }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '11px 13px',
-          borderBottom: '1px solid rgba(255,255,255,.05)',
-          flexShrink: 0,
-        }}>
-          <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 13, color: '#fff' }}>
-            Amigos
-            <span style={{
-              marginLeft: 7, padding: '1px 6px', borderRadius: 20,
-              background: 'rgba(255,255,255,.06)',
-              border: '1px solid rgba(255,255,255,.08)',
-              color: 'rgba(255,255,255,.4)', fontSize: 9, fontWeight: 700,
-            }}>{amigos.length}</span>
-          </div>
-          <button onClick={() => setModalBusca(true)} style={{
-            padding: '4px 10px', borderRadius: 7,
-            background: 'rgba(0,220,255,.08)',
-            border: '1px solid rgba(0,220,255,.2)',
-            color: '#00DCFF', fontSize: 11, fontWeight: 700,
-            fontFamily: 'Rajdhani,sans-serif', cursor: 'pointer',
-          }}>+ Add</button>
-        </div>
-
-        <div style={{ padding: '8px 10px', borderBottom: '1px solid rgba(255,255,255,.04)', flexShrink: 0 }}>
-          <input
-            value={busca}
-            onChange={e => setBusca(e.target.value)}
-            placeholder="Buscar nos amigos..."
+        {/* Botão de colapso flutuante (apenas desktop) */}
+        {!drawer && (
+          <button
+            onClick={() => setColapsado(!colapsado)}
+            title={isCollapsed ? 'Expandir amigos' : 'Recolher amigos'}
             style={{
-              width: '100%', padding: '6px 10px',
-              background: '#111827', border: '1px solid rgba(255,255,255,.07)',
-              borderRadius: 8, color: '#E2E8F0', fontSize: 11, outline: 'none',
+              position: 'absolute', top: 14, left: -12, zIndex: 2,
+              width: 24, height: 24, borderRadius: '50%',
+              background: '#0d1120', border: '1px solid rgba(0,220,255,.3)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#00DCFF', cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(0,0,0,.4)',
             }}
-          />
-        </div>
+          >
+            {isCollapsed ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+          </button>
+        )}
 
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          {amigos.length === 0 ? (
-            <div style={{ padding: '28px 14px', textAlign: 'center', color: 'rgba(255,255,255,.2)', fontSize: 12 }}>
-              <div style={{ fontSize: 24, opacity: .2, marginBottom: 8 }}>👥</div>
-              Nenhum amigo ainda
-              <div onClick={() => setModalBusca(true)} style={{ marginTop: 10, fontSize: 11, color: 'rgba(0,220,255,.5)', cursor: 'pointer' }}>
-                Adicionar amigos →
+        {isCollapsed ? (
+          <CollapsedRail
+            amigosOnline={amigosOnline}
+            totalNotificacoes={totalNotificacoes}
+            onAbrir={() => setColapsado(false)}
+            onAdd={() => { setColapsado(false); setModalBusca(true); }}
+            onSelecionar={a => { setColapsado(false); setSelecionado(a); }}
+          />
+        ) : (
+          <>
+            {/* Header */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '12px 14px',
+              borderBottom: '1px solid rgba(255,255,255,.05)',
+              flexShrink: 0,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className="font-heading" style={{ fontWeight: 700, fontSize: 14, color: '#fff', letterSpacing: 0.3 }}>
+                  Amigos
+                </span>
+                <span style={{
+                  padding: '1px 7px', borderRadius: 999,
+                  background: 'rgba(0,220,255,.1)',
+                  border: '1px solid rgba(0,220,255,.25)',
+                  color: '#00DCFF', fontSize: 10, fontWeight: 700,
+                }}>{amigos.length}</span>
+                {totalNotificacoes > 0 && (
+                  <span title={`${totalNotificacoes} pedido(s) de amizade`} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 3,
+                    padding: '1px 7px', borderRadius: 999,
+                    background: 'rgba(255,45,85,.14)',
+                    border: '1px solid rgba(255,45,85,.35)',
+                    color: '#FF6B7A', fontSize: 10, fontWeight: 700,
+                  }}>
+                    <Bell size={9} /> {totalNotificacoes}
+                  </span>
+                )}
+              </div>
+              <button onClick={() => setModalBusca(true)} title="Adicionar amigo" style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                padding: '4px 9px', borderRadius: 7,
+                background: 'rgba(0,220,255,.08)',
+                border: '1px solid rgba(0,220,255,.22)',
+                color: '#00DCFF', fontSize: 11, fontWeight: 700,
+                fontFamily: 'Rajdhani,sans-serif', cursor: 'pointer',
+              }}>
+                <UserPlus size={11} /> Add
+              </button>
+            </div>
+
+            {/* Notificação destacada quando há pedidos */}
+            {totalNotificacoes > 0 && (
+              <button
+                onClick={() => navigate('/blader/home')}
+                style={{
+                  margin: '8px 10px 4px',
+                  padding: '8px 10px',
+                  background: 'linear-gradient(90deg, rgba(255,45,85,.14), rgba(255,45,85,.04))',
+                  border: '1px solid rgba(255,45,85,.3)',
+                  borderRadius: 9,
+                  color: '#FFB4BC',
+                  fontSize: 11.5, fontWeight: 600, fontFamily: 'Montserrat,sans-serif',
+                  cursor: 'pointer', textAlign: 'left',
+                  display: 'flex', alignItems: 'center', gap: 7,
+                }}
+              >
+                <span style={{ fontSize: 14 }}>👋</span>
+                <span style={{ flex: 1 }}>
+                  {totalNotificacoes} novo{totalNotificacoes > 1 ? 's' : ''} pedido{totalNotificacoes > 1 ? 's' : ''} de amizade
+                </span>
+              </button>
+            )}
+
+            {/* Search */}
+            <div style={{ padding: '8px 10px 10px', borderBottom: '1px solid rgba(255,255,255,.04)', flexShrink: 0 }}>
+              <div style={{ position: 'relative' }}>
+                <Search size={12} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,.3)' }} />
+                <input
+                  value={busca}
+                  onChange={e => setBusca(e.target.value)}
+                  placeholder="Buscar nos amigos..."
+                  style={{
+                    width: '100%', padding: '7px 10px 7px 26px',
+                    background: 'rgba(255,255,255,.03)',
+                    border: '1px solid rgba(255,255,255,.07)',
+                    borderRadius: 8, color: '#E2E8F0', fontSize: 11.5, outline: 'none',
+                    fontFamily: 'Montserrat,sans-serif',
+                  }}
+                />
               </div>
             </div>
-          ) : (
-            <>
-              {onOnline.length > 0 && (
-                <>
-                  <div style={{ padding: '6px 12px 3px', fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,255,255,.25)' }}>
-                    Online ({onOnline.length})
+
+            {/* Lista */}
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {amigos.length === 0 ? (
+                <div style={{ padding: '34px 14px', textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: 12 }}>
+                  <div style={{ fontSize: 28, opacity: .25, marginBottom: 10 }}>👥</div>
+                  Nenhum amigo ainda
+                  <div onClick={() => setModalBusca(true)} style={{ marginTop: 12, fontSize: 11.5, color: '#00DCFF', cursor: 'pointer', fontWeight: 600 }}>
+                    Adicionar amigos →
                   </div>
-                  {onOnline.map(a => <AmigoRow key={a.id} amigo={a} onClick={() => setSelecionado(a)} />)}
+                </div>
+              ) : (
+                <>
+                  {onOnline.length > 0 && (
+                    <>
+                      <SectionHeader label={`Online · ${onOnline.length}`} dotColor="#10B981" />
+                      {onOnline.map(a => <AmigoRow key={a.id} amigo={a} onClick={() => setSelecionado(a)} />)}
+                    </>
+                  )}
+                  {offOff.length > 0 && (
+                    <>
+                      <SectionHeader label={`Offline · ${offOff.length}`} dotColor="#374151" />
+                      {offOff.map(a => <AmigoRow key={a.id} amigo={a} onClick={() => setSelecionado(a)} />)}
+                    </>
+                  )}
                 </>
               )}
-              {offOff.length > 0 && (
-                <>
-                  <div style={{ padding: '8px 12px 3px', fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,255,255,.25)' }}>
-                    Offline ({offOff.length})
-                  </div>
-                  {offOff.map(a => <AmigoRow key={a.id} amigo={a} onClick={() => setSelecionado(a)} />)}
-                </>
-              )}
-            </>
-          )}
-        </div>
-      </div>
+            </div>
+          </>
+        )}
+      </aside>
 
       <BuscarBladerModal aberto={modalBusca} onFechar={() => setModalBusca(false)} />
 
@@ -127,26 +240,116 @@ export function PainelAmigos({ drawer = false, onFechar }: { drawer?: boolean; o
   );
 }
 
+function SectionHeader({ label, dotColor }: { label: string; dotColor: string }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 6,
+      padding: '10px 14px 4px', fontSize: 9.5, fontWeight: 700,
+      letterSpacing: 1.5, textTransform: 'uppercase',
+      color: 'rgba(255,255,255,.32)',
+    }}>
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor, boxShadow: `0 0 6px ${dotColor}` }} />
+      {label}
+    </div>
+  );
+}
+
+function CollapsedRail({
+  amigosOnline, totalNotificacoes, onAbrir, onAdd, onSelecionar,
+}: {
+  amigosOnline: BladerAmigo[];
+  totalNotificacoes: number;
+  onAbrir: () => void;
+  onAdd: () => void;
+  onSelecionar: (a: BladerAmigo) => void;
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 0', gap: 8, flex: 1 }}>
+      <button onClick={onAbrir} title="Amigos" style={{
+        position: 'relative',
+        width: 36, height: 36, borderRadius: 10,
+        background: 'rgba(0,220,255,.08)',
+        border: '1px solid rgba(0,220,255,.2)',
+        color: '#00DCFF', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 16,
+      }}>
+        👥
+        {totalNotificacoes > 0 && (
+          <span style={{
+            position: 'absolute', top: -4, right: -4,
+            minWidth: 16, height: 16, padding: '0 4px',
+            borderRadius: 999,
+            background: '#FF2D55',
+            color: '#fff', fontSize: 9, fontWeight: 800,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: '2px solid #07091a',
+            fontFamily: 'Montserrat,sans-serif',
+          }}>{totalNotificacoes > 9 ? '9+' : totalNotificacoes}</span>
+        )}
+      </button>
+
+      <button onClick={onAdd} title="Adicionar amigo" style={{
+        width: 36, height: 36, borderRadius: 10,
+        background: 'rgba(255,255,255,.03)',
+        border: '1px solid rgba(255,255,255,.08)',
+        color: 'rgba(255,255,255,.55)', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <UserPlus size={15} />
+      </button>
+
+      <div style={{ width: 28, height: 1, background: 'rgba(255,255,255,.06)', margin: '4px 0' }} />
+
+      {/* Avatares dos amigos online */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, overflowY: 'auto', flex: 1, padding: '0 0 12px', alignItems: 'center', width: '100%' }}>
+        {amigosOnline.slice(0, 14).map(a => {
+          const eloCor = ELOS_COR[a.elo?.elo || 'Ferro'] || '#9CA3AF';
+          return (
+            <button key={a.id} onClick={() => onSelecionar(a)} title={a.nome_blader || 'Blader'} style={{
+              position: 'relative', width: 36, height: 36, borderRadius: '50%',
+              padding: 0, border: `1.5px solid ${eloCor}50`,
+              background: a.avatar_blader_url ? `url(${a.avatar_blader_url}) center/cover` : `${eloCor}22`,
+              cursor: 'pointer', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: eloCor, fontSize: 12, fontWeight: 700, fontFamily: 'Rajdhani,sans-serif',
+            }}>
+              {!a.avatar_blader_url && (a.nome_blader?.charAt(0) || '?')}
+              <span style={{
+                position: 'absolute', bottom: -1, right: -1,
+                width: 9, height: 9, borderRadius: '50%',
+                background: '#10B981', border: '2px solid #07091a',
+              }} />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function AmigoRow({ amigo, onClick }: { amigo: BladerAmigo; onClick: () => void }) {
   const eloCor = ELOS_COR[amigo.elo?.elo || 'Ferro'] || '#9CA3AF';
   return (
     <div
       onClick={onClick}
       style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        padding: '8px 11px', cursor: 'pointer',
-        borderBottom: '1px solid rgba(255,255,255,.03)',
+        display: 'flex', alignItems: 'center', gap: 9,
+        padding: '7px 12px', cursor: 'pointer',
+        borderRadius: 8, margin: '1px 6px',
+        transition: 'background .12s',
       }}
-      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.03)')}
+      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.04)')}
       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
     >
       <div style={{ position: 'relative', flexShrink: 0 }}>
         <div style={{
           width: 32, height: 32, borderRadius: '50%',
-          background: amigo.avatar_blader_url ? `url(${amigo.avatar_blader_url}) center/cover` : `${eloCor}18`,
-          border: `1.5px solid ${eloCor}30`,
+          background: amigo.avatar_blader_url ? `url(${amigo.avatar_blader_url}) center/cover` : `${eloCor}22`,
+          border: `1.5px solid ${eloCor}40`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 11, fontWeight: 700, color: eloCor, overflow: 'hidden',
+          fontFamily: 'Rajdhani,sans-serif',
         }}>
           {!amigo.avatar_blader_url && (amigo.nome_blader?.charAt(0) || '?')}
         </div>
@@ -154,16 +357,16 @@ function AmigoRow({ amigo, onClick }: { amigo: BladerAmigo; onClick: () => void 
           position: 'absolute', bottom: -1, right: -1,
           width: 9, height: 9, borderRadius: '50%',
           background: amigo.online ? '#10B981' : '#374151',
-          border: '1.5px solid #08091a',
+          border: '2px solid #07091a',
         }} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
           fontFamily: 'Rajdhani,sans-serif', fontWeight: 600,
-          fontSize: 12, color: '#fff',
+          fontSize: 12.5, color: '#fff',
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
         }}>{amigo.nome_blader || 'Blader'}</div>
-        <div style={{ fontSize: 9, color: 'rgba(255,255,255,.3)', marginTop: 1 }}>
+        <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.32)', marginTop: 1 }}>
           {amigo.elo?.elo || 'Ferro'} · Andar {amigo.torre?.andar || 1}
         </div>
       </div>
