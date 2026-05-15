@@ -176,6 +176,7 @@ export default function TournamentHub() {
       currentRound: 0, arenaCount: tArenaCount, totalRounds: 3, pointsToWin: 4,
       status: 'upcoming', createdAt: new Date().toISOString(), maxPlayers: tMaxPlayers,
       eliminationSize: tEliminationSize,
+      modalidade: tModalidade,
       descricao: tDescricao.trim() || undefined,
       horarioInicio: tHorarioInicio || undefined,
       horarioFim: tHorarioFim || undefined,
@@ -191,9 +192,9 @@ export default function TournamentHub() {
     setTName(''); setTDate(''); setTEliminationSize(null);
     setTDescricao(''); setTHorarioInicio(''); setTHorarioFim('');
     setTLocalNome(''); setTLocalEndereco(''); setTLocalCidade(''); setTLocalEstado('');
-    setTPremio(''); setTRegras(''); setTArenaCount(1);
+    setTPremio(''); setTRegras(''); setTArenaCount(1); setTModalidade('individual');
     toast.success('Torneio criado!');
-  }, [tName, tDate, tMaxPlayers, tEliminationSize, tArenaCount, tDescricao, tHorarioInicio, tHorarioFim, tLocalNome, tLocalEndereco, tLocalCidade, tLocalEstado, tPremio, tRegras, createTournament]);
+  }, [tName, tDate, tMaxPlayers, tEliminationSize, tArenaCount, tDescricao, tHorarioInicio, tHorarioFim, tLocalNome, tLocalEndereco, tLocalCidade, tLocalEstado, tPremio, tRegras, tModalidade, createTournament]);
 
   // ─── Edit Tournament ───
   const openEditModal = useCallback((t: Tournament) => {
