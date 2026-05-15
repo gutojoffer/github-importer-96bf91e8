@@ -260,7 +260,7 @@ export default function BladerHome() {
       className="p-4 md:p-6 mx-auto"
       style={{
         maxWidth: 1024,
-        paddingRight: mostrarPainel ? 264 : undefined,
+        paddingRight: mostrarPainel ? larguraPainel + 16 : undefined,
         transition: 'padding-right .2s ease',
       }}
     >
