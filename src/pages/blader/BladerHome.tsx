@@ -107,6 +107,7 @@ export default function BladerHome() {
   const isMobile = useIsMobile();
   const temAmigos = amigos.length > 0;
   const mostrarPainel = temAmigos && !isMobile;
+  const { larguraPainel } = usePainelAmigosColapsado();
 
   const bladerName = profile?.nomeBlader || profile?.nome || null;
   const bladerAvatar = profile?.avatarBladerUrl || profile?.avatarUrl || null;
