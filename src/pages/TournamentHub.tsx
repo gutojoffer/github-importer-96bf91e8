@@ -79,6 +79,7 @@ export default function TournamentHub() {
   const [tPremio, setTPremio] = useState('');
   const [tRegras, setTRegras] = useState('');
   const [tArenaCount, setTArenaCount] = useState(1);
+  const [tModalidade, setTModalidade] = useState<'individual' | 'times'>('individual');
 
   // Edit tournament
   const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
