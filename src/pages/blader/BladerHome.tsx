@@ -19,7 +19,7 @@ import { ELOS, getElo, getProximoElo } from '@/lib/elo';
 import DashboardInsights from '@/components/blader/DashboardInsights';
 import { PedidosAmizade } from '@/components/blader/PedidosAmizade';
 import { FeedAmigos } from '@/components/blader/FeedAmigos';
-import { PainelAmigos } from '@/components/blader/PainelAmigos';
+import { PainelAmigos, usePainelAmigosColapsado } from '@/components/blader/PainelAmigos';
 import { useAmizades } from '@/hooks/useAmizades';
 import { useIsMobile } from '@/hooks/use-mobile';
 
