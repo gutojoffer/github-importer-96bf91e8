@@ -19,7 +19,7 @@ import { ELOS, getElo, getProximoElo } from '@/lib/elo';
 import DashboardInsights from '@/components/blader/DashboardInsights';
 import { PedidosAmizade } from '@/components/blader/PedidosAmizade';
 import { FeedAmigos } from '@/components/blader/FeedAmigos';
-import { PainelAmigos } from '@/components/blader/PainelAmigos';
+import { PainelAmigos, usePainelAmigosColapsado } from '@/components/blader/PainelAmigos';
 import { useAmizades } from '@/hooks/useAmizades';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -107,6 +107,7 @@ export default function BladerHome() {
   const isMobile = useIsMobile();
   const temAmigos = amigos.length > 0;
   const mostrarPainel = temAmigos && !isMobile;
+  const { larguraPainel } = usePainelAmigosColapsado();
 
   const bladerName = profile?.nomeBlader || profile?.nome || null;
   const bladerAvatar = profile?.avatarBladerUrl || profile?.avatarUrl || null;
@@ -259,7 +260,7 @@ export default function BladerHome() {
       className="p-4 md:p-6 mx-auto"
       style={{
         maxWidth: 1024,
-        paddingRight: mostrarPainel ? 264 : undefined,
+        paddingRight: mostrarPainel ? larguraPainel + 16 : undefined,
         transition: 'padding-right .2s ease',
       }}
     >

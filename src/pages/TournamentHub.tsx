@@ -79,6 +79,7 @@ export default function TournamentHub() {
   const [tPremio, setTPremio] = useState('');
   const [tRegras, setTRegras] = useState('');
   const [tArenaCount, setTArenaCount] = useState(1);
+  const [tModalidade, setTModalidade] = useState<'individual' | 'times'>('individual');
 
   // Edit tournament
   const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
@@ -175,6 +176,7 @@ export default function TournamentHub() {
       currentRound: 0, arenaCount: tArenaCount, totalRounds: 3, pointsToWin: 4,
       status: 'upcoming', createdAt: new Date().toISOString(), maxPlayers: tMaxPlayers,
       eliminationSize: tEliminationSize,
+      modalidade: tModalidade,
       descricao: tDescricao.trim() || undefined,
       horarioInicio: tHorarioInicio || undefined,
       horarioFim: tHorarioFim || undefined,
@@ -190,9 +192,9 @@ export default function TournamentHub() {
     setTName(''); setTDate(''); setTEliminationSize(null);
     setTDescricao(''); setTHorarioInicio(''); setTHorarioFim('');
     setTLocalNome(''); setTLocalEndereco(''); setTLocalCidade(''); setTLocalEstado('');
-    setTPremio(''); setTRegras(''); setTArenaCount(1);
+    setTPremio(''); setTRegras(''); setTArenaCount(1); setTModalidade('individual');
     toast.success('Torneio criado!');
-  }, [tName, tDate, tMaxPlayers, tEliminationSize, tArenaCount, tDescricao, tHorarioInicio, tHorarioFim, tLocalNome, tLocalEndereco, tLocalCidade, tLocalEstado, tPremio, tRegras, createTournament]);
+  }, [tName, tDate, tMaxPlayers, tEliminationSize, tArenaCount, tDescricao, tHorarioInicio, tHorarioFim, tLocalNome, tLocalEndereco, tLocalCidade, tLocalEstado, tPremio, tRegras, tModalidade, createTournament]);
 
   // ─── Edit Tournament ───
   const openEditModal = useCallback((t: Tournament) => {
@@ -1142,6 +1144,32 @@ export default function TournamentHub() {
             <textarea value={tDescricao} onChange={e => setTDescricao(e.target.value.slice(0, 200))} placeholder="Descrição breve do torneio..." maxLength={200}
               style={{ ...inputStyle, height: 80, resize: 'none', paddingTop: 10 }} onFocus={onFocus} onBlur={onBlur} />
             <p style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', textAlign: 'right', marginTop: 4 }}>{tDescricao.length}/200</p>
+          </div>
+
+          {/* Modalidade */}
+          <div style={sectionStyle}>Modalidade{sectionLine}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {([
+              { v: 'individual' as const, icon: '👤', titulo: 'Individual', desc: 'Bladers competem sozinhos' },
+              { v: 'times' as const, icon: '👥', titulo: 'Em times', desc: 'Inscrição por equipe' },
+            ]).map(opt => {
+              const ativo = tModalidade === opt.v;
+              return (
+                <button key={opt.v} type="button" onClick={() => setTModalidade(opt.v)}
+                  style={{
+                    padding: '12px 14px', textAlign: 'left', borderRadius: 12, cursor: 'pointer',
+                    background: ativo ? 'rgba(37,99,235,.12)' : 'rgba(255,255,255,.02)',
+                    border: ativo ? '1px solid rgba(37,99,235,.45)' : '1px solid rgba(255,255,255,.08)',
+                    transition: 'all .15s', display: 'flex', gap: 10, alignItems: 'center',
+                  }}>
+                  <span style={{ fontSize: 22 }}>{opt.icon}</span>
+                  <span>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: ativo ? '#60A5FA' : '#fff' }}>{opt.titulo}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 2 }}>{opt.desc}</div>
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Data e horário */}
