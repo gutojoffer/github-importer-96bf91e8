@@ -228,6 +228,7 @@ function tournamentFromRow(row: any): Tournament {
     regras: row.regras ?? undefined,
     ligaId: row.liga_id ?? undefined,
     enrolledCount: playerIds.length,
+    modalidade: (row.modalidade as 'individual' | 'times') ?? 'individual',
   };
 }
 
