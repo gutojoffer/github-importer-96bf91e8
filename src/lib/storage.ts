@@ -259,6 +259,7 @@ function tournamentToRow(t: Tournament, ligaId: string) {
     imagem_url: t.imagemUrl ?? null,
     premio: t.premio ?? null,
     regras: t.regras ?? null,
+    modalidade: t.modalidade ?? 'individual',
   };
 }
 
