@@ -1484,6 +1484,7 @@ export type Database = {
           local_estado: string | null
           local_nome: string | null
           max_players: number | null
+          modalidade: string
           name: string
           player_ids: string[]
           points_to_win: number
@@ -1511,6 +1512,7 @@ export type Database = {
           local_estado?: string | null
           local_nome?: string | null
           max_players?: number | null
+          modalidade?: string
           name: string
           player_ids?: string[]
           points_to_win?: number
@@ -1538,6 +1540,7 @@ export type Database = {
           local_estado?: string | null
           local_nome?: string | null
           max_players?: number | null
+          modalidade?: string
           name?: string
           player_ids?: string[]
           points_to_win?: number
