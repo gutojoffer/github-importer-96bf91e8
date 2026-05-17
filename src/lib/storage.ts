@@ -11,16 +11,62 @@ async function getLigaId(): Promise<string> {
 // ──────────── Players ────────────
 
 export async function getPlayers(): Promise<Player[]> {
-  const { data, error } = await supabase.from('players').select('id, name, nickname, avatar, xp, created_at').order('created_at', { ascending: true });
-  if (error) { console.error('getPlayers error:', error); return []; }
-  return (data || []).map(row => ({
-    id: row.id,
-    name: row.name,
-    nickname: row.nickname || '',
-    avatar: row.avatar || '🔵',
-    xp: row.xp ?? 0,
-    createdAt: row.created_at,
-  }));
+  let ligaId: string | null = null;
+  try { ligaId = await getLigaId(); } catch { /* anon */ }
+
+  const [playersRes, profilesRes, tempRes] = await Promise.all([
+    supabase.from('players').select('id, name, nickname, avatar, xp, created_at').order('created_at', { ascending: true }),
+    supabase.from('profiles').select('id, nome_blader, avatar_blader_url, xp_total').eq('tem_perfil_blader', true).not('nome_blader', 'is', null),
+    ligaId
+      ? supabase.from('bladers_temp').select('id, nome, apelido, avatar_url, created_at, vinculado_a').eq('organizador_id', ligaId)
+      : Promise.resolve({ data: [] as any[] }),
+  ]);
+
+  if (playersRes.error) console.error('getPlayers error:', playersRes.error);
+
+  const profileById = new Map<string, any>((profilesRes.data || []).map((p: any) => [p.id, p]));
+  const byId = new Map<string, Player>();
+
+  for (const row of playersRes.data || []) {
+    const prof = profileById.get(row.id);
+    byId.set(row.id, {
+      id: row.id,
+      name: prof?.nome_blader || row.name,
+      nickname: row.nickname || '',
+      avatar: prof?.avatar_blader_url || row.avatar || '🔵',
+      xp: prof?.xp_total ?? row.xp ?? 0,
+      createdAt: row.created_at,
+    });
+  }
+
+  // Union profile-bladers not present in players table (self-registered)
+  for (const prof of profilesRes.data || []) {
+    if (byId.has(prof.id)) continue;
+    byId.set(prof.id, {
+      id: prof.id,
+      name: prof.nome_blader,
+      nickname: '',
+      avatar: prof.avatar_blader_url || '🔵',
+      xp: prof.xp_total ?? 0,
+      createdAt: new Date().toISOString(),
+    });
+  }
+
+  // Union temp bladers (still unlinked) from this organizer
+  for (const t of (tempRes as any).data || []) {
+    if (t.vinculado_a) continue;
+    if (byId.has(t.id)) continue;
+    byId.set(t.id, {
+      id: t.id,
+      name: t.nome || t.apelido || 'Blader',
+      nickname: t.apelido || '',
+      avatar: t.avatar_url || '🔵',
+      xp: 0,
+      createdAt: t.created_at || new Date().toISOString(),
+    });
+  }
+
+  return Array.from(byId.values());
 }
 
 export async function savePlayers(players: Player[]) {
