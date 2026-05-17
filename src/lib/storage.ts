@@ -116,9 +116,23 @@ export async function deletePlayer(id: string) {
 
 
 export async function getPlayerById(id: string): Promise<Player | undefined> {
-  const { data } = await supabase.from('players').select('id, name, nickname, avatar, xp, created_at').eq('id', id).single();
-  if (!data) return undefined;
-  return { id: data.id, name: data.name, nickname: data.nickname || '', avatar: data.avatar || '🔵', xp: data.xp ?? 0, createdAt: data.created_at };
+  const [playerRes, profRes, tempRes] = await Promise.all([
+    supabase.from('players').select('id, name, nickname, avatar, xp, created_at').eq('id', id).maybeSingle(),
+    supabase.from('profiles').select('id, nome_blader, avatar_blader_url, xp_total').eq('id', id).maybeSingle(),
+    supabase.from('bladers_temp').select('id, nome, apelido, avatar_url, created_at').eq('id', id).maybeSingle(),
+  ]);
+  const p = playerRes.data;
+  const prof = profRes.data;
+  const t = tempRes.data;
+  if (!p && !prof && !t) return undefined;
+  return {
+    id,
+    name: prof?.nome_blader || p?.name || t?.nome || t?.apelido || 'Blader',
+    nickname: p?.nickname || t?.apelido || '',
+    avatar: prof?.avatar_blader_url || p?.avatar || t?.avatar_url || '🔵',
+    xp: prof?.xp_total ?? p?.xp ?? 0,
+    createdAt: p?.created_at || t?.created_at || new Date().toISOString(),
+  };
 }
 
 // ──────────── Stats ────────────
