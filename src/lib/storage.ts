@@ -87,6 +87,8 @@ export async function savePlayers(players: Player[]) {
   }));
   const { error } = await supabase.from('players').upsert(rows, { onConflict: 'id' });
   if (error) console.error('savePlayers error:', error);
+  invalidate('players:');
+  invalidate('player:');
 }
 
 export async function addPlayer(p: Player) {
@@ -101,6 +103,7 @@ export async function addPlayer(p: Player) {
     liga_id: ligaId,
   });
   if (error) console.error('addPlayer error:', error);
+  invalidate('players:');
 }
 
 export async function updatePlayer(id: string, patch: Partial<Player>) {
@@ -111,33 +114,39 @@ export async function updatePlayer(id: string, patch: Partial<Player>) {
   if (patch.xp !== undefined) row.xp = patch.xp;
   const { error } = await supabase.from('players').update(row).eq('id', id);
   if (error) console.error('updatePlayer error:', error);
+  invalidate('players:');
+  invalidate(`player:${id}`);
 }
 
 export async function deletePlayer(id: string) {
   const { error } = await supabase.from('players').delete().eq('id', id);
   if (error) console.error('deletePlayer error:', error);
+  invalidate('players:');
+  invalidate(`player:${id}`);
 }
 
 
 
 export async function getPlayerById(id: string): Promise<Player | undefined> {
-  const [playerRes, profRes, tempRes] = await Promise.all([
-    supabase.from('players').select('id, name, nickname, avatar, xp, created_at').eq('id', id).maybeSingle(),
-    supabase.from('profiles').select('id, nome_blader, avatar_blader_url, xp_total').eq('id', id).maybeSingle(),
-    supabase.from('bladers_temp').select('id, nome, apelido, avatar_url, created_at').eq('id', id).maybeSingle(),
-  ]);
-  const p = playerRes.data;
-  const prof = profRes.data;
-  const t = tempRes.data;
-  if (!p && !prof && !t) return undefined;
-  return {
-    id,
-    name: prof?.nome_blader || p?.name || t?.nome || t?.apelido || 'Blader',
-    nickname: p?.nickname || t?.apelido || '',
-    avatar: prof?.avatar_blader_url || p?.avatar || t?.avatar_url || '🔵',
-    xp: prof?.xp_total ?? p?.xp ?? 0,
-    createdAt: p?.created_at || t?.created_at || new Date().toISOString(),
-  };
+  return cacheMemory(`player:${id}`, 30_000, async () => {
+    const [playerRes, profRes, tempRes] = await Promise.all([
+      supabase.from('players').select('id, name, nickname, avatar, xp, created_at').eq('id', id).maybeSingle(),
+      supabase.from('profiles').select('id, nome_blader, avatar_blader_url, xp_total').eq('id', id).maybeSingle(),
+      supabase.from('bladers_temp').select('id, nome, apelido, avatar_url, created_at').eq('id', id).maybeSingle(),
+    ]);
+    const p = playerRes.data;
+    const prof = profRes.data;
+    const t = tempRes.data;
+    if (!p && !prof && !t) return undefined as any;
+    return {
+      id,
+      name: prof?.nome_blader || p?.name || t?.nome || t?.apelido || 'Blader',
+      nickname: p?.nickname || t?.apelido || '',
+      avatar: prof?.avatar_blader_url || p?.avatar || t?.avatar_url || '🔵',
+      xp: prof?.xp_total ?? p?.xp ?? 0,
+      createdAt: p?.created_at || t?.created_at || new Date().toISOString(),
+    };
+  });
 }
 
 // ──────────── Stats ────────────
