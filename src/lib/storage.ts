@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Player, PlayerStats, Tournament, TournamentStanding, getRankingPoints, getTournamentXP } from '@/types/tournament';
 import { enviarNotificacoesTorneioPublicado } from '@/lib/notificacoes';
+import { cacheMemory, invalidate } from '@/lib/cache';
 
 async function getLigaId(): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
@@ -13,6 +14,10 @@ async function getLigaId(): Promise<string> {
 export async function getPlayers(): Promise<Player[]> {
   let ligaId: string | null = null;
   try { ligaId = await getLigaId(); } catch { /* anon */ }
+  return cacheMemory(`players:${ligaId || 'anon'}`, 30_000, () => fetchPlayers(ligaId));
+}
+
+async function fetchPlayers(ligaId: string | null): Promise<Player[]> {
 
   const [playersRes, profilesRes, tempRes] = await Promise.all([
     supabase.from('players').select('id, name, nickname, avatar, xp, created_at').order('created_at', { ascending: true }),
