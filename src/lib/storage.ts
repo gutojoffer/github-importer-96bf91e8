@@ -152,18 +152,20 @@ export async function getPlayerById(id: string): Promise<Player | undefined> {
 // ──────────── Stats ────────────
 
 export async function getAllStats(): Promise<PlayerStats[]> {
-  const { data, error } = await supabase.from('player_stats').select('player_id, wins, losses, finish_wins, extreme_finish_wins, points, week_key, month_key');
-  if (error) { console.error('getAllStats error:', error); return []; }
-  return (data || []).map(row => ({
-    playerId: row.player_id,
-    wins: row.wins,
-    losses: row.losses,
-    finishWins: row.finish_wins,
-    extremeFinishWins: row.extreme_finish_wins,
-    points: row.points,
-    weekKey: row.week_key,
-    monthKey: row.month_key,
-  }));
+  return cacheMemory('player_stats:all', 60_000, async () => {
+    const { data, error } = await supabase.from('player_stats').select('player_id, wins, losses, finish_wins, extreme_finish_wins, points, week_key, month_key');
+    if (error) { console.error('getAllStats error:', error); return []; }
+    return (data || []).map(row => ({
+      playerId: row.player_id,
+      wins: row.wins,
+      losses: row.losses,
+      finishWins: row.finish_wins,
+      extremeFinishWins: row.extreme_finish_wins,
+      points: row.points,
+      weekKey: row.week_key,
+      monthKey: row.month_key,
+    }));
+  });
 }
 
 export async function saveAllStats(stats: PlayerStats[]) {
