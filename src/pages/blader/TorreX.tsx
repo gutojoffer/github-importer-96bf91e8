@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { cacheMemory, invalidate } from '@/lib/cache';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import AvatarBlader from '@/components/blader/AvatarBlader';
@@ -116,20 +117,30 @@ export default function TorreX() {
 
   async function carregarRanking() {
     if (!userId) return;
-    let q = supabase.from('torre_x_pontos').select('*').order('pontos', { ascending: false }).limit(100);
-    if (filtro === 'cidade' && meu?.cidade) q = q.eq('cidade', meu.cidade);
-    else if (filtro === 'estado' && meu?.estado) q = q.eq('estado', meu.estado);
-    const { data } = await q;
-    if (!data || data.length === 0) { setRanking([]); return; }
-    const ids = data.map((r: any) => r.user_id);
-    const { data: profs } = await supabase
-      .from('profiles').select('id, nome_blader, avatar_blader_url').in('id', ids);
-    const map = new Map((profs || []).map((p: any) => [p.id, p]));
-    setRanking(data.map((r: any) => ({
-      ...r,
-      nome_blader: map.get(r.user_id)?.nome_blader ?? null,
-      avatar_blader_url: map.get(r.user_id)?.avatar_blader_url ?? null,
-    })));
+    const cidadeKey = filtro === 'cidade' ? meu?.cidade || '' : '';
+    const estadoKey = filtro === 'estado' ? meu?.estado || '' : '';
+    const cacheKey = `torre-x:rank:${filtro}:${cidadeKey}:${estadoKey}`;
+    const rows = await cacheMemory(cacheKey, 30_000, async () => {
+      let q = supabase
+        .from('torre_x_pontos')
+        .select('user_id, pontos, andar, tier, cidade, estado, rejeicoes_seguidas')
+        .order('pontos', { ascending: false })
+        .limit(100);
+      if (filtro === 'cidade' && meu?.cidade) q = q.eq('cidade', meu.cidade);
+      else if (filtro === 'estado' && meu?.estado) q = q.eq('estado', meu.estado);
+      const { data } = await q;
+      if (!data || data.length === 0) return [] as RankingItem[];
+      const ids = data.map((r: any) => r.user_id);
+      const { data: profs } = await supabase
+        .from('profiles').select('id, nome_blader, avatar_blader_url').in('id', ids);
+      const map = new Map((profs || []).map((p: any) => [p.id, p]));
+      return data.map((r: any) => ({
+        ...r,
+        nome_blader: map.get(r.user_id)?.nome_blader ?? null,
+        avatar_blader_url: map.get(r.user_id)?.avatar_blader_url ?? null,
+      })) as RankingItem[];
+    });
+    setRanking(rows);
   }
 
   async function carregarDesafios() {

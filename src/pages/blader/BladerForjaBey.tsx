@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { cacheSession } from '@/lib/cache';
 import { toast } from 'sonner';
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
@@ -990,9 +991,13 @@ function PartSelector({
   }, [aberto]);
 
   useEffect(() => {
-    let q: any = (supabase as any).from(tabela).select('*').order('nome');
-    if (linha && (tabela === 'bey_blades')) q = q.eq('linha', linha);
-    q.then(({ data }: any) => setPecas((data || []) as Peca[]));
+    const cacheKey = `forjabey:${tabela}:${linha || 'all'}`;
+    cacheSession(cacheKey, 60 * 60 * 1000, async () => {
+      let q: any = (supabase as any).from(tabela).select('*').order('nome');
+      if (linha && (tabela === 'bey_blades')) q = q.eq('linha', linha);
+      const { data } = await q;
+      return (data || []) as Peca[];
+    }).then(setPecas).catch(() => setPecas([]));
   }, [tabela, linha]);
 
   const filtradas = useMemo(() =>

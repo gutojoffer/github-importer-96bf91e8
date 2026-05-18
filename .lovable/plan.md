@@ -1,64 +1,76 @@
+# Refatoração de Performance
 
+Objetivo: eliminar queries lentas, reduzir payload e adicionar cache em todo o sistema.
 
-# Beyblade X Tournament Hub
+## 1. Cache utilitário (novo)
 
-## Visão Geral
-Aplicação web responsiva para gerenciamento de torneios de Beyblade X com design 2D premium, flat/estilizado, temática do anime com cores escuras (grafite), azul elétrico, verde neon e toques de vermelho.
+Criar `src/lib/cache.ts`:
+- `cacheSession(key, ttlMs, fetcher)` — sessionStorage com TTL
+- `cacheMemory(key, ttlMs, fetcher)` — Map em memória com TTL
+- `invalidate(prefix)` — limpar por prefixo
 
-## Design System
-- **Fundo**: Grafite escuro (#0D0D0D, #1A1A2E)
-- **Acentos**: Azul elétrico (#00D4FF), Verde neon (#39FF14), Vermelho (#FF2D55), Branco
-- **Tipografia**: Rajdhani (headings) + Montserrat (body)
-- **Estilo**: Flat design com bordas geométricas afiadas, painéis translúcidos, ícones minimalistas
-- **Logo Beyblade X** em destaque no header de todas as telas
+## 2. ForjaBey — cache de peças
 
-## Páginas e Funcionalidades
+Em `BladerForjaBey.tsx` e `AdminForjaBey.tsx`:
+- Buscar `bey_blades`, `bey_ratchets`, `bey_bits`, `bey_lock_chips`, `bey_main_blades`, `bey_assist_blades` via `cacheSession` (TTL 1h, dados estáticos).
+- Selecionar apenas colunas usadas pela UI (não `select('*')`).
 
-### 1. Dashboard / Tela Inicial
-- Header com logo Beyblade X e navegação principal
-- Resumo rápido: torneios ativos, total de jogadores
-- Leaderboard em destaque (Top Semanal / Top Mensal com abas)
-- Botões de ação: "Novo Torneio", "Cadastrar Jogador", "Rankings"
+## 3. Rankings com paginação + cache
 
-### 2. Módulo de Jogadores
-- Formulário: Nome/Nickname + Upload de foto ou seleção de avatar padrão (avatares temáticos Beyblade)
-- Lista de jogadores cadastrados com foto, nome e stats resumidos
-- Persistência via LocalStorage
+`RankingPublicoPage.tsx` e `Leaderboard.tsx`:
+- Paginação de 50 em 50 com `.range()`.
+- Cache de 60s do top 50 da temporada ativa em memória.
+- Buscar profiles em lote único (já faz) mas só colunas necessárias.
 
-### 3. Configuração de Torneio
-- Seleção de jogadores cadastrados (checkbox/cards clicáveis)
-- Input de número de rodadas com sugestão automática (log2(N))
-- Definição de número de arenas ativas (Arena A, Arena B, etc.)
-- Botão "Iniciar Torneio" que gera o bracket
+## 4. Torre X com paginação
 
-### 4. Sistema de Partidas (Swiss System)
-- Rodada 1: embaralhamento aleatório completo
-- Rodadas seguintes: pareamento suíço (mesma pontuação, sem repetição)
-- Distribuição automática das partidas pelas arenas ativas
+`TorreX.tsx`:
+- Paginação 30/página por cidade.
+- Cache 30s do ranking da cidade atual.
+- Histórico do user limitado a últimos 20.
 
-### 5. Tela de Versus / Interface do Juiz ("Pro Arena")
-- Visual VS épico 2D: foto circular Player 1 (esquerda) VS Player 2 (direita) com nomes em destaque
-- Painel de arenas com abas (Arena A, Arena B...)
-- Botões de resultado para cada jogador:
-  - "Finish" (Spin/Over/Burst) → pontuação normal
-  - "Extreme Finish" → pontuação bônus
-- Botão "Confirmar Resultado" → alerta visual de vitória → carrega próxima partida automaticamente
+## 5. Notificações — limite + paginação
 
-### 6. Rankings / Leaderboard
-- Abas: "Top Semanal" e "Top Mensal"
-- Ranking calculado por vitórias + tipo de vitória (Extreme Finish vale mais)
-- Atualização automática ao confirmar resultados
-- Visual com posição, foto, nome, pontuação, W/L ratio
+`BladerNotificacoes.tsx` e `SinoNotificacoes.tsx`:
+- `.limit(20)` + "carregar mais" com `.range()`.
+- Sino: contar não-lidas via `.select('id', { count: 'exact', head: true })` em vez de baixar lista.
 
-## Persistência
-- Todos os dados (jogadores, torneios, rankings, histórico) salvos em LocalStorage
-- Estado do torneio preservado ao recarregar a página
+## 6. Feed de atividades — paginação
 
-## Estrutura de Componentes
-- `Dashboard` – tela inicial com resumo e rankings
-- `PlayerManager` – CRUD de jogadores
-- `TournamentSetup` – configuração e início
-- `MatchArena` – tela VS com interface do juiz
-- `Leaderboard` – rankings com filtros temporais
-- Componentes compartilhados: `PlayerCard`, `VersusScreen`, `ArenaPanel`, `ResultButtons`
+`FeedAmigos.tsx`:
+- `.limit(20)` + scroll infinito com `.range()`.
+- Cache 30s da primeira página.
 
+## 7. Storage (`src/lib/storage.ts`)
+
+- `getPlayers()` / `getPlayerById()`: cache em memória 30s (invalidado em add/update/delete).
+- Trocar `select('*')` por colunas explícitas em `getTournaments`, `getInscricoes`.
+- Adicionar `.limit()` onde faltar.
+
+## 8. Hooks de times e amizades
+
+`useTimes.ts`, `useAmizades.ts`, `useNotificacoesNaoLidas.ts`:
+- `count: 'exact', head: true` para badges (zero payload).
+- Cache 30s das listas.
+
+## 9. Dashboard (`BladerHome`, `TopBladers`, `DashboardInsights`)
+
+- Consolidar chamadas paralelas com `Promise.all`.
+- Cache 60s das estatísticas agregadas.
+- Limitar TopBladers a top 10 no servidor (não no client).
+
+## 10. Skeleton states
+
+Adicionar `<Skeleton>` em telas que faziam queries longas (Rankings, Torre X, Times, Notificações, Feed) para feedback imediato.
+
+## Detalhes técnicos
+
+- TTL padrão: 30s para dados dinâmicos, 60s para rankings, 1h para dados estáticos (peças).
+- Cache invalidado em mutations relevantes (ex: criar time invalida cache de times).
+- Realtime do Supabase continua funcionando — atualiza store local e invalida cache.
+- Sem mudanças de schema (índices já foram criados na migration anterior).
+
+## Arquivos editados
+
+Novos: `src/lib/cache.ts`
+Modificados: `BladerForjaBey.tsx`, `AdminForjaBey.tsx`, `RankingPublicoPage.tsx`, `Leaderboard.tsx`, `TorreX.tsx`, `BladerNotificacoes.tsx`, `SinoNotificacoes.tsx`, `FeedAmigos.tsx`, `storage.ts`, `useTimes.ts`, `useAmizades.ts`, `useNotificacoesNaoLidas.ts`, `BladerHome.tsx`, `TopBladers.tsx`, `DashboardInsights.tsx`.

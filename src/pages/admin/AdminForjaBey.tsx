@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { invalidate } from '@/lib/cache';
 import { toast } from 'sonner';
 import { Loader2, Plus, Pencil, Trash2, Camera, X, Search } from 'lucide-react';
 
@@ -104,6 +105,7 @@ export default function AdminForjaBey() {
     const publicUrl = `${data.publicUrl}?t=${Date.now()}`;
     const { error } = await (supabase as any).from(tabDef.table).update({ imagem_url: publicUrl }).eq('id', id);
     if (error) { toast.error('Falha ao salvar URL'); return; }
+    invalidate('forjabey:');
     toast.success('Imagem atualizada!');
     fetchPecas();
   }
@@ -112,6 +114,7 @@ export default function AdminForjaBey() {
     if (!confirm('Deletar esta peça?')) return;
     const { error } = await (supabase as any).from(tabDef.table).delete().eq('id', id);
     if (error) { toast.error('Erro ao deletar: ' + error.message); return; }
+    invalidate('forjabey:');
     toast.success('Peça deletada');
     fetchPecas();
   }
@@ -159,6 +162,7 @@ export default function AdminForjaBey() {
       if (error) { toast.error('Erro: ' + error.message); return; }
       toast.success('Peça criada');
     }
+    invalidate('forjabey:');
     setShowModal(false);
     setEditing(null);
     fetchPecas();
