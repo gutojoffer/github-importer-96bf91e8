@@ -257,6 +257,8 @@ export async function awardXP(standings: TournamentStanding[]) {
   const ops: PromiseLike<any>[] = [...updates];
   if (inserts.length) ops.push(supabase.from('player_stats').insert(inserts));
   await Promise.all(ops);
+  invalidate('player_stats:');
+  invalidate('players:');
 }
 
 export async function applyTournamentResults(tournamentId: string, standings: TournamentStanding[]) {
