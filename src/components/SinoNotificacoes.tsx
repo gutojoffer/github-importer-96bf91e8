@@ -32,7 +32,7 @@ export default function SinoNotificacoes() {
     (async () => {
       const { data } = await supabase
         .from('notificacoes')
-        .select('*')
+        .select('id, tipo, mensagem, lida, dados, created_at, user_id')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(20);

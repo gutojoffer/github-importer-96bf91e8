@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import NavbarPublica from '@/components/public/NavbarPublica';
+import { cacheMemory } from '@/lib/cache';
 
 interface RankingRow {
   user_id: string;
@@ -30,52 +31,49 @@ export default function RankingPublicoPage() {
   useEffect(() => {
     (async () => {
       try {
-        const { data: temp } = await supabase
-          .from('temporadas')
-          .select('id, nome')
-          .eq('ativa', true)
-          .maybeSingle();
+        const result = await cacheMemory('ranking-publico:top50', 60_000, async () => {
+          const { data: temp } = await supabase
+            .from('temporadas')
+            .select('id, nome')
+            .eq('ativa', true)
+            .maybeSingle();
 
-        if (!temp) {
-          setLoading(false);
-          return;
-        }
-        setTemporadaNome(temp.nome);
+          if (!temp) return { nome: '', rows: [] as RankingRow[] };
 
-        const { data: elos } = await supabase
-          .from('elo_bladers')
-          .select('user_id, pontos, elo')
-          .eq('temporada_id', temp.id)
-          .order('pontos', { ascending: false })
-          .limit(50);
+          const { data: elos } = await supabase
+            .from('elo_bladers')
+            .select('user_id, pontos, elo')
+            .eq('temporada_id', temp.id)
+            .order('pontos', { ascending: false })
+            .limit(50);
 
-        if (!elos || elos.length === 0) {
-          setLoading(false);
-          return;
-        }
+          if (!elos || elos.length === 0) return { nome: temp.nome, rows: [] as RankingRow[] };
 
-        const userIds = elos.map((e) => e.user_id).filter(Boolean) as string[];
-        const { data: profs } = await supabase
-          .from('profiles')
-          .select('id, nome_blader, avatar_blader_url, cidade_blader, estado_blader')
-          .in('id', userIds);
+          const userIds = elos.map((e) => e.user_id).filter(Boolean) as string[];
+          const { data: profs } = await supabase
+            .from('profiles')
+            .select('id, nome_blader, avatar_blader_url, cidade_blader, estado_blader')
+            .in('id', userIds);
 
-        const profMap = new Map((profs ?? []).map((p) => [p.id, p]));
-        const rows: RankingRow[] = elos
-          .filter((e) => e.user_id && profMap.has(e.user_id))
-          .map((e) => {
-            const p = profMap.get(e.user_id!)!;
-            return {
-              user_id: e.user_id!,
-              pontos: e.pontos ?? 0,
-              elo: e.elo ?? 'Ferro',
-              nome_blader: p.nome_blader,
-              avatar_blader_url: p.avatar_blader_url,
-              cidade_blader: p.cidade_blader,
-              estado_blader: p.estado_blader,
-            };
-          });
-        setRanking(rows);
+          const profMap = new Map((profs ?? []).map((p) => [p.id, p]));
+          const rows: RankingRow[] = elos
+            .filter((e) => e.user_id && profMap.has(e.user_id))
+            .map((e) => {
+              const p = profMap.get(e.user_id!)!;
+              return {
+                user_id: e.user_id!,
+                pontos: e.pontos ?? 0,
+                elo: e.elo ?? 'Ferro',
+                nome_blader: p.nome_blader,
+                avatar_blader_url: p.avatar_blader_url,
+                cidade_blader: p.cidade_blader,
+                estado_blader: p.estado_blader,
+              };
+            });
+          return { nome: temp.nome, rows };
+        });
+        setTemporadaNome(result.nome);
+        setRanking(result.rows);
       } finally {
         setLoading(false);
       }
