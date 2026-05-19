@@ -1582,6 +1582,7 @@ export type Database = {
       }
       calcular_nivel_blader: { Args: { _xp: number }; Returns: string }
       calcular_stats_time: { Args: { p_time_id: string }; Returns: undefined }
+      calcular_tier_elo: { Args: { _pontos: number }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
