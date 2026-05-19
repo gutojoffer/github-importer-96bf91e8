@@ -81,49 +81,79 @@ export default function BladerProfile() {
     enabled: !!correlationName,
   });
 
-  const { data: tournaments = [], isLoading: tournLoading } = useQuery({
-    queryKey: ['blader-profile-tournaments'],
+  // Inscrições reais do blader (sistema novo via auth.uid)
+  const { data: inscricoes = [], isLoading: inscLoading } = useQuery({
+    queryKey: ['blader-profile-inscricoes', targetUserId],
     queryFn: async () => {
+      if (!targetUserId) return [];
       const { data } = await supabase
-        .from('tournaments')
-        .select('id, name, date, status, player_ids, final_standings, rounds')
-        .order('date', { ascending: false });
-      return (data ?? []) as TournamentRow[];
+        .from('inscricoes')
+        .select('torneio_id, posicao_final, vitorias, derrotas, xp_ganho, streak_max, status, inscrito_em')
+        .eq('blader_id', targetUserId)
+        .order('inscrito_em', { ascending: false });
+      return data ?? [];
     },
+    enabled: !!targetUserId,
+  });
+
+  const inscricaoTorneioIds = useMemo(() => inscricoes.map(i => i.torneio_id), [inscricoes]);
+
+  const { data: tournaments = [], isLoading: tournLoading } = useQuery({
+    queryKey: ['blader-profile-tournaments', inscricaoTorneioIds.join(','), playerIds.join(',')],
+    queryFn: async () => {
+      const ids = Array.from(new Set([...inscricaoTorneioIds]));
+      let allTournaments: TournamentRow[] = [];
+      if (ids.length > 0) {
+        const { data } = await supabase
+          .from('tournaments')
+          .select('id, name, date, status, player_ids, final_standings, rounds')
+          .in('id', ids);
+        allTournaments = (data ?? []) as TournamentRow[];
+      }
+      // Também trazer torneios legados via players.id
+      if (playerIds.length > 0) {
+        const { data: legacy } = await supabase
+          .from('tournaments')
+          .select('id, name, date, status, player_ids, final_standings, rounds')
+          .overlaps('player_ids', playerIds);
+        const existingIds = new Set(allTournaments.map(t => t.id));
+        for (const t of (legacy ?? []) as TournamentRow[]) {
+          if (!existingIds.has(t.id)) allTournaments.push(t);
+        }
+      }
+      return allTournaments.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    },
+    enabled: inscricaoTorneioIds.length > 0 || playerIds.length > 0,
   });
 
   const { history, stats } = useMemo(() => {
-    const myTournaments = tournaments.filter(t => t.player_ids.some(pid => playerIds.includes(pid)));
-    const completed = myTournaments.filter(t => t.status === 'completed');
-
+    const inscByTorneio = new Map(inscricoes.map(i => [i.torneio_id, i]));
     let totalWins = 0, totalLosses = 0, podiums = 0, championships = 0;
     let bestPlacement = Infinity;
     let longestStreak = 0;
+    let completedCount = 0;
 
-    const enriched = myTournaments.map(t => {
+    const enriched = tournaments.map(t => {
+      const insc = inscByTorneio.get(t.id);
       const standings = (t.final_standings as Array<{ playerId: string; placement: number; wins: number; losses: number }> | null) || [];
-      const mine = standings.find(s => playerIds.includes(s.playerId));
-      if (mine) {
-        totalWins += mine.wins || 0;
-        totalLosses += mine.losses || 0;
-        if (mine.placement <= 3) podiums++;
-        if (mine.placement === 1) championships++;
-        if (mine.placement < bestPlacement) bestPlacement = mine.placement;
+      const legacyMine = standings.find(s => playerIds.includes(s.playerId));
+
+      const placement = insc?.posicao_final ?? legacyMine?.placement;
+      const wins = insc?.vitorias ?? legacyMine?.wins ?? 0;
+      const losses = insc?.derrotas ?? legacyMine?.losses ?? 0;
+      const streakMax = insc?.streak_max ?? 0;
+
+      if (t.status === 'completed' && (insc || legacyMine)) {
+        completedCount++;
+        totalWins += wins;
+        totalLosses += losses;
+        if (placement && placement <= 3) podiums++;
+        if (placement === 1) championships++;
+        if (placement && placement < bestPlacement) bestPlacement = placement;
+        if (streakMax > longestStreak) longestStreak = streakMax;
       }
 
-      const rounds = (t.rounds as Array<{ matches: Array<{ player1Id: string; player2Id: string; result?: { winnerId?: string } }> }> | null) || [];
-      let cur = 0, max = 0;
-      for (const r of rounds) {
-        for (const m of r.matches || []) {
-          const involves = playerIds.includes(m.player1Id) || playerIds.includes(m.player2Id);
-          if (!involves || !m.result?.winnerId) continue;
-          if (playerIds.includes(m.result.winnerId)) { cur++; if (cur > max) max = cur; }
-          else { cur = 0; }
-        }
-      }
-      if (max > longestStreak) longestStreak = max;
-
-      return { ...t, _placement: mine?.placement, _wins: mine?.wins ?? 0, _losses: mine?.losses ?? 0 };
+      return { ...t, _placement: placement, _wins: wins, _losses: losses };
     });
 
     const totalGames = totalWins + totalLosses;
@@ -132,14 +162,14 @@ export default function BladerProfile() {
     return {
       history: enriched,
       stats: {
-        tournamentsPlayed: completed.length,
+        tournamentsPlayed: completedCount,
         totalWins, totalLosses, winrate,
         podiums, championships,
         bestPlacement: bestPlacement === Infinity ? 0 : bestPlacement,
         longestStreak,
       },
     };
-  }, [tournaments, playerIds]);
+  }, [tournaments, inscricoes, playerIds]);
 
   const achievements = useMemo(() => computeAchievements({
     tournamentsPlayed: stats.tournamentsPlayed,
