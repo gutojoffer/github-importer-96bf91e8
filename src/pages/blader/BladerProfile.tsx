@@ -332,7 +332,7 @@ export default function BladerProfile() {
           Histórico
         </h2>
 
-        {tournLoading ? (
+        {(inscLoading || tournLoading) ? (
           <div className="space-y-2">
             {[1,2,3].map(i => <div key={i} className="h-16 rounded-xl animate-pulse" style={{ background: 'rgba(255,255,255,.04)' }} />)}
           </div>
