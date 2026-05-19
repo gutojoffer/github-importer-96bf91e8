@@ -721,20 +721,42 @@ function EmptyState({ message }: { message: string }) {
 function CardElo({ userId }: { userId: string }) {
   const [elo, setElo] = useState<{ pontos: number; elo: string; temporada: string } | null>(null);
   const [historico, setHistorico] = useState<Array<{ variacao: number; motivo: string; created_at: string }>>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data: temporada } = await supabase
+      setLoading(true);
+      let { data: temporada } = await supabase
         .from('temporadas').select('id, nome').eq('ativa', true).maybeSingle();
-      if (!temporada || cancelled) return;
 
-      const { data: eloData } = await supabase
+      // Auto-criar temporada padrão se não existir
+      if (!temporada) {
+        const { data: novaTemp } = await supabase
+          .from('temporadas')
+          .insert({ nome: 'Temporada 1 — 2026', inicio: '2026-01-01', fim: '2026-06-30', ativa: true })
+          .select('id, nome')
+          .maybeSingle();
+        temporada = novaTemp;
+      }
+      if (!temporada || cancelled) { setLoading(false); return; }
+
+      let { data: eloData } = await supabase
         .from('elo_bladers')
         .select('pontos, elo')
         .eq('user_id', userId)
         .eq('temporada_id', temporada.id)
         .maybeSingle();
+
+      // Auto-criar linha de ELO se não existir
+      if (!eloData) {
+        const { data: novoElo } = await supabase
+          .from('elo_bladers')
+          .insert({ user_id: userId, temporada_id: temporada.id, pontos: 0, elo: 'Ferro' })
+          .select('pontos, elo')
+          .maybeSingle();
+        eloData = novoElo ?? { pontos: 0, elo: 'Ferro' };
+      }
 
       const { data: hist } = await supabase
         .from('historico_elo')
@@ -751,11 +773,12 @@ function CardElo({ userId }: { userId: string }) {
         temporada: temporada.nome,
       });
       setHistorico((hist as any) || []);
+      setLoading(false);
     })();
     return () => { cancelled = true; };
   }, [userId]);
 
-  if (!elo) return null;
+  if (loading || !elo) return null;
 
   const eloConfig = getElo(elo.pontos);
   const proximoElo = getProximoElo(elo.pontos);
