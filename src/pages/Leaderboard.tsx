@@ -1,77 +1,129 @@
-import { useEffect, useMemo, useState } from 'react';
-import { usePlayerStore } from '@/stores/usePlayerStore';
-import { useTournamentStore } from '@/stores/useTournamentStore';
-import { getAllStats } from '@/lib/storage';
-import { getEloFromXP, ELO_TIERS, PlayerStats } from '@/types/tournament';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { cacheMemory } from '@/lib/cache';
+import { ELO_TIERS } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import EloBadge from '@/components/EloBadge';
 import BladerLink from '@/components/BladerLink';
-import { Crown, Shield, Trophy, Swords, Medal } from 'lucide-react';
+import { Crown, Shield, Trophy, Medal } from 'lucide-react';
 
 interface RankingEntry {
   playerId: string;
+  userId: string | null;
   name: string;
   nickname: string;
   avatar: string;
-  xp: number;
   totalPoints: number;
   totalWins: number;
   totalLosses: number;
   tournamentsPlayed: number;
+  elo: string;
+}
+
+const eloColors: Record<string, string> = {
+  Ferro: '210 10% 70%',
+  Bronze: '30 50% 45%',
+  Prata: '210 10% 82%',
+  Ouro: '45 95% 58%',
+  Platina: '188 100% 50%',
+  Diamante: '258 90% 75%',
+};
+
+function rankingPoints(posicao: number) {
+  if (posicao === 1) return 100;
+  if (posicao === 2) return 70;
+  if (posicao === 3) return 50;
+  if (posicao === 4) return 35;
+  if (posicao <= 8) return 20;
+  if (posicao <= 16) return 10;
+  return 5;
+}
+
+function eloFromPoints(points: number) {
+  if (points < 100) return 'Ferro';
+  if (points < 300) return 'Bronze';
+  if (points < 600) return 'Prata';
+  if (points < 1000) return 'Ouro';
+  if (points < 1500) return 'Platina';
+  return 'Diamante';
+}
+
+async function fetchRanking(): Promise<RankingEntry[]> {
+  const { data: torneios } = await supabase
+    .from('tournaments')
+    .select('id')
+    .eq('status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(100);
+
+  const torneioIds = (torneios ?? []).map((t) => t.id);
+  if (!torneioIds.length) return [];
+
+  const { data: inscricoes, error } = await supabase
+    .from('inscricoes')
+    .select('blader_id, blader_temp_id, posicao_final, vitorias, derrotas')
+    .in('torneio_id', torneioIds)
+    .not('posicao_final', 'is', null);
+
+  if (error || !inscricoes?.length) return [];
+
+  const userIds = Array.from(new Set(inscricoes.map((i) => i.blader_id).filter(Boolean))) as string[];
+  const tempIds = Array.from(new Set(inscricoes.map((i) => i.blader_temp_id).filter(Boolean))) as string[];
+  const [profilesRes, tempRes] = await Promise.all([
+    userIds.length
+      ? supabase.from('profiles').select('id, nome_blader, avatar_blader_url').in('id', userIds)
+      : Promise.resolve({ data: [] as any[] }),
+    tempIds.length
+      ? supabase.from('bladers_temp').select('id, nome, apelido, avatar_url').in('id', tempIds)
+      : Promise.resolve({ data: [] as any[] }),
+  ]);
+
+  const profileMap = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
+  const tempMap = new Map((tempRes.data ?? []).map((p) => [p.id, p]));
+  const rows = new Map<string, RankingEntry>();
+
+  for (const inscricao of inscricoes) {
+    const id = inscricao.blader_id || inscricao.blader_temp_id;
+    const posicao = inscricao.posicao_final ?? 999;
+    if (!id || posicao === 999) continue;
+
+    const key = inscricao.blader_id ? `user:${id}` : `temp:${id}`;
+    const profile = inscricao.blader_id ? profileMap.get(inscricao.blader_id) : null;
+    const temp = inscricao.blader_temp_id ? tempMap.get(inscricao.blader_temp_id) : null;
+    const current = rows.get(key) ?? {
+      playerId: id,
+      userId: inscricao.blader_id ?? null,
+      name: profile?.nome_blader || temp?.nome || temp?.apelido || 'Blader',
+      nickname: temp?.apelido || '',
+      avatar: profile?.avatar_blader_url || temp?.avatar_url || '🔵',
+      totalPoints: 0,
+      totalWins: 0,
+      totalLosses: 0,
+      tournamentsPlayed: 0,
+      elo: 'Ferro',
+    };
+
+    current.totalPoints += rankingPoints(posicao);
+    current.totalWins += inscricao.vitorias ?? 0;
+    current.totalLosses += inscricao.derrotas ?? 0;
+    current.tournamentsPlayed += 1;
+    current.elo = eloFromPoints(current.totalPoints);
+    rows.set(key, current);
+  }
+
+  return Array.from(rows.values())
+    .sort((a, b) => b.totalPoints - a.totalPoints || b.totalWins - a.totalWins)
+    .slice(0, 50);
 }
 
 export default function Rankings() {
-  const players = usePlayerStore(s => s.players);
-  const load = usePlayerStore(s => s.load);
-  const { tournaments, load: loadTournaments } = useTournamentStore();
-  const [stats, setStats] = useState<PlayerStats[]>([]);
+  const [rankings, setRankings] = useState<RankingEntry[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    load();
-    loadTournaments();
-    getAllStats().then(setStats);
+    cacheMemory('leaderboard:inscricoes:top50:v1', 15_000, fetchRanking)
+      .then(setRankings)
+      .finally(() => setLoading(false));
   }, []);
-
-  const rankings = useMemo(() => {
-    // Aggregate stats per player
-    const pointsMap = new Map<string, { points: number; wins: number; losses: number; tournaments: number }>();
-
-    for (const s of stats) {
-      const cur = pointsMap.get(s.playerId) || { points: 0, wins: 0, losses: 0, tournaments: 0 };
-      cur.points += s.points;
-      cur.wins += s.wins;
-      cur.losses += s.losses;
-      pointsMap.set(s.playerId, cur);
-    }
-
-    // Count tournaments played per player from completed tournaments
-    const tournamentCounts = new Map<string, number>();
-    for (const t of tournaments.filter(t => t.status === 'completed')) {
-      for (const pid of t.playerIds) {
-        tournamentCounts.set(pid, (tournamentCounts.get(pid) || 0) + 1);
-      }
-    }
-
-    const entries: RankingEntry[] = players.map(p => {
-      const s = pointsMap.get(p.id);
-      return {
-        playerId: p.id,
-        name: p.name,
-        nickname: p.nickname,
-        avatar: p.avatar,
-        xp: p.xp || 0,
-        totalPoints: s?.points || 0,
-        totalWins: s?.wins || 0,
-        totalLosses: s?.losses || 0,
-        tournamentsPlayed: tournamentCounts.get(p.id) || 0,
-      };
-    });
-
-    // Sort by points desc, then wins desc
-    return entries
-      .filter(e => e.totalPoints > 0 || e.tournamentsPlayed > 0)
-      .sort((a, b) => b.totalPoints - a.totalPoints || b.totalWins - a.totalWins);
-  }, [players, stats, tournaments]);
 
   const positionColors = ['text-gold', 'text-muted-foreground', 'text-secondary'];
 
@@ -116,7 +168,12 @@ export default function Rankings() {
         </div>
       </div>
 
-      {rankings.length === 0 ? (
+      {loading ? (
+        <div className="glass-panel p-12 text-center">
+          <div className="h-8 w-8 mx-auto border-2 border-primary border-t-transparent rounded-full animate-spin mb-3" />
+          <p className="text-muted-foreground font-body text-sm">Carregando ranking...</p>
+        </div>
+      ) : rankings.length === 0 ? (
         <div className="glass-panel p-12 text-center">
           <Shield className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
           <p className="text-muted-foreground font-body text-sm">Nenhum blader ranqueado ainda. Encerre torneios para gerar pontos!</p>
@@ -134,7 +191,7 @@ export default function Rankings() {
           </div>
 
           {rankings.map((entry, i) => {
-            const elo = getEloFromXP(entry.xp);
+            const eloColor = eloColors[entry.elo] || eloColors.Ferro;
             return (
               <div key={entry.playerId}
                 className={`glass-panel flex items-center gap-3 p-4 anim-fade-up ${i < 3 ? 'neon-line-cyan' : ''}`}
@@ -145,8 +202,8 @@ export default function Rankings() {
                   <span className={`font-heading text-xl font-bold text-center italic ${i < 3 ? positionColors[i] : 'text-muted-foreground/50'}`}>
                     {i === 0 ? <Crown className="h-5 w-5 inline text-gold" /> : `#${i + 1}`}
                   </span>
-                  <BladerLink name={entry.name} className="flex items-center gap-3 min-w-0 hover:opacity-80 transition-opacity">
-                    <Avatar className="h-10 w-10 border-2 shrink-0" style={{ borderColor: `hsl(${elo.tier.color} / 0.5)` }}>
+                  <BladerLink name={entry.name} userId={entry.userId} className="flex items-center gap-3 min-w-0 hover:opacity-80 transition-opacity">
+                    <Avatar className="h-10 w-10 border-2 shrink-0" style={{ borderColor: `hsl(${eloColor} / 0.5)` }}>
                       {entry.avatar.startsWith('http') || entry.avatar.startsWith('data:') ? <AvatarImage src={entry.avatar} alt={entry.name} /> : <AvatarFallback className="bg-muted text-lg">{entry.avatar}</AvatarFallback>}
                     </Avatar>
                     <div className="min-w-0">
@@ -157,7 +214,9 @@ export default function Rankings() {
                   <span className="font-heading text-lg font-bold text-primary text-right">{entry.totalPoints}</span>
                   <span className="font-heading text-sm text-foreground text-right">{entry.totalWins}</span>
                   <span className="font-heading text-sm text-muted-foreground text-right">{entry.tournamentsPlayed}</span>
-                  <div className="flex justify-end"><EloBadge xp={entry.xp} size="sm" /></div>
+                  <div className="flex justify-end">
+                    <span className="font-heading text-xs font-bold" style={{ color: `hsl(${eloColor})` }}>{entry.elo}</span>
+                  </div>
                 </div>
 
                 {/* Mobile layout */}
@@ -165,8 +224,8 @@ export default function Rankings() {
                   <span className={`font-heading text-xl font-bold w-8 text-center italic ${i < 3 ? positionColors[i] : 'text-muted-foreground/50'}`}>
                     {i === 0 ? <Crown className="h-5 w-5 inline text-gold" /> : `#${i + 1}`}
                   </span>
-                  <BladerLink name={entry.name} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
-                    <Avatar className="h-10 w-10 border-2 shrink-0" style={{ borderColor: `hsl(${elo.tier.color} / 0.5)` }}>
+                  <BladerLink name={entry.name} userId={entry.userId} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
+                    <Avatar className="h-10 w-10 border-2 shrink-0" style={{ borderColor: `hsl(${eloColor} / 0.5)` }}>
                       {entry.avatar.startsWith('http') || entry.avatar.startsWith('data:') ? <AvatarImage src={entry.avatar} alt={entry.name} /> : <AvatarFallback className="bg-muted text-lg">{entry.avatar}</AvatarFallback>}
                     </Avatar>
                     <div className="flex-1 min-w-0">
@@ -179,7 +238,7 @@ export default function Rankings() {
                   </BladerLink>
                   <div className="text-right shrink-0">
                     <span className="font-heading text-lg font-bold text-primary">{entry.totalPoints}</span>
-                    <div className="mt-0.5"><EloBadge xp={entry.xp} size="sm" /></div>
+                    <div className="mt-0.5 font-heading text-[10px] font-bold" style={{ color: `hsl(${eloColor})` }}>{entry.elo}</div>
                   </div>
                 </div>
               </div>
