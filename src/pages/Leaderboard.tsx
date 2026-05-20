@@ -120,7 +120,7 @@ export default function Rankings() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    cacheMemory('leaderboard:elo:top50', 15_000, fetchRanking)
+    cacheMemory('leaderboard:inscricoes:top50:v1', 15_000, fetchRanking)
       .then(setRankings)
       .finally(() => setLoading(false));
   }, []);
@@ -202,7 +202,7 @@ export default function Rankings() {
                   <span className={`font-heading text-xl font-bold text-center italic ${i < 3 ? positionColors[i] : 'text-muted-foreground/50'}`}>
                     {i === 0 ? <Crown className="h-5 w-5 inline text-gold" /> : `#${i + 1}`}
                   </span>
-                  <BladerLink name={entry.name} className="flex items-center gap-3 min-w-0 hover:opacity-80 transition-opacity">
+                  <BladerLink name={entry.name} userId={entry.userId} className="flex items-center gap-3 min-w-0 hover:opacity-80 transition-opacity">
                     <Avatar className="h-10 w-10 border-2 shrink-0" style={{ borderColor: `hsl(${eloColor} / 0.5)` }}>
                       {entry.avatar.startsWith('http') || entry.avatar.startsWith('data:') ? <AvatarImage src={entry.avatar} alt={entry.name} /> : <AvatarFallback className="bg-muted text-lg">{entry.avatar}</AvatarFallback>}
                     </Avatar>
@@ -224,7 +224,7 @@ export default function Rankings() {
                   <span className={`font-heading text-xl font-bold w-8 text-center italic ${i < 3 ? positionColors[i] : 'text-muted-foreground/50'}`}>
                     {i === 0 ? <Crown className="h-5 w-5 inline text-gold" /> : `#${i + 1}`}
                   </span>
-                  <BladerLink name={entry.name} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
+                  <BladerLink name={entry.name} userId={entry.userId} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
                     <Avatar className="h-10 w-10 border-2 shrink-0" style={{ borderColor: `hsl(${eloColor} / 0.5)` }}>
                       {entry.avatar.startsWith('http') || entry.avatar.startsWith('data:') ? <AvatarImage src={entry.avatar} alt={entry.name} /> : <AvatarFallback className="bg-muted text-lg">{entry.avatar}</AvatarFallback>}
                     </Avatar>
