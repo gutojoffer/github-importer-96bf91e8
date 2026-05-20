@@ -1606,6 +1606,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: undefined
       }
+      recompute_elo_rankings: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "organizer"
