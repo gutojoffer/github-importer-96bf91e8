@@ -4,7 +4,7 @@ import { cacheMemory } from '@/lib/cache';
 import { ELO_TIERS } from '@/types/tournament';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import BladerLink from '@/components/BladerLink';
-import { Crown, Shield, Trophy, Swords, Medal } from 'lucide-react';
+import { Crown, Shield, Trophy, Medal } from 'lucide-react';
 
 interface RankingEntry {
   playerId: string;
@@ -126,7 +126,12 @@ export default function Rankings() {
         </div>
       </div>
 
-      {rankings.length === 0 ? (
+      {loading ? (
+        <div className="glass-panel p-12 text-center">
+          <div className="h-8 w-8 mx-auto border-2 border-primary border-t-transparent rounded-full animate-spin mb-3" />
+          <p className="text-muted-foreground font-body text-sm">Carregando ranking...</p>
+        </div>
+      ) : rankings.length === 0 ? (
         <div className="glass-panel p-12 text-center">
           <Shield className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
           <p className="text-muted-foreground font-body text-sm">Nenhum blader ranqueado ainda. Encerre torneios para gerar pontos!</p>
@@ -144,7 +149,7 @@ export default function Rankings() {
           </div>
 
           {rankings.map((entry, i) => {
-            const elo = getEloFromXP(entry.xp);
+            const eloColor = eloColors[entry.elo] || eloColors.Ferro;
             return (
               <div key={entry.playerId}
                 className={`glass-panel flex items-center gap-3 p-4 anim-fade-up ${i < 3 ? 'neon-line-cyan' : ''}`}
@@ -156,7 +161,7 @@ export default function Rankings() {
                     {i === 0 ? <Crown className="h-5 w-5 inline text-gold" /> : `#${i + 1}`}
                   </span>
                   <BladerLink name={entry.name} className="flex items-center gap-3 min-w-0 hover:opacity-80 transition-opacity">
-                    <Avatar className="h-10 w-10 border-2 shrink-0" style={{ borderColor: `hsl(${elo.tier.color} / 0.5)` }}>
+                    <Avatar className="h-10 w-10 border-2 shrink-0" style={{ borderColor: `hsl(${eloColor} / 0.5)` }}>
                       {entry.avatar.startsWith('http') || entry.avatar.startsWith('data:') ? <AvatarImage src={entry.avatar} alt={entry.name} /> : <AvatarFallback className="bg-muted text-lg">{entry.avatar}</AvatarFallback>}
                     </Avatar>
                     <div className="min-w-0">
@@ -167,7 +172,9 @@ export default function Rankings() {
                   <span className="font-heading text-lg font-bold text-primary text-right">{entry.totalPoints}</span>
                   <span className="font-heading text-sm text-foreground text-right">{entry.totalWins}</span>
                   <span className="font-heading text-sm text-muted-foreground text-right">{entry.tournamentsPlayed}</span>
-                  <div className="flex justify-end"><EloBadge xp={entry.xp} size="sm" /></div>
+                  <div className="flex justify-end">
+                    <span className="font-heading text-xs font-bold" style={{ color: `hsl(${eloColor})` }}>{entry.elo}</span>
+                  </div>
                 </div>
 
                 {/* Mobile layout */}
@@ -176,7 +183,7 @@ export default function Rankings() {
                     {i === 0 ? <Crown className="h-5 w-5 inline text-gold" /> : `#${i + 1}`}
                   </span>
                   <BladerLink name={entry.name} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
-                    <Avatar className="h-10 w-10 border-2 shrink-0" style={{ borderColor: `hsl(${elo.tier.color} / 0.5)` }}>
+                    <Avatar className="h-10 w-10 border-2 shrink-0" style={{ borderColor: `hsl(${eloColor} / 0.5)` }}>
                       {entry.avatar.startsWith('http') || entry.avatar.startsWith('data:') ? <AvatarImage src={entry.avatar} alt={entry.name} /> : <AvatarFallback className="bg-muted text-lg">{entry.avatar}</AvatarFallback>}
                     </Avatar>
                     <div className="flex-1 min-w-0">
@@ -189,7 +196,7 @@ export default function Rankings() {
                   </BladerLink>
                   <div className="text-right shrink-0">
                     <span className="font-heading text-lg font-bold text-primary">{entry.totalPoints}</span>
-                    <div className="mt-0.5"><EloBadge xp={entry.xp} size="sm" /></div>
+                    <div className="mt-0.5 font-heading text-[10px] font-bold" style={{ color: `hsl(${eloColor})` }}>{entry.elo}</div>
                   </div>
                 </div>
               </div>
