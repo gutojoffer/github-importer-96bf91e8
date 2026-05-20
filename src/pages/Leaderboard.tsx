@@ -8,6 +8,7 @@ import { Crown, Shield, Trophy, Medal } from 'lucide-react';
 
 interface RankingEntry {
   playerId: string;
+  userId: string | null;
   name: string;
   nickname: string;
   avatar: string;
@@ -27,50 +28,91 @@ const eloColors: Record<string, string> = {
   Diamante: '258 90% 75%',
 };
 
+function rankingPoints(posicao: number) {
+  if (posicao === 1) return 100;
+  if (posicao === 2) return 70;
+  if (posicao === 3) return 50;
+  if (posicao === 4) return 35;
+  if (posicao <= 8) return 20;
+  if (posicao <= 16) return 10;
+  return 5;
+}
+
+function eloFromPoints(points: number) {
+  if (points < 100) return 'Ferro';
+  if (points < 300) return 'Bronze';
+  if (points < 600) return 'Prata';
+  if (points < 1000) return 'Ouro';
+  if (points < 1500) return 'Platina';
+  return 'Diamante';
+}
+
 async function fetchRanking(): Promise<RankingEntry[]> {
-  const { data: temporada, error: tempError } = await supabase
-    .from('temporadas')
+  const { data: torneios } = await supabase
+    .from('tournaments')
     .select('id')
-    .eq('ativa', true)
+    .eq('status', 'completed')
     .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(100);
 
-  if (tempError || !temporada) return [];
+  const torneioIds = (torneios ?? []).map((t) => t.id);
+  if (!torneioIds.length) return [];
 
-  const { data: elos, error: eloError } = await supabase
-    .from('elo_bladers')
-    .select('user_id, pontos, elo')
-    .eq('temporada_id', temporada.id)
-    .order('pontos', { ascending: false })
-    .limit(50);
+  const { data: inscricoes, error } = await supabase
+    .from('inscricoes')
+    .select('blader_id, blader_temp_id, posicao_final, vitorias, derrotas')
+    .in('torneio_id', torneioIds)
+    .not('posicao_final', 'is', null);
 
-  if (eloError || !elos?.length) return [];
+  if (error || !inscricoes?.length) return [];
 
-  const userIds = elos.map((e) => e.user_id).filter(Boolean) as string[];
-  const { data: profiles } = await supabase
-    .from('profiles')
-    .select('id, nome_blader, avatar_blader_url, torneios_total, vitorias_total')
-    .in('id', userIds);
+  const userIds = Array.from(new Set(inscricoes.map((i) => i.blader_id).filter(Boolean))) as string[];
+  const tempIds = Array.from(new Set(inscricoes.map((i) => i.blader_temp_id).filter(Boolean))) as string[];
+  const [profilesRes, tempRes] = await Promise.all([
+    userIds.length
+      ? supabase.from('profiles').select('id, nome_blader, avatar_blader_url').in('id', userIds)
+      : Promise.resolve({ data: [] as any[] }),
+    tempIds.length
+      ? supabase.from('bladers_temp').select('id, nome, apelido, avatar_url').in('id', tempIds)
+      : Promise.resolve({ data: [] as any[] }),
+  ]);
 
-  const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
-  return elos
-    .filter((e) => e.user_id)
-    .map((e) => {
-      const profile = profileMap.get(e.user_id!);
-      return {
-        playerId: e.user_id!,
-        name: profile?.nome_blader || 'Blader',
-        nickname: '',
-        avatar: profile?.avatar_blader_url || '🔵',
-        totalPoints: e.pontos ?? 0,
-        totalWins: profile?.vitorias_total ?? 0,
-        totalLosses: 0,
-        tournamentsPlayed: profile?.torneios_total ?? 0,
-        elo: e.elo || 'Ferro',
-      };
-    })
-    .filter((e) => e.totalPoints > 0 || e.tournamentsPlayed > 0);
+  const profileMap = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
+  const tempMap = new Map((tempRes.data ?? []).map((p) => [p.id, p]));
+  const rows = new Map<string, RankingEntry>();
+
+  for (const inscricao of inscricoes) {
+    const id = inscricao.blader_id || inscricao.blader_temp_id;
+    const posicao = inscricao.posicao_final ?? 999;
+    if (!id || posicao === 999) continue;
+
+    const key = inscricao.blader_id ? `user:${id}` : `temp:${id}`;
+    const profile = inscricao.blader_id ? profileMap.get(inscricao.blader_id) : null;
+    const temp = inscricao.blader_temp_id ? tempMap.get(inscricao.blader_temp_id) : null;
+    const current = rows.get(key) ?? {
+      playerId: id,
+      userId: inscricao.blader_id ?? null,
+      name: profile?.nome_blader || temp?.nome || temp?.apelido || 'Blader',
+      nickname: temp?.apelido || '',
+      avatar: profile?.avatar_blader_url || temp?.avatar_url || '🔵',
+      totalPoints: 0,
+      totalWins: 0,
+      totalLosses: 0,
+      tournamentsPlayed: 0,
+      elo: 'Ferro',
+    };
+
+    current.totalPoints += rankingPoints(posicao);
+    current.totalWins += inscricao.vitorias ?? 0;
+    current.totalLosses += inscricao.derrotas ?? 0;
+    current.tournamentsPlayed += 1;
+    current.elo = eloFromPoints(current.totalPoints);
+    rows.set(key, current);
+  }
+
+  return Array.from(rows.values())
+    .sort((a, b) => b.totalPoints - a.totalPoints || b.totalWins - a.totalWins)
+    .slice(0, 50);
 }
 
 export default function Rankings() {
