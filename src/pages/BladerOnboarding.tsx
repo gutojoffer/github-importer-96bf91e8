@@ -28,29 +28,30 @@ export default function BladerOnboarding() {
     (async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('tipo_conta, nome_liga, cidade, beyblade_favorita, avatar_url, bio')
+        .select('tipo_conta, nome_blader, cidade_blader, beyblade_favorita, avatar_blader_url, bio_blader, tem_perfil_blader')
         .eq('id', user.id)
         .maybeSingle();
 
       if (data) {
         if (data.tipo_conta !== 'blader') {
-          // não é blader → tira do onboarding
           navigate('/home', { replace: true });
           return;
         }
-        setNome(data.nome_liga || '');
-        setCidade(data.cidade || '');
+        setNome(data.nome_blader || '');
+        setCidade(data.cidade_blader || '');
         setBeybladeFavorita(data.beyblade_favorita || '');
-        setBio(data.bio || '');
-        setAvatarUrl(data.avatar_url || '');
+        setBio(data.bio_blader || '');
+        setAvatarUrl(data.avatar_blader_url || '');
 
-        // Se já está completo, vai direto pro dashboard
-        if (data.nome_liga && data.cidade) {
+        // Se já concluiu, vai direto pro dashboard
+        if (data.tem_perfil_blader && data.nome_blader) {
+          localStorage.setItem('bladex_onboarding_completo', 'true');
           navigate('/blader/home', { replace: true });
         }
       }
     })();
   }, [user, navigate]);
+
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!user || !e.target.files?.[0]) return;
