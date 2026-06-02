@@ -1133,7 +1133,7 @@ function PartSelector({
             zIndex: 9999,
             background: '#0d1120', border: '1px solid rgba(0,220,255,.15)',
             borderRadius: 12, boxShadow: '0 16px 40px rgba(0,0,0,.7)',
-            display: 'flex', flexDirection: 'column', maxHeight: 280, overflow: 'hidden',
+            display: 'flex', flexDirection: 'column', maxHeight: dropdownPos.maxH, overflow: 'hidden',
           }}>
           <style>{`
             .forjabey-dropdown::-webkit-scrollbar { width: 3px; }
@@ -1143,8 +1143,10 @@ function PartSelector({
           `}</style>
           <div style={{ padding: '8px 10px', borderBottom: '1px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
             <input
+              ref={inputRef}
               autoFocus value={busca}
-              onChange={e => setBusca(e.target.value)}
+              onChange={e => { setBusca(e.target.value); setIndiceAtivo(0); }}
+              onKeyDown={handleKeyDown}
               placeholder={`Buscar ${label.toLowerCase()}...`}
               style={{
                 width: '100%', padding: '7px 10px', background: '#111827',
@@ -1153,7 +1155,8 @@ function PartSelector({
               }}
             />
           </div>
-          <div className="forjabey-dropdown" style={{ overflowY: 'auto', flex: 1, scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,.1) transparent' }}>
+          <div ref={listaRef} className="forjabey-dropdown" style={{ overflowY: 'auto', flex: 1, scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,.1) transparent' }}>
+
             {valor && (
               <div
                 onClick={() => { onSelecionar(null); setAberto(false); setBusca(''); }}
