@@ -267,12 +267,30 @@ export default function BladerHome() {
       <div className="space-y-5" style={{ minWidth: 0 }}>
       {/* Welcome / Hero */}
       <div
-        className="rounded-2xl p-5 md:p-6 flex items-center gap-4 md:gap-5"
+        className="rounded-2xl p-5 md:p-6 flex items-center gap-4 md:gap-5 relative"
         style={{
           background: `linear-gradient(135deg, ${palette.from}22 0%, #111827 60%)`,
           border: `1px solid ${palette.border}`,
         }}
       >
+        <button
+          onClick={() => navigate('/settings')}
+          title="Editar perfil"
+          className="font-body"
+          style={{
+            position: 'absolute', top: 10, right: 10,
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            padding: '5px 11px', borderRadius: 8,
+            background: 'rgba(255,255,255,.06)',
+            border: '1px solid rgba(255,255,255,.12)',
+            color: 'rgba(255,255,255,.7)',
+            fontSize: 11, fontWeight: 600, cursor: 'pointer',
+            zIndex: 2,
+          }}
+        >
+          ✏️ <span className="hidden sm:inline">Editar perfil</span>
+        </button>
+
         <BladerAvatar url={bladerAvatar} name={bladerName} colorKey={profile?.corPerfil} size={64} borderWidth={2} />
         <div className="flex-1 min-w-0">
           <h1 className="font-heading font-bold text-foreground" style={{ fontSize: 20, lineHeight: 1.2 }}>
@@ -303,6 +321,7 @@ export default function BladerHome() {
           </span>
         </div>
       </div>
+
 
       {/* Tabs */}
       <div style={{
