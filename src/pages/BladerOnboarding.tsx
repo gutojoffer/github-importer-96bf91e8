@@ -88,18 +88,26 @@ export default function BladerOnboarding() {
         setLoading(false);
         return;
       }
-      const ok = await saveStep({ nome_liga: nome.trim(), cidade: cidade.trim(), avatar_url: avatarUrl || null });
+      const ok = await saveStep({
+        nome_blader: nome.trim(),
+        cidade_blader: cidade.trim(),
+        avatar_blader_url: avatarUrl || null,
+      });
       if (ok) setStep(1);
     } else if (step === 1) {
       const ok = await saveStep({
         beyblade_favorita: beybladeFavorita.trim() || null,
-        bio: bio.trim() || null,
+        bio_blader: bio.trim() || null,
       });
       if (ok) setStep(2);
     } else {
+      // Marca o perfil como concluído de forma idempotente
+      await saveStep({ tem_perfil_blader: true });
+      localStorage.setItem('bladex_onboarding_completo', 'true');
       await verificarEExecutarMatch(user.id, user.email);
       navigate('/blader/home', { replace: true });
     }
+
 
     setLoading(false);
   };
