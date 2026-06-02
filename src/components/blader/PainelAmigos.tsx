@@ -67,8 +67,32 @@ export function PainelAmigos({ drawer = false, onFechar }: { drawer?: boolean; o
   return (
     <>
       {drawer && (
-        <div onClick={onFechar} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 60 }} />
+        <div
+          onClick={onFechar}
+          title="Fechar"
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)',
+            zIndex: 60, cursor: 'pointer',
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-start',
+            padding: 16,
+          }}
+        >
+          <button
+            onClick={(e) => { e.stopPropagation(); onFechar?.(); }}
+            aria-label="Fechar amigos"
+            style={{
+              width: 36, height: 36, borderRadius: '50%',
+              background: 'rgba(255,255,255,.08)',
+              border: '1px solid rgba(255,255,255,.15)',
+              color: '#fff', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <X size={18} />
+          </button>
+        </div>
       )}
+
 
       <aside style={{
         position: 'fixed',
