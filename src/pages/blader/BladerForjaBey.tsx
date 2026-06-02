@@ -1170,28 +1170,32 @@ function PartSelector({
                 ✕ Remover seleção
               </div>
             )}
-            {filtradas.map(p => {
+            {filtradas.map((p, idx) => {
               const beyEmUso = pecaEmUso(todasBeys, slotAtual, tabela, p.id);
               const emUso = beyEmUso !== null;
+              const ativo = idx === indiceAtivo;
               return (
                 <div
                   key={p.id}
+                  data-forja-item
                   onClick={() => {
                     if (emUso) {
                       toast.error(`"${p.nome}" já está na Bey ${beyEmUso}. Cada peça só pode ser usada uma vez.`, { duration: 3500 });
                       return;
                     }
-                    onSelecionar(p); setAberto(false); setBusca('');
+                    onSelecionar(p); setAberto(false); setBusca(''); setIndiceAtivo(-1);
                   }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px',
                     cursor: emUso ? 'not-allowed' : 'pointer',
                     borderBottom: '1px solid rgba(255,255,255,.03)',
                     opacity: emUso ? 0.5 : 1,
+                    background: ativo ? 'rgba(0,220,255,.08)' : 'transparent',
                   }}
-                  onMouseEnter={e => { if (!emUso) e.currentTarget.style.background = 'rgba(0,220,255,.05)'; }}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  onMouseEnter={e => { setIndiceAtivo(idx); if (!emUso) e.currentTarget.style.background = 'rgba(0,220,255,.08)'; }}
+                  onMouseLeave={e => (e.currentTarget.style.background = ativo ? 'rgba(0,220,255,.08)' : 'transparent')}
                 >
+
                   <div style={{
                     width: 36, height: 36, borderRadius: 8, flexShrink: 0,
                     background: p.imagem_url ? `url(${p.imagem_url}) center/contain no-repeat` : '#090c18',
