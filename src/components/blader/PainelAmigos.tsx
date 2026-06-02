@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, Search, UserPlus, Bell } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Search, UserPlus, Bell, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAmizades, BladerAmigo } from '@/hooks/useAmizades';
