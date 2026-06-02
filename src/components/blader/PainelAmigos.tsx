@@ -165,16 +165,35 @@ export function PainelAmigos({ drawer = false, onFechar }: { drawer?: boolean; o
                   </span>
                 )}
               </div>
-              <button onClick={() => setModalBusca(true)} title="Adicionar amigo" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 4,
-                padding: '4px 9px', borderRadius: 7,
-                background: 'rgba(0,220,255,.08)',
-                border: '1px solid rgba(0,220,255,.22)',
-                color: '#00DCFF', fontSize: 11, fontWeight: 700,
-                fontFamily: 'Rajdhani,sans-serif', cursor: 'pointer',
-              }}>
-                <UserPlus size={11} /> Add
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <button onClick={() => setModalBusca(true)} title="Adicionar amigo" style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  padding: '4px 9px', borderRadius: 7,
+                  background: 'rgba(0,220,255,.08)',
+                  border: '1px solid rgba(0,220,255,.22)',
+                  color: '#00DCFF', fontSize: 11, fontWeight: 700,
+                  fontFamily: 'Rajdhani,sans-serif', cursor: 'pointer',
+                }}>
+                  <UserPlus size={11} /> Add
+                </button>
+                {drawer && (
+                  <button
+                    onClick={onFechar}
+                    title="Fechar"
+                    aria-label="Fechar painel de amigos"
+                    style={{
+                      width: 28, height: 28, borderRadius: 7,
+                      background: 'rgba(255,255,255,.06)',
+                      border: '1px solid rgba(255,255,255,.1)',
+                      color: 'rgba(255,255,255,.7)', cursor: 'pointer',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
             </div>
 
             {/* Notificação destacada quando há pedidos */}
