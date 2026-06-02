@@ -946,16 +946,37 @@ function PartSelector({
   const [aberto, setAberto] = useState(false);
   const [pecas, setPecas] = useState<Peca[]>([]);
   const [busca, setBusca] = useState('');
+  const [indiceAtivo, setIndiceAtivo] = useState(-1);
   const botaoRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listaRef = useRef<HTMLDivElement>(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0, maxH: 280, flipUp: false });
+
+  function calcPos() {
+    const rect = botaoRef.current?.getBoundingClientRect();
+    if (!rect) return null;
+    const margin = 8;
+    const espacoAbaixo = window.innerHeight - rect.bottom - margin;
+    const espacoAcima = rect.top - margin;
+    const desejado = 280;
+    const flipUp = espacoAbaixo < 180 && espacoAcima > espacoAbaixo;
+    const maxH = Math.max(160, Math.min(desejado, flipUp ? espacoAcima : espacoAbaixo));
+    return {
+      top: flipUp ? Math.max(margin, rect.top - maxH - 4) : rect.bottom + 4,
+      left: rect.left,
+      width: rect.width,
+      maxH,
+      flipUp,
+    };
+  }
 
   function abrirDropdown() {
-    const rect = botaoRef.current?.getBoundingClientRect();
-    if (rect) {
-      setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
-    }
+    const pos = calcPos();
+    if (pos) setDropdownPos(pos);
     setAberto(true);
+    setIndiceAtivo(-1);
+    setTimeout(() => inputRef.current?.focus(), 30);
   }
 
   // Fechar ao clicar fora
@@ -975,14 +996,11 @@ function PartSelector({
   useEffect(() => {
     if (!aberto) return;
     const reposicionar = () => {
-      const rect = botaoRef.current?.getBoundingClientRect();
-      if (rect) {
-        setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
-      }
+      const pos = calcPos();
+      if (pos) setDropdownPos(pos);
     };
     const fechar = () => setAberto(false);
     window.addEventListener('resize', fechar);
-    // Scroll na página: reposiciona; scroll dentro do dropdown não dispara aqui (stopPropagation no onWheel)
     window.addEventListener('scroll', reposicionar, true);
     return () => {
       window.removeEventListener('resize', fechar);
@@ -1003,6 +1021,38 @@ function PartSelector({
   const filtradas = useMemo(() =>
     pecas.filter(p => p.nome?.toLowerCase().includes(busca.toLowerCase())),
     [pecas, busca]);
+
+  // Scroll item ativo para a vista
+  useEffect(() => {
+    if (indiceAtivo < 0 || !listaRef.current) return;
+    const items = listaRef.current.querySelectorAll('[data-forja-item]');
+    (items[indiceAtivo] as HTMLElement | undefined)?.scrollIntoView({ block: 'nearest' });
+  }, [indiceAtivo]);
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!aberto) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setIndiceAtivo(i => Math.min(i + 1, filtradas.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setIndiceAtivo(i => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const p = filtradas[indiceAtivo];
+      if (!p) return;
+      const beyEmUso = pecaEmUso(todasBeys, slotAtual, tabela, p.id);
+      if (beyEmUso !== null) {
+        toast.error(`"${p.nome}" já está na Bey ${beyEmUso}. Cada peça só pode ser usada uma vez.`, { duration: 3500 });
+        return;
+      }
+      onSelecionar(p); setAberto(false); setBusca(''); setIndiceAtivo(-1);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setAberto(false);
+    }
+  }
+
 
   return (
     <div style={{ marginBottom: 10, position: 'relative' }}>
