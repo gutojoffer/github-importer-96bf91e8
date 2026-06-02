@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, Search, UserPlus, Bell } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Search, UserPlus, Bell, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAmizades, BladerAmigo } from '@/hooks/useAmizades';
@@ -67,8 +67,32 @@ export function PainelAmigos({ drawer = false, onFechar }: { drawer?: boolean; o
   return (
     <>
       {drawer && (
-        <div onClick={onFechar} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 60 }} />
+        <div
+          onClick={onFechar}
+          title="Fechar"
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)',
+            zIndex: 60, cursor: 'pointer',
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-start',
+            padding: 16,
+          }}
+        >
+          <button
+            onClick={(e) => { e.stopPropagation(); onFechar?.(); }}
+            aria-label="Fechar amigos"
+            style={{
+              width: 36, height: 36, borderRadius: '50%',
+              background: 'rgba(255,255,255,.08)',
+              border: '1px solid rgba(255,255,255,.15)',
+              color: '#fff', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <X size={18} />
+          </button>
+        </div>
       )}
+
 
       <aside style={{
         position: 'fixed',
@@ -141,16 +165,35 @@ export function PainelAmigos({ drawer = false, onFechar }: { drawer?: boolean; o
                   </span>
                 )}
               </div>
-              <button onClick={() => setModalBusca(true)} title="Adicionar amigo" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 4,
-                padding: '4px 9px', borderRadius: 7,
-                background: 'rgba(0,220,255,.08)',
-                border: '1px solid rgba(0,220,255,.22)',
-                color: '#00DCFF', fontSize: 11, fontWeight: 700,
-                fontFamily: 'Rajdhani,sans-serif', cursor: 'pointer',
-              }}>
-                <UserPlus size={11} /> Add
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <button onClick={() => setModalBusca(true)} title="Adicionar amigo" style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  padding: '4px 9px', borderRadius: 7,
+                  background: 'rgba(0,220,255,.08)',
+                  border: '1px solid rgba(0,220,255,.22)',
+                  color: '#00DCFF', fontSize: 11, fontWeight: 700,
+                  fontFamily: 'Rajdhani,sans-serif', cursor: 'pointer',
+                }}>
+                  <UserPlus size={11} /> Add
+                </button>
+                {drawer && (
+                  <button
+                    onClick={onFechar}
+                    title="Fechar"
+                    aria-label="Fechar painel de amigos"
+                    style={{
+                      width: 28, height: 28, borderRadius: 7,
+                      background: 'rgba(255,255,255,.06)',
+                      border: '1px solid rgba(255,255,255,.1)',
+                      color: 'rgba(255,255,255,.7)', cursor: 'pointer',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
             </div>
 
             {/* Notificação destacada quando há pedidos */}

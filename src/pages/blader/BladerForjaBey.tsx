@@ -946,16 +946,37 @@ function PartSelector({
   const [aberto, setAberto] = useState(false);
   const [pecas, setPecas] = useState<Peca[]>([]);
   const [busca, setBusca] = useState('');
+  const [indiceAtivo, setIndiceAtivo] = useState(-1);
   const botaoRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listaRef = useRef<HTMLDivElement>(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0, maxH: 280, flipUp: false });
+
+  function calcPos() {
+    const rect = botaoRef.current?.getBoundingClientRect();
+    if (!rect) return null;
+    const margin = 8;
+    const espacoAbaixo = window.innerHeight - rect.bottom - margin;
+    const espacoAcima = rect.top - margin;
+    const desejado = 280;
+    const flipUp = espacoAbaixo < 180 && espacoAcima > espacoAbaixo;
+    const maxH = Math.max(160, Math.min(desejado, flipUp ? espacoAcima : espacoAbaixo));
+    return {
+      top: flipUp ? Math.max(margin, rect.top - maxH - 4) : rect.bottom + 4,
+      left: rect.left,
+      width: rect.width,
+      maxH,
+      flipUp,
+    };
+  }
 
   function abrirDropdown() {
-    const rect = botaoRef.current?.getBoundingClientRect();
-    if (rect) {
-      setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
-    }
+    const pos = calcPos();
+    if (pos) setDropdownPos(pos);
     setAberto(true);
+    setIndiceAtivo(-1);
+    setTimeout(() => inputRef.current?.focus(), 30);
   }
 
   // Fechar ao clicar fora
@@ -975,14 +996,11 @@ function PartSelector({
   useEffect(() => {
     if (!aberto) return;
     const reposicionar = () => {
-      const rect = botaoRef.current?.getBoundingClientRect();
-      if (rect) {
-        setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
-      }
+      const pos = calcPos();
+      if (pos) setDropdownPos(pos);
     };
     const fechar = () => setAberto(false);
     window.addEventListener('resize', fechar);
-    // Scroll na página: reposiciona; scroll dentro do dropdown não dispara aqui (stopPropagation no onWheel)
     window.addEventListener('scroll', reposicionar, true);
     return () => {
       window.removeEventListener('resize', fechar);
@@ -1003,6 +1021,38 @@ function PartSelector({
   const filtradas = useMemo(() =>
     pecas.filter(p => p.nome?.toLowerCase().includes(busca.toLowerCase())),
     [pecas, busca]);
+
+  // Scroll item ativo para a vista
+  useEffect(() => {
+    if (indiceAtivo < 0 || !listaRef.current) return;
+    const items = listaRef.current.querySelectorAll('[data-forja-item]');
+    (items[indiceAtivo] as HTMLElement | undefined)?.scrollIntoView({ block: 'nearest' });
+  }, [indiceAtivo]);
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!aberto) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setIndiceAtivo(i => Math.min(i + 1, filtradas.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setIndiceAtivo(i => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const p = filtradas[indiceAtivo];
+      if (!p) return;
+      const beyEmUso = pecaEmUso(todasBeys, slotAtual, tabela, p.id);
+      if (beyEmUso !== null) {
+        toast.error(`"${p.nome}" já está na Bey ${beyEmUso}. Cada peça só pode ser usada uma vez.`, { duration: 3500 });
+        return;
+      }
+      onSelecionar(p); setAberto(false); setBusca(''); setIndiceAtivo(-1);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setAberto(false);
+    }
+  }
+
 
   return (
     <div style={{ marginBottom: 10, position: 'relative' }}>
@@ -1083,7 +1133,7 @@ function PartSelector({
             zIndex: 9999,
             background: '#0d1120', border: '1px solid rgba(0,220,255,.15)',
             borderRadius: 12, boxShadow: '0 16px 40px rgba(0,0,0,.7)',
-            display: 'flex', flexDirection: 'column', maxHeight: 280, overflow: 'hidden',
+            display: 'flex', flexDirection: 'column', maxHeight: dropdownPos.maxH, overflow: 'hidden',
           }}>
           <style>{`
             .forjabey-dropdown::-webkit-scrollbar { width: 3px; }
@@ -1093,8 +1143,10 @@ function PartSelector({
           `}</style>
           <div style={{ padding: '8px 10px', borderBottom: '1px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
             <input
+              ref={inputRef}
               autoFocus value={busca}
-              onChange={e => setBusca(e.target.value)}
+              onChange={e => { setBusca(e.target.value); setIndiceAtivo(0); }}
+              onKeyDown={handleKeyDown}
               placeholder={`Buscar ${label.toLowerCase()}...`}
               style={{
                 width: '100%', padding: '7px 10px', background: '#111827',
@@ -1103,7 +1155,8 @@ function PartSelector({
               }}
             />
           </div>
-          <div className="forjabey-dropdown" style={{ overflowY: 'auto', flex: 1, scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,.1) transparent' }}>
+          <div ref={listaRef} className="forjabey-dropdown" style={{ overflowY: 'auto', flex: 1, scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,.1) transparent' }}>
+
             {valor && (
               <div
                 onClick={() => { onSelecionar(null); setAberto(false); setBusca(''); }}
@@ -1117,28 +1170,32 @@ function PartSelector({
                 ✕ Remover seleção
               </div>
             )}
-            {filtradas.map(p => {
+            {filtradas.map((p, idx) => {
               const beyEmUso = pecaEmUso(todasBeys, slotAtual, tabela, p.id);
               const emUso = beyEmUso !== null;
+              const ativo = idx === indiceAtivo;
               return (
                 <div
                   key={p.id}
+                  data-forja-item
                   onClick={() => {
                     if (emUso) {
                       toast.error(`"${p.nome}" já está na Bey ${beyEmUso}. Cada peça só pode ser usada uma vez.`, { duration: 3500 });
                       return;
                     }
-                    onSelecionar(p); setAberto(false); setBusca('');
+                    onSelecionar(p); setAberto(false); setBusca(''); setIndiceAtivo(-1);
                   }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px',
                     cursor: emUso ? 'not-allowed' : 'pointer',
                     borderBottom: '1px solid rgba(255,255,255,.03)',
                     opacity: emUso ? 0.5 : 1,
+                    background: ativo ? 'rgba(0,220,255,.08)' : 'transparent',
                   }}
-                  onMouseEnter={e => { if (!emUso) e.currentTarget.style.background = 'rgba(0,220,255,.05)'; }}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  onMouseEnter={e => { setIndiceAtivo(idx); if (!emUso) e.currentTarget.style.background = 'rgba(0,220,255,.08)'; }}
+                  onMouseLeave={e => (e.currentTarget.style.background = ativo ? 'rgba(0,220,255,.08)' : 'transparent')}
                 >
+
                   <div style={{
                     width: 36, height: 36, borderRadius: 8, flexShrink: 0,
                     background: p.imagem_url ? `url(${p.imagem_url}) center/contain no-repeat` : '#090c18',
