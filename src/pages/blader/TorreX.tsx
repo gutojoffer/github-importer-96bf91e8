@@ -166,28 +166,49 @@ export default function TorreX() {
   }
 
   async function enviarDesafio(alvoId: string, alvoNome: string | null) {
-    if (!userId || !meu) return;
-    if (alvoId === userId) return;
-    const ativo = desafios.find(d =>
-      ((d.desafiante_id === alvoId && d.desafiado_id === userId) ||
-       (d.desafiado_id === alvoId && d.desafiante_id === userId)) &&
-      ['pendente', 'aceito', 'em_andamento'].includes(d.status)
-    );
-    if (ativo) { toast.error('Já existe um desafio ativo entre vocês.'); return; }
+    try {
+      if (!userId) { toast.error('Faça login para desafiar.'); return; }
+      if (alvoId === userId) { toast.error('Você não pode desafiar a si mesmo.'); return; }
 
-    const { error } = await supabase.from('torre_x_desafios').insert({
-      desafiante_id: userId, desafiado_id: alvoId, status: 'pendente',
-      cidade: meu.cidade, pontos_em_jogo: 25,
-    });
-    if (error) { toast.error('Falha ao enviar desafio.'); return; }
+      let meuRow: any = meu;
+      if (!meuRow) {
+        await carregarMeu();
+        const { data: refreshed } = await supabase
+          .from('torre_x_pontos').select('*').eq('user_id', userId).maybeSingle();
+        meuRow = refreshed;
+      }
+      if (!meuRow) { toast.error('Não foi possível carregar seu perfil da Torre X.'); return; }
 
-    await supabase.from('notificacoes').insert({
-      user_id: alvoId, tipo: 'torre_x_desafio',
-      mensagem: `⚔️ ${meu.nome_blader || 'Um blader'} te desafiou na Torre X!`,
-      lida: false, dados: { desafiante_id: userId } as any,
-    });
-    toast.success(`Desafio enviado para ${alvoNome || 'oponente'}.`);
-    void carregarDesafios();
+      const ativo = desafios.find(d =>
+        ((d.desafiante_id === alvoId && d.desafiado_id === userId) ||
+         (d.desafiado_id === alvoId && d.desafiante_id === userId)) &&
+        ['pendente', 'aceito', 'em_andamento'].includes(d.status)
+      );
+      if (ativo) { toast.error('Já existe um desafio ativo entre vocês.'); return; }
+
+      const { error: errDes } = await supabase.from('torre_x_desafios').insert({
+        desafiante_id: userId, desafiado_id: alvoId, status: 'pendente',
+        cidade: meuRow.cidade ?? null, pontos_em_jogo: 25,
+      });
+      if (errDes) {
+        console.error('[TorreX] erro ao inserir desafio:', errDes);
+        toast.error(`Falha ao enviar desafio: ${errDes.message}`);
+        return;
+      }
+
+      const { error: errNot } = await supabase.from('notificacoes').insert({
+        user_id: alvoId, tipo: 'torre_x_desafio',
+        mensagem: `⚔️ ${meuRow.nome_blader || 'Um blader'} te desafiou na Torre X!`,
+        lida: false, dados: { desafiante_id: userId } as any,
+      });
+      if (errNot) console.warn('[TorreX] notificação falhou:', errNot.message);
+
+      toast.success(`Desafio enviado para ${alvoNome || 'oponente'}.`);
+      void carregarDesafios();
+    } catch (e: any) {
+      console.error('[TorreX] enviarDesafio exception:', e);
+      toast.error(`Erro inesperado: ${e?.message || e}`);
+    }
   }
 
   async function aceitarDesafio(d: Desafio) {
