@@ -324,13 +324,19 @@ export default function BladerForjaBey() {
     <div
       className="forjabey-root"
       style={{
+        minHeight: 'calc(100dvh - 54px)',
         height: 'calc(100dvh - 54px)',
-        background: '#050714',
+        background: '#0a0a1a',
         overflow: 'hidden',
         display: 'flex',
+        fontFamily: '"Barlow", system-ui, sans-serif',
+        color: '#E2E8F0',
       }}
     >
       <style>{`
+        .forjabey-root { color-scheme: dark; }
+        .forjabey-root .fb-heading { font-family: "Bebas Neue", "Rajdhani", sans-serif; letter-spacing: .08em; }
+        .forjabey-root .fb-mono { font-family: "Bebas Neue", "Orbitron", sans-serif; letter-spacing: .12em; }
         @media (min-width: 768px) {
           .forjabey-root { height: 100dvh; }
         }
@@ -339,27 +345,37 @@ export default function BladerForjaBey() {
         .forjabey-left::-webkit-scrollbar-track,
         .forjabey-right::-webkit-scrollbar-track { background: transparent; }
         .forjabey-left::-webkit-scrollbar-thumb {
-          background: rgba(0, 220, 255, 0.18);
+          background: rgba(79,70,229,.28);
           border-radius: 2px;
         }
         .forjabey-right::-webkit-scrollbar-thumb {
-          background: rgba(139, 92, 246, 0.18);
+          background: rgba(79,70,229,.18);
           border-radius: 2px;
         }
-        .forjabey-left::-webkit-scrollbar-thumb:hover { background: rgba(0,220,255,.3); }
-        .forjabey-right::-webkit-scrollbar-thumb:hover { background: rgba(139,92,246,.3); }
+        .forjabey-left::-webkit-scrollbar-thumb:hover { background: rgba(79,70,229,.45); }
+        .forjabey-right::-webkit-scrollbar-thumb:hover { background: rgba(79,70,229,.35); }
         @media (max-width: 900px) {
-          .forjabey-cols { flex-direction: column !important; }
+          .forjabey-root {
+            height: auto !important;
+            min-height: calc(100dvh - 54px) !important;
+            overflow: visible !important;
+            display: block !important;
+          }
+          .forjabey-cols { flex-direction: column !important; display: block !important; }
           .forjabey-left {
             width: 100% !important;
             max-width: 100% !important;
             border-right: none !important;
-            border-bottom: 1px solid rgba(255,255,255,.05);
-            height: ${montadorVisivel ? '60%' : '100%'} !important;
+            border-bottom: 1px solid rgba(79,70,229,.12);
+            height: auto !important;
+            overflow: visible !important;
+            padding: 16px 14px 24px !important;
           }
           .forjabey-right {
             display: ${montadorVisivel ? 'block' : 'none'} !important;
-            height: 40% !important;
+            height: auto !important;
+            overflow: visible !important;
+            padding: 16px 14px 120px !important;
           }
         }
       `}</style>
@@ -379,9 +395,9 @@ export default function BladerForjaBey() {
           overflowY: 'auto',
           overflowX: 'hidden',
           padding: '18px 18px 80px',
-          borderRight: montadorVisivel ? '1px solid rgba(255,255,255,.05)' : 'none',
+          borderRight: montadorVisivel ? '1px solid rgba(79,70,229,.15)' : 'none',
           scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(0,220,255,.18) transparent',
+          scrollbarColor: 'rgba(79,70,229,.28) transparent',
         }}
       >
         {/* Header da seção lista */}
