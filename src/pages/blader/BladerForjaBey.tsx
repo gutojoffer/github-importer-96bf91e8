@@ -324,13 +324,19 @@ export default function BladerForjaBey() {
     <div
       className="forjabey-root"
       style={{
+        minHeight: 'calc(100dvh - 54px)',
         height: 'calc(100dvh - 54px)',
-        background: '#050714',
+        background: '#0a0a1a',
         overflow: 'hidden',
         display: 'flex',
+        fontFamily: '"Barlow", system-ui, sans-serif',
+        color: '#E2E8F0',
       }}
     >
       <style>{`
+        .forjabey-root { color-scheme: dark; }
+        .forjabey-root .fb-heading { font-family: "Bebas Neue", "Rajdhani", sans-serif; letter-spacing: .08em; }
+        .forjabey-root .fb-mono { font-family: "Bebas Neue", "Orbitron", sans-serif; letter-spacing: .12em; }
         @media (min-width: 768px) {
           .forjabey-root { height: 100dvh; }
         }
@@ -339,27 +345,37 @@ export default function BladerForjaBey() {
         .forjabey-left::-webkit-scrollbar-track,
         .forjabey-right::-webkit-scrollbar-track { background: transparent; }
         .forjabey-left::-webkit-scrollbar-thumb {
-          background: rgba(0, 220, 255, 0.18);
+          background: rgba(79,70,229,.28);
           border-radius: 2px;
         }
         .forjabey-right::-webkit-scrollbar-thumb {
-          background: rgba(139, 92, 246, 0.18);
+          background: rgba(79,70,229,.18);
           border-radius: 2px;
         }
-        .forjabey-left::-webkit-scrollbar-thumb:hover { background: rgba(0,220,255,.3); }
-        .forjabey-right::-webkit-scrollbar-thumb:hover { background: rgba(139,92,246,.3); }
+        .forjabey-left::-webkit-scrollbar-thumb:hover { background: rgba(79,70,229,.45); }
+        .forjabey-right::-webkit-scrollbar-thumb:hover { background: rgba(79,70,229,.35); }
         @media (max-width: 900px) {
-          .forjabey-cols { flex-direction: column !important; }
+          .forjabey-root {
+            height: auto !important;
+            min-height: calc(100dvh - 54px) !important;
+            overflow: visible !important;
+            display: block !important;
+          }
+          .forjabey-cols { flex-direction: column !important; display: block !important; }
           .forjabey-left {
             width: 100% !important;
             max-width: 100% !important;
             border-right: none !important;
-            border-bottom: 1px solid rgba(255,255,255,.05);
-            height: ${montadorVisivel ? '60%' : '100%'} !important;
+            border-bottom: 1px solid rgba(79,70,229,.12);
+            height: auto !important;
+            overflow: visible !important;
+            padding: 16px 14px 24px !important;
           }
           .forjabey-right {
             display: ${montadorVisivel ? 'block' : 'none'} !important;
-            height: 40% !important;
+            height: auto !important;
+            overflow: visible !important;
+            padding: 16px 14px 120px !important;
           }
         }
       `}</style>
@@ -379,9 +395,9 @@ export default function BladerForjaBey() {
           overflowY: 'auto',
           overflowX: 'hidden',
           padding: '18px 18px 80px',
-          borderRight: montadorVisivel ? '1px solid rgba(255,255,255,.05)' : 'none',
+          borderRight: montadorVisivel ? '1px solid rgba(79,70,229,.15)' : 'none',
           scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(0,220,255,.18) transparent',
+          scrollbarColor: 'rgba(79,70,229,.28) transparent',
         }}
       >
         {/* Header da seção lista */}
@@ -391,7 +407,7 @@ export default function BladerForjaBey() {
         }}>
           <div>
             <div style={{
-              fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 22,
+              fontFamily: '"Bebas Neue", "Rajdhani", sans-serif', fontWeight: 700, fontSize: 22,
               color: '#fff', letterSpacing: 1, lineHeight: 1.1,
             }}>
               ⚙️ ForjaBey
@@ -401,7 +417,7 @@ export default function BladerForjaBey() {
               color: 'rgba(255,255,255,.3)', marginTop: 6,
               display: 'flex', alignItems: 'center', gap: 7,
             }}>
-              <div style={{ width: 3, height: 12, background: 'linear-gradient(180deg,#00DCFF,#A78BFA)' }} />
+              <div style={{ width: 3, height: 12, background: 'linear-gradient(180deg,#818cf8,#A78BFA)' }} />
               Meus Decks ({decks.length})
             </div>
           </div>
@@ -410,10 +426,10 @@ export default function BladerForjaBey() {
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
               padding: '8px 14px', borderRadius: 9,
-              background: 'rgba(0,220,255,.08)',
-              border: '1px solid rgba(0,220,255,.22)',
-              color: '#00DCFF', fontSize: 12, fontWeight: 700,
-              fontFamily: 'Rajdhani,sans-serif', letterSpacing: 1, cursor: 'pointer',
+              background: 'rgba(79,70,229,.08)',
+              border: '1px solid rgba(79,70,229,.22)',
+              color: '#818cf8', fontSize: 12, fontWeight: 700,
+              fontFamily: '"Bebas Neue", "Rajdhani", sans-serif', letterSpacing: 1, cursor: 'pointer',
             }}
           >
             <Plus size={13} /> Novo Deck
@@ -428,12 +444,12 @@ export default function BladerForjaBey() {
         ) : decks.length === 0 ? (
           <div style={{
             textAlign: 'center', padding: '40px 20px',
-            background: '#08091a', border: '1px dashed rgba(255,255,255,.08)',
+            background: '#0a0a1a', border: '1px dashed rgba(255,255,255,.08)',
             borderRadius: 14,
           }}>
             <div style={{ fontSize: 30, opacity: 0.2, marginBottom: 8 }}>⚙️</div>
             <div style={{
-              fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 16,
+              fontFamily: '"Bebas Neue", "Rajdhani", sans-serif', fontWeight: 700, fontSize: 16,
               color: 'rgba(255,255,255,.3)',
             }}>
               Nenhum deck salvo ainda
@@ -452,22 +468,22 @@ export default function BladerForjaBey() {
               const ativo = deck.deck_uuid === deckEditandoUuid && montadorVisivel;
               return (
                 <div key={deck.deck_uuid} style={{
-                  background: '#0d1120',
-                  border: `1px solid ${ativo ? 'rgba(0,220,255,.3)' : 'rgba(255,255,255,.07)'}`,
+                  background: '#141432',
+                  border: `1px solid ${ativo ? 'rgba(79,70,229,.3)' : 'rgba(255,255,255,.07)'}`,
                   borderRadius: 13, overflow: 'hidden',
                   transition: 'border-color .15s',
                 }}
-                onMouseEnter={e => { if (!ativo) e.currentTarget.style.borderColor = 'rgba(0,220,255,.15)'; }}
+                onMouseEnter={e => { if (!ativo) e.currentTarget.style.borderColor = 'rgba(79,70,229,.15)'; }}
                 onMouseLeave={e => { if (!ativo) e.currentTarget.style.borderColor = 'rgba(255,255,255,.07)'; }}>
                   {/* Header do card */}
                   <div style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '11px 13px', borderBottom: '1px solid rgba(255,255,255,.05)',
-                    background: 'rgba(255,255,255,.02)',
+                    background: 'rgba(79,70,229,.05)',
                   }}>
                     <div style={{ minWidth: 0, flex: 1 }}>
                       <div style={{
-                        fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 15, color: '#fff',
+                        fontFamily: '"Bebas Neue", "Rajdhani", sans-serif', fontWeight: 700, fontSize: 15, color: '#fff',
                         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                       }}>
                         {deck.nome}
@@ -481,9 +497,9 @@ export default function BladerForjaBey() {
                         onClick={() => carregarDeckParaEdicao(deck)}
                         style={{
                           width: 26, height: 26, borderRadius: 7,
-                          background: 'rgba(0,220,255,.06)',
-                          border: '1px solid rgba(0,220,255,.15)',
-                          color: '#00DCFF', cursor: 'pointer',
+                          background: 'rgba(79,70,229,.06)',
+                          border: '1px solid rgba(79,70,229,.15)',
+                          color: '#818cf8', cursor: 'pointer',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}
                         title="Editar"
@@ -536,7 +552,7 @@ export default function BladerForjaBey() {
                           }} />
                           <div style={{
                             flex: 1, fontSize: 12, fontWeight: 600,
-                            fontFamily: 'Rajdhani,sans-serif',
+                            fontFamily: '"Bebas Neue", "Rajdhani", sans-serif',
                             color: bey ? '#E2E8F0' : 'rgba(255,255,255,.2)',
                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                           }}>
@@ -582,7 +598,7 @@ export default function BladerForjaBey() {
                 fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase',
                 color: 'rgba(255,255,255,.3)', display: 'flex', alignItems: 'center', gap: 7, flex: 1,
               }}>
-                <div style={{ width: 3, height: 12, background: 'linear-gradient(180deg,#00DCFF,#A78BFA)' }} />
+                <div style={{ width: 3, height: 12, background: 'linear-gradient(180deg,#818cf8,#A78BFA)' }} />
                 {deckEditandoUuid ? `Editando: ${nomeDeck}` : 'Novo Deck'}
               </div>
               <button
@@ -604,10 +620,10 @@ export default function BladerForjaBey() {
                   padding: '7px 14px', borderRadius: 9,
                   background: temRepeticao
                     ? 'rgba(255,255,255,.04)'
-                    : 'linear-gradient(135deg,#F59E0B,#EF4444)',
+                    : 'linear-gradient(135deg,#4f46e5,#818cf8)',
                   border: temRepeticao ? '1px solid rgba(239,68,68,.25)' : 'none',
-                  color: temRepeticao ? '#F87171' : '#0a0d18',
-                  fontFamily: 'Rajdhani,sans-serif', fontWeight: 700,
+                  color: temRepeticao ? '#F87171' : '#0a0a1a',
+                  fontFamily: '"Bebas Neue", "Rajdhani", sans-serif', fontWeight: 700,
                   fontSize: 12, letterSpacing: 1, textTransform: 'uppercase',
                   cursor: (salvando || temRepeticao) ? 'not-allowed' : 'pointer',
                   opacity: salvando ? 0.6 : 1,
@@ -654,10 +670,10 @@ export default function BladerForjaBey() {
                 placeholder="Ex: Deck Competitivo"
                 style={{
                   width: '100%', padding: '10px 13px',
-                  background: '#111827', border: '1px solid rgba(255,255,255,.1)',
+                  background: '#1e1e5a', border: '1px solid rgba(255,255,255,.1)',
                   borderRadius: 9, color: '#E2E8F0', fontSize: 13, outline: 'none',
                 }}
-                onFocus={e => (e.target.style.borderColor = 'rgba(0,220,255,.35)')}
+                onFocus={e => (e.target.style.borderColor = 'rgba(79,70,229,.35)')}
                 onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,.1)')}
               />
             </div>
@@ -706,7 +722,7 @@ export default function BladerForjaBey() {
             color: 'rgba(255,255,255,.35)', fontWeight: 700, marginBottom: 12,
             display: 'flex', alignItems: 'center', gap: 7,
           }}>
-            <div style={{ width: 3, height: 12, background: 'linear-gradient(180deg,#A78BFA,#EC4899)' }} />
+            <div style={{ width: 3, height: 12, background: 'linear-gradient(180deg,#818cf8,#4f46e5)' }} />
             Análise do deck
           </div>
           <PainelAnalise beys={beys} />
@@ -726,12 +742,12 @@ export default function BladerForjaBey() {
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              background: '#0d1120', border: '1px solid rgba(0,220,255,.18)',
+              background: '#141432', border: '1px solid rgba(79,70,229,.18)',
               borderRadius: 14, padding: 24, maxWidth: 380, width: '100%',
             }}
           >
             <div style={{
-              fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 18,
+              fontFamily: '"Bebas Neue", "Rajdhani", sans-serif', fontWeight: 700, fontSize: 18,
               color: '#fff', marginBottom: 14,
             }}>
               Renomear deck
@@ -743,7 +759,7 @@ export default function BladerForjaBey() {
               onKeyDown={e => { if (e.key === 'Enter') confirmarRenomear(); }}
               style={{
                 width: '100%', padding: '10px 12px',
-                background: '#111827', border: '1px solid rgba(255,255,255,.1)',
+                background: '#1e1e5a', border: '1px solid rgba(255,255,255,.1)',
                 borderRadius: 9, color: '#E2E8F0', fontSize: 13, outline: 'none',
                 marginBottom: 16,
               }}
@@ -763,7 +779,7 @@ export default function BladerForjaBey() {
                 onClick={confirmarRenomear}
                 style={{
                   flex: 1, padding: 10, borderRadius: 9,
-                  background: '#2563EB', border: 'none', color: '#fff',
+                  background: '#4f46e5', border: 'none', color: '#fff',
                   fontSize: 12, fontWeight: 700, cursor: 'pointer', letterSpacing: 1,
                 }}
               >
@@ -798,7 +814,7 @@ function CardBey({
   return (
     <div style={{
       marginBottom: 12,
-      background: '#0b0f1f',
+      background: '#141432',
       border: `1px solid ${bey.aberta ? `${cor}44` : 'rgba(255,255,255,.07)'}`,
       borderRadius: 12,
       overflow: 'hidden',
@@ -817,8 +833,8 @@ function CardBey({
           width: 28, height: 28, borderRadius: 8, flexShrink: 0,
           background: `linear-gradient(135deg, ${cor}, ${cor}88)`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: 'Orbitron,sans-serif', fontWeight: 800,
-          fontSize: 13, color: '#0a0d18',
+          fontFamily: '"Bebas Neue", "Orbitron", sans-serif', fontWeight: 800,
+          fontSize: 13, color: '#0a0a1a',
         }}>
           {bey.slot}
         </div>
@@ -829,7 +845,7 @@ function CardBey({
           border: `1px solid ${corLinha(bey.linha)}44`,
           fontSize: 10, fontWeight: 700, letterSpacing: 1,
           color: corLinha(bey.linha),
-          fontFamily: 'Orbitron,sans-serif',
+          fontFamily: '"Bebas Neue", "Orbitron", sans-serif',
         }}>
           {bey.linha}
         </div>
@@ -891,12 +907,12 @@ function CardBey({
                   style={{
                     flex: 1, padding: '8px 5px', borderRadius: 9,
                     border: `1px solid ${ativo ? corLinha(l) : 'rgba(255,255,255,.07)'}`,
-                    background: ativo ? `${corLinha(l)}18` : 'rgba(255,255,255,.02)',
+                    background: ativo ? `${corLinha(l)}18` : 'rgba(79,70,229,.05)',
                     cursor: 'pointer', textAlign: 'center',
                   }}
                 >
                   <div style={{
-                    fontFamily: 'Orbitron,sans-serif', fontWeight: 700, fontSize: 12,
+                    fontFamily: '"Bebas Neue", "Orbitron", sans-serif', fontWeight: 700, fontSize: 12,
                     color: ativo ? corLinha(l) : 'rgba(255,255,255,.35)',
                   }}>
                     {l}
@@ -1069,15 +1085,15 @@ function PartSelector({
         style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '8px 10px',
-          background: valor ? 'rgba(0,220,255,.03)' : '#111827',
-          border: `1px solid ${valor ? 'rgba(0,220,255,.18)' : 'rgba(255,255,255,.08)'}`,
+          background: valor ? 'rgba(79,70,229,.03)' : '#1e1e5a',
+          border: `1px solid ${valor ? 'rgba(79,70,229,.18)' : 'rgba(255,255,255,.08)'}`,
           borderRadius: 9, cursor: 'pointer',
         }}
       >
         <div style={{
           width: 40, height: 40, borderRadius: 8, flexShrink: 0,
-          background: valor?.imagem_url ? `url(${valor.imagem_url}) center/contain no-repeat` : '#090c18',
-          border: `1px ${valor ? 'solid' : 'dashed'} ${valor ? 'rgba(0,220,255,.18)' : 'rgba(255,255,255,.07)'}`,
+          background: valor?.imagem_url ? `url(${valor.imagem_url}) center/contain no-repeat` : '#0a0a1a',
+          border: `1px ${valor ? 'solid' : 'dashed'} ${valor ? 'rgba(79,70,229,.18)' : 'rgba(255,255,255,.07)'}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 10, color: 'rgba(255,255,255,.35)', fontWeight: 700,
         }}>
@@ -1088,7 +1104,7 @@ function PartSelector({
           {valor ? (
             <>
               <div style={{
-                fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 15,
+                fontFamily: '"Bebas Neue", "Rajdhani", sans-serif', fontWeight: 700, fontSize: 15,
                 color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
               }}>
                 {valor.nome}
@@ -1131,7 +1147,7 @@ function PartSelector({
             left: dropdownPos.left,
             width: dropdownPos.width,
             zIndex: 9999,
-            background: '#0d1120', border: '1px solid rgba(0,220,255,.15)',
+            background: '#141432', border: '1px solid rgba(79,70,229,.15)',
             borderRadius: 12, boxShadow: '0 16px 40px rgba(0,0,0,.7)',
             display: 'flex', flexDirection: 'column', maxHeight: dropdownPos.maxH, overflow: 'hidden',
           }}>
@@ -1149,7 +1165,7 @@ function PartSelector({
               onKeyDown={handleKeyDown}
               placeholder={`Buscar ${label.toLowerCase()}...`}
               style={{
-                width: '100%', padding: '7px 10px', background: '#111827',
+                width: '100%', padding: '7px 10px', background: '#1e1e5a',
                 border: '1px solid rgba(255,255,255,.1)', borderRadius: 8,
                 color: '#E2E8F0', fontSize: 12, outline: 'none',
               }}
@@ -1190,15 +1206,15 @@ function PartSelector({
                     cursor: emUso ? 'not-allowed' : 'pointer',
                     borderBottom: '1px solid rgba(255,255,255,.03)',
                     opacity: emUso ? 0.5 : 1,
-                    background: ativo ? 'rgba(0,220,255,.08)' : 'transparent',
+                    background: ativo ? 'rgba(79,70,229,.08)' : 'transparent',
                   }}
-                  onMouseEnter={e => { setIndiceAtivo(idx); if (!emUso) e.currentTarget.style.background = 'rgba(0,220,255,.08)'; }}
-                  onMouseLeave={e => (e.currentTarget.style.background = ativo ? 'rgba(0,220,255,.08)' : 'transparent')}
+                  onMouseEnter={e => { setIndiceAtivo(idx); if (!emUso) e.currentTarget.style.background = 'rgba(79,70,229,.08)'; }}
+                  onMouseLeave={e => (e.currentTarget.style.background = ativo ? 'rgba(79,70,229,.08)' : 'transparent')}
                 >
 
                   <div style={{
                     width: 36, height: 36, borderRadius: 8, flexShrink: 0,
-                    background: p.imagem_url ? `url(${p.imagem_url}) center/contain no-repeat` : '#090c18',
+                    background: p.imagem_url ? `url(${p.imagem_url}) center/contain no-repeat` : '#0a0a1a',
                     border: `1px solid ${emUso ? 'rgba(239,68,68,.2)' : 'rgba(255,255,255,.08)'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 10, color: 'rgba(255,255,255,.3)', fontWeight: 600,
@@ -1337,7 +1353,7 @@ function PainelAnalise({ beys }: { beys: Bey[] }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 720, margin: '0 auto' }}>
       {/* Header da análise com score integrado */}
       <div style={{
-        background: '#0d1120',
+        background: '#141432',
         border: '1px solid rgba(255,255,255,.07)',
         borderRadius: 14,
         overflow: 'hidden',
@@ -1346,7 +1362,7 @@ function PainelAnalise({ beys }: { beys: Bey[] }) {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '12px 14px',
           borderBottom: '1px solid rgba(255,255,255,.05)',
-          background: 'rgba(255,255,255,.02)',
+          background: 'rgba(79,70,229,.05)',
         }}>
           <div>
             <div style={{
@@ -1362,12 +1378,12 @@ function PainelAnalise({ beys }: { beys: Bey[] }) {
           <div style={{
             display: 'flex', alignItems: 'baseline', gap: 4,
             padding: '6px 14px',
-            background: 'rgba(0,220,255,.08)',
-            border: '1px solid rgba(0,220,255,.15)',
+            background: 'rgba(79,70,229,.08)',
+            border: '1px solid rgba(79,70,229,.15)',
             borderRadius: 10,
           }}>
             <span style={{
-              fontFamily: 'Orbitron, sans-serif',
+              fontFamily: '"Bebas Neue", "Orbitron", sans-serif',
               fontWeight: 900, fontSize: 22,
               color: score >= 7 ? '#34D399' : score >= 4 ? '#FBBF24' : '#F87171',
             }}>
@@ -1380,10 +1396,10 @@ function PainelAnalise({ beys }: { beys: Bey[] }) {
 
       {/* Radar */}
       <div style={{
-        background: '#0b0f1f', border: '1px solid rgba(255,255,255,.06)',
+        background: '#141432', border: '1px solid rgba(255,255,255,.06)',
         borderRadius: 14, padding: 16,
       }}>
-        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 13, letterSpacing: 1.5, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', marginBottom: 10 }}>
+        <div style={{ fontFamily: '"Bebas Neue", "Rajdhani", sans-serif', fontWeight: 700, fontSize: 13, letterSpacing: 1.5, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', marginBottom: 10 }}>
           Comparação de stats
         </div>
         <div style={{ width: '100%', height: 280 }}>
@@ -1404,7 +1420,7 @@ function PainelAnalise({ beys }: { beys: Bey[] }) {
                   fillOpacity={0.12}
                 />
               ))}
-              <Tooltip contentStyle={{ background: '#0a0d18', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, fontSize: 12 }} />
+              <Tooltip contentStyle={{ background: '#0a0a1a', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, fontSize: 12 }} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
             </RadarChart>
           </ResponsiveContainer>
@@ -1416,7 +1432,7 @@ function PainelAnalise({ beys }: { beys: Bey[] }) {
             <div key={b.slot} style={{
               display: 'flex', alignItems: 'center', gap: 10,
               padding: '6px 10px', borderRadius: 8,
-              background: 'rgba(255,255,255,.02)',
+              background: 'rgba(79,70,229,.05)',
             }}>
               <div style={{
                 width: 28, height: 3, borderRadius: 2,
@@ -1439,10 +1455,10 @@ function PainelAnalise({ beys }: { beys: Bey[] }) {
 
       {/* Médias do deck */}
       <div style={{
-        background: '#0b0f1f', border: '1px solid rgba(255,255,255,.06)',
+        background: '#141432', border: '1px solid rgba(255,255,255,.06)',
         borderRadius: 14, padding: 16,
       }}>
-        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 13, letterSpacing: 1.5, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', marginBottom: 12 }}>
+        <div style={{ fontFamily: '"Bebas Neue", "Rajdhani", sans-serif', fontWeight: 700, fontSize: 13, letterSpacing: 1.5, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', marginBottom: 12 }}>
           Médias do deck
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1455,10 +1471,10 @@ function PainelAnalise({ beys }: { beys: Bey[] }) {
 
       {/* Tips */}
       <div style={{
-        background: '#0b0f1f', border: '1px solid rgba(255,255,255,.06)',
+        background: '#141432', border: '1px solid rgba(255,255,255,.06)',
         borderRadius: 14, padding: 16,
       }}>
-        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 13, letterSpacing: 1.5, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', marginBottom: 12 }}>
+        <div style={{ fontFamily: '"Bebas Neue", "Rajdhani", sans-serif', fontWeight: 700, fontSize: 13, letterSpacing: 1.5, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', marginBottom: 12 }}>
           Análise & dicas
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
