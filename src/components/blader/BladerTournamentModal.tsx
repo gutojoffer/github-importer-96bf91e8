@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Calendar, MapPin, Users, Trophy, ChevronDown, X, Search } from 'lucide-react';
 import { fetchUserDecks, type DeckResumo } from '@/lib/decks';
+import { sendNotificacao } from '@/lib/notificacoes';
 
 interface TournamentData {
   id: string;
