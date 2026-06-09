@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { sendNotificacao } from '@/lib/notificacoes';
 
 export interface TimeMembroEnriquecido {
   id: string;
@@ -238,13 +239,12 @@ export function useTimes() {
       supabase.from('profiles').select('nome_blader').eq('id', user.id).maybeSingle(),
       supabase.from('times').select('nome, emoji').eq('id', timeId).maybeSingle(),
     ]);
-    await supabase.from('notificacoes').insert({
-      user_id: convidadoId,
-      tipo: 'convite_time',
-      mensagem: `${(time as any)?.emoji || '👥'} ${(meuPerfil as any)?.nome_blader || 'Um blader'} te convidou para o time "${(time as any)?.nome || ''}"!`,
-      lida: false,
-      dados: { time_id: timeId, time_nome: (time as any)?.nome },
-    });
+    await sendNotificacao(
+      convidadoId,
+      'convite_time',
+      `${(time as any)?.emoji || '👥'} ${(meuPerfil as any)?.nome_blader || 'Um blader'} te convidou para o time "${(time as any)?.nome || ''}"!`,
+      { time_id: timeId, time_nome: (time as any)?.nome },
+    );
     toast.success('Convite enviado!');
   }
 
@@ -267,13 +267,12 @@ export function useTimes() {
     const { data: meu } = await supabase.from('profiles').select('nome_blader').eq('id', user.id).maybeSingle();
 
     if ((convite as any)?.convidado_por) {
-      await supabase.from('notificacoes').insert({
-        user_id: (convite as any).convidado_por,
-        tipo: 'convite_aceito',
-        mensagem: `✅ ${(meu as any)?.nome_blader || 'Um blader'} entrou no seu time!`,
-        lida: false,
-        dados: { time_id: timeId },
-      });
+      await sendNotificacao(
+        (convite as any).convidado_por,
+        'convite_aceito',
+        `✅ ${(meu as any)?.nome_blader || 'Um blader'} entrou no seu time!`,
+        { time_id: timeId },
+      );
     }
     toast.success('Você entrou no time!');
     await Promise.all([carregarMeuTime(), carregarConvites()]);

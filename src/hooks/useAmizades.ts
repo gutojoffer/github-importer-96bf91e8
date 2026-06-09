@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { sendNotificacao } from '@/lib/notificacoes';
 
 export interface BladerAmigo {
   amizadeId?: string;
@@ -158,13 +159,12 @@ export function useAmizades() {
       return false;
     }
     const { data: meu } = await supabase.from('profiles').select('nome_blader').eq('id', user.id).maybeSingle();
-    await supabase.from('notificacoes').insert({
-      user_id: destinatarioId,
-      tipo: 'pedido_amizade',
-      mensagem: `👋 ${(meu as any)?.nome_blader || 'Um blader'} quer ser seu amigo no BLADEX!`,
-      lida: false,
-      dados: { solicitante_id: user.id, solicitante_nome: (meu as any)?.nome_blader },
-    });
+    await sendNotificacao(
+      destinatarioId,
+      'pedido_amizade',
+      `👋 ${(meu as any)?.nome_blader || 'Um blader'} quer ser seu amigo no BLADEX!`,
+      { solicitante_id: user.id, solicitante_nome: (meu as any)?.nome_blader },
+    );
     toast.success('Solicitação enviada!');
     return true;
   }
@@ -181,13 +181,12 @@ export function useAmizades() {
       { user_id: user.id, tipo: 'amizade_aceita', dados: { amigo_id: solicitanteId } },
     ]);
 
-    await supabase.from('notificacoes').insert({
-      user_id: solicitanteId,
-      tipo: 'amizade_aceita',
-      mensagem: `✅ ${(meu as any)?.nome_blader || 'Seu pedido'} aceitou seu pedido de amizade!`,
-      lida: false,
-      dados: { amigo_id: user.id },
-    });
+    await sendNotificacao(
+      solicitanteId,
+      'amizade_aceita',
+      `✅ ${(meu as any)?.nome_blader || 'Seu pedido'} aceitou seu pedido de amizade!`,
+      { amigo_id: user.id },
+    );
 
     toast.success('Amizade aceita!');
     carregarAmigos();

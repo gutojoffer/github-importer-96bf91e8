@@ -57,6 +57,32 @@ export function formatarDataRelativa(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR');
 }
 
+/** Envia uma notificação para outro usuário via RPC server-side.
+ *  Não pode enviar para si mesmo (validado no banco). */
+export async function sendNotificacao(
+  targetUserId: string,
+  tipo: NotifTipo | string,
+  mensagem: string,
+  dados?: any
+): Promise<string | null> {
+  try {
+    const { data, error } = await (supabase as any).rpc('send_notificacao', {
+      _target_user_id: targetUserId,
+      _tipo: tipo,
+      _mensagem: mensagem,
+      _dados: dados ?? null,
+    });
+    if (error) {
+      console.warn('[notif] send_notificacao falhou:', error.message);
+      return null;
+    }
+    return (data as string) || null;
+  } catch (err: any) {
+    console.warn('[notif] send_notificacao exception:', err?.message);
+    return null;
+  }
+}
+
 /** Envia notificações ricas de resultado para todos os bladers do torneio.
  *  Substitui as notificações básicas geradas pela RPC apply_tournament_results. */
 export async function enviarNotificacoesResultado(torneioId: string) {
@@ -113,23 +139,17 @@ export async function enviarNotificacoesResultado(torneioId: string) {
         `Total: ${insc.vitorias}V · ${insc.derrotas}D`,
       ].join(' · ');
 
-      await supabase.from('notificacoes').insert({
-        user_id: insc.blader_id,
-        tipo: 'resultado_torneio',
-        mensagem,
-        lida: false,
-        dados: {
-          torneio_id: torneioId,
-          torneio_nome: torneio.name,
-          posicao_final: pos,
-          xp_ganho: xp,
-          vitorias: insc.vitorias,
-          derrotas: insc.derrotas,
-          ranking_global: rankingGlobal,
-          xp_total: xpTotal,
-          torneios_total: (profile as any)?.torneios_total ?? 0,
-        } as any,
-      } as any);
+      await sendNotificacao(insc.blader_id, 'resultado_torneio', mensagem, {
+        torneio_id: torneioId,
+        torneio_nome: torneio.name,
+        posicao_final: pos,
+        xp_ganho: xp,
+        vitorias: insc.vitorias,
+        derrotas: insc.derrotas,
+        ranking_global: rankingGlobal,
+        xp_total: xpTotal,
+        torneios_total: (profile as any)?.torneios_total ?? 0,
+      });
     }
   } catch (err) {
     console.error('enviarNotificacoesResultado:', err);
@@ -153,13 +173,12 @@ export async function enviarNotificacoesInicio(torneioId: string) {
       .not('blader_id', 'is', null);
 
     for (const i of (inscricoes || []) as any[]) {
-      await supabase.from('notificacoes').insert({
-        user_id: i.blader_id,
-        tipo: 'torneio_iniciado',
-        mensagem: `⚔️ "${torneio.name}" começou! Vá para a arena.`,
-        lida: false,
-        dados: { torneio_id: torneioId } as any,
-      } as any);
+      await sendNotificacao(
+        i.blader_id,
+        'torneio_iniciado',
+        `⚔️ "${torneio.name}" começou! Vá para a arena.`,
+        { torneio_id: torneioId },
+      );
     }
   } catch (err) {
     console.error('enviarNotificacoesInicio:', err);
@@ -195,17 +214,14 @@ export async function enviarNotificacoesTorneioPublicado(torneio: {
     const sufData = dataFmt ? ` — ${dataFmt}` : '';
     const mensagem = `🏟️ Novo torneio disponível: "${torneio.name}"${sufData} em ${local}`;
 
-    const notifs = (bladers as any[]).map(b => ({
-      user_id: b.id,
-      tipo: 'torneio_publicado',
-      mensagem,
-      lida: false,
-      dados: { torneio_id: torneio.id, torneio_nome: torneio.name } as any,
-    }));
-
-    // Inserir em chunks de 500 para evitar payloads gigantes
-    for (let i = 0; i < notifs.length; i += 500) {
-      await supabase.from('notificacoes').insert(notifs.slice(i, i + 500) as any);
+    // Envia uma por uma via RPC (sem self-insert; server valida).
+    // Roda em paralelo em lotes para não saturar.
+    const dados = { torneio_id: torneio.id, torneio_nome: torneio.name };
+    for (let i = 0; i < bladers.length; i += 25) {
+      const chunk = (bladers as any[]).slice(i, i + 25);
+      await Promise.all(
+        chunk.map(b => sendNotificacao(b.id, 'torneio_publicado', mensagem, dados))
+      );
     }
   } catch (err) {
     console.error('enviarNotificacoesTorneioPublicado:', err);

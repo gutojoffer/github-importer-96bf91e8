@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Calendar, MapPin, Users, Trophy, ChevronDown, X, Search } from 'lucide-react';
 import { fetchUserDecks, type DeckResumo } from '@/lib/decks';
+import { sendNotificacao } from '@/lib/notificacoes';
 
 interface TournamentData {
   id: string;
@@ -304,11 +305,11 @@ export default function BladerTournamentModal({ tournament, open, onOpenChange, 
     if (tournament.liga_id) {
       const { data: profile } = await supabase.from('profiles').select('nome_blader').eq('id', user.id).maybeSingle();
       const bladerNome = (profile as any)?.nome_blader || 'Um blader';
-      await supabase.from('notificacoes').insert({
-        user_id: tournament.liga_id,
-        tipo: 'nova_inscricao',
-        mensagem: `${bladerNome} se inscreveu no torneio "${tournament.name}"`,
-      });
+      await sendNotificacao(
+        tournament.liga_id,
+        'nova_inscricao',
+        `${bladerNome} se inscreveu no torneio "${tournament.name}"`,
+      );
     }
   }
 

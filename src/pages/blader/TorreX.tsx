@@ -4,6 +4,7 @@ import { cacheMemory, invalidate } from '@/lib/cache';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import AvatarBlader from '@/components/blader/AvatarBlader';
+import { sendNotificacao } from '@/lib/notificacoes';
 
 type TorrePontos = {
   user_id: string;
@@ -95,16 +96,12 @@ export default function TorreX() {
 
     let final = pontos;
     if (!final) {
-      const { data: perfil } = await supabase
-        .from('profiles').select('cidade_blader, estado_blader')
-        .eq('id', userId).maybeSingle();
-      const { data: novo } = await supabase.from('torre_x_pontos').insert({
-        user_id: userId,
-        pontos: 0, andar: 1, tier: 'Iniciante',
-        cidade: perfil?.cidade_blader ?? null,
-        estado: perfil?.estado_blader ?? null,
-      }).select('*').single();
-      final = novo;
+      const { data: novo, error: errEnsure } = await (supabase as any)
+        .rpc('ensure_torre_x_row');
+      if (errEnsure) {
+        console.warn('[TorreX] ensure_torre_x_row falhou:', errEnsure.message);
+      }
+      final = novo as any;
     }
 
     const { data: prof } = await supabase
@@ -196,12 +193,12 @@ export default function TorreX() {
         return;
       }
 
-      const { error: errNot } = await supabase.from('notificacoes').insert({
-        user_id: alvoId, tipo: 'torre_x_desafio',
-        mensagem: `⚔️ ${meuRow.nome_blader || 'Um blader'} te desafiou na Torre X!`,
-        lida: false, dados: { desafiante_id: userId } as any,
-      });
-      if (errNot) console.warn('[TorreX] notificação falhou:', errNot.message);
+      await sendNotificacao(
+        alvoId,
+        'torre_x_desafio',
+        `⚔️ ${meuRow.nome_blader || 'Um blader'} te desafiou na Torre X!`,
+        { desafiante_id: userId },
+      );
 
       toast.success(`Desafio enviado para ${alvoNome || 'oponente'}.`);
       void carregarDesafios();
@@ -213,11 +210,12 @@ export default function TorreX() {
 
   async function aceitarDesafio(d: Desafio) {
     await supabase.from('torre_x_desafios').update({ status: 'aceito', confirmado_desafiado: true }).eq('id', d.id);
-    await supabase.from('notificacoes').insert({
-      user_id: d.desafiante_id, tipo: 'torre_x_aceito',
-      mensagem: `✅ ${meu?.nome_blader || 'Seu oponente'} aceitou o desafio!`, lida: false,
-      dados: { desafio_id: d.id } as any,
-    });
+    await sendNotificacao(
+      d.desafiante_id,
+      'torre_x_aceito',
+      `✅ ${meu?.nome_blader || 'Seu oponente'} aceitou o desafio!`,
+      { desafio_id: d.id },
+    );
     toast.success('Desafio aceito!');
     void carregarDesafios();
   }
