@@ -239,13 +239,12 @@ export function useTimes() {
       supabase.from('profiles').select('nome_blader').eq('id', user.id).maybeSingle(),
       supabase.from('times').select('nome, emoji').eq('id', timeId).maybeSingle(),
     ]);
-    await supabase.from('notificacoes').insert({
-      user_id: convidadoId,
-      tipo: 'convite_time',
-      mensagem: `${(time as any)?.emoji || '👥'} ${(meuPerfil as any)?.nome_blader || 'Um blader'} te convidou para o time "${(time as any)?.nome || ''}"!`,
-      lida: false,
-      dados: { time_id: timeId, time_nome: (time as any)?.nome },
-    });
+    await sendNotificacao(
+      convidadoId,
+      'convite_time',
+      `${(time as any)?.emoji || '👥'} ${(meuPerfil as any)?.nome_blader || 'Um blader'} te convidou para o time "${(time as any)?.nome || ''}"!`,
+      { time_id: timeId, time_nome: (time as any)?.nome },
+    );
     toast.success('Convite enviado!');
   }
 
