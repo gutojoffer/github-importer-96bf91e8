@@ -181,13 +181,12 @@ export function useAmizades() {
       { user_id: user.id, tipo: 'amizade_aceita', dados: { amigo_id: solicitanteId } },
     ]);
 
-    await supabase.from('notificacoes').insert({
-      user_id: solicitanteId,
-      tipo: 'amizade_aceita',
-      mensagem: `✅ ${(meu as any)?.nome_blader || 'Seu pedido'} aceitou seu pedido de amizade!`,
-      lida: false,
-      dados: { amigo_id: user.id },
-    });
+    await sendNotificacao(
+      solicitanteId,
+      'amizade_aceita',
+      `✅ ${(meu as any)?.nome_blader || 'Seu pedido'} aceitou seu pedido de amizade!`,
+      { amigo_id: user.id },
+    );
 
     toast.success('Amizade aceita!');
     carregarAmigos();
