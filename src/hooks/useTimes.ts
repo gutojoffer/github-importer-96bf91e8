@@ -267,13 +267,12 @@ export function useTimes() {
     const { data: meu } = await supabase.from('profiles').select('nome_blader').eq('id', user.id).maybeSingle();
 
     if ((convite as any)?.convidado_por) {
-      await supabase.from('notificacoes').insert({
-        user_id: (convite as any).convidado_por,
-        tipo: 'convite_aceito',
-        mensagem: `✅ ${(meu as any)?.nome_blader || 'Um blader'} entrou no seu time!`,
-        lida: false,
-        dados: { time_id: timeId },
-      });
+      await sendNotificacao(
+        (convite as any).convidado_por,
+        'convite_aceito',
+        `✅ ${(meu as any)?.nome_blader || 'Um blader'} entrou no seu time!`,
+        { time_id: timeId },
+      );
     }
     toast.success('Você entrou no time!');
     await Promise.all([carregarMeuTime(), carregarConvites()]);
