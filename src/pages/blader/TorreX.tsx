@@ -4,6 +4,7 @@ import { cacheMemory, invalidate } from '@/lib/cache';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import AvatarBlader from '@/components/blader/AvatarBlader';
+import { sendNotificacao } from '@/lib/notificacoes';
 
 type TorrePontos = {
   user_id: string;
