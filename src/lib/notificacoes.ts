@@ -214,17 +214,14 @@ export async function enviarNotificacoesTorneioPublicado(torneio: {
     const sufData = dataFmt ? ` — ${dataFmt}` : '';
     const mensagem = `🏟️ Novo torneio disponível: "${torneio.name}"${sufData} em ${local}`;
 
-    const notifs = (bladers as any[]).map(b => ({
-      user_id: b.id,
-      tipo: 'torneio_publicado',
-      mensagem,
-      lida: false,
-      dados: { torneio_id: torneio.id, torneio_nome: torneio.name } as any,
-    }));
-
-    // Inserir em chunks de 500 para evitar payloads gigantes
-    for (let i = 0; i < notifs.length; i += 500) {
-      await supabase.from('notificacoes').insert(notifs.slice(i, i + 500) as any);
+    // Envia uma por uma via RPC (sem self-insert; server valida).
+    // Roda em paralelo em lotes para não saturar.
+    const dados = { torneio_id: torneio.id, torneio_nome: torneio.name };
+    for (let i = 0; i < bladers.length; i += 25) {
+      const chunk = (bladers as any[]).slice(i, i + 25);
+      await Promise.all(
+        chunk.map(b => sendNotificacao(b.id, 'torneio_publicado', mensagem, dados))
+      );
     }
   } catch (err) {
     console.error('enviarNotificacoesTorneioPublicado:', err);
