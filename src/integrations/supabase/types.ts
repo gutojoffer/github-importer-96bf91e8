@@ -1583,6 +1583,27 @@ export type Database = {
       calcular_nivel_blader: { Args: { _xp: number }; Returns: string }
       calcular_stats_time: { Args: { p_time_id: string }; Returns: undefined }
       calcular_tier_elo: { Args: { _pontos: number }; Returns: string }
+      ensure_torre_x_row: {
+        Args: never
+        Returns: {
+          andar: number | null
+          cidade: string | null
+          created_at: string | null
+          estado: string | null
+          id: string
+          pontos: number | null
+          rejeicoes_seguidas: number | null
+          tier: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "torre_x_pontos"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1602,11 +1623,24 @@ export type Database = {
         Args: { _torneio_id: string }
         Returns: Json
       }
+      recompute_blader_conquistas: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       recompute_blader_metrics: {
         Args: { _user_id: string }
         Returns: undefined
       }
       recompute_elo_rankings: { Args: never; Returns: undefined }
+      send_notificacao: {
+        Args: {
+          _dados?: Json
+          _mensagem: string
+          _target_user_id: string
+          _tipo: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "admin" | "organizer"
