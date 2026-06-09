@@ -210,11 +210,12 @@ export default function TorreX() {
 
   async function aceitarDesafio(d: Desafio) {
     await supabase.from('torre_x_desafios').update({ status: 'aceito', confirmado_desafiado: true }).eq('id', d.id);
-    await supabase.from('notificacoes').insert({
-      user_id: d.desafiante_id, tipo: 'torre_x_aceito',
-      mensagem: `✅ ${meu?.nome_blader || 'Seu oponente'} aceitou o desafio!`, lida: false,
-      dados: { desafio_id: d.id } as any,
-    });
+    await sendNotificacao(
+      d.desafiante_id,
+      'torre_x_aceito',
+      `✅ ${meu?.nome_blader || 'Seu oponente'} aceitou o desafio!`,
+      { desafio_id: d.id },
+    );
     toast.success('Desafio aceito!');
     void carregarDesafios();
   }
