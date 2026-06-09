@@ -139,23 +139,17 @@ export async function enviarNotificacoesResultado(torneioId: string) {
         `Total: ${insc.vitorias}V · ${insc.derrotas}D`,
       ].join(' · ');
 
-      await supabase.from('notificacoes').insert({
-        user_id: insc.blader_id,
-        tipo: 'resultado_torneio',
-        mensagem,
-        lida: false,
-        dados: {
-          torneio_id: torneioId,
-          torneio_nome: torneio.name,
-          posicao_final: pos,
-          xp_ganho: xp,
-          vitorias: insc.vitorias,
-          derrotas: insc.derrotas,
-          ranking_global: rankingGlobal,
-          xp_total: xpTotal,
-          torneios_total: (profile as any)?.torneios_total ?? 0,
-        } as any,
-      } as any);
+      await sendNotificacao(insc.blader_id, 'resultado_torneio', mensagem, {
+        torneio_id: torneioId,
+        torneio_nome: torneio.name,
+        posicao_final: pos,
+        xp_ganho: xp,
+        vitorias: insc.vitorias,
+        derrotas: insc.derrotas,
+        ranking_global: rankingGlobal,
+        xp_total: xpTotal,
+        torneios_total: (profile as any)?.torneios_total ?? 0,
+      });
     }
   } catch (err) {
     console.error('enviarNotificacoesResultado:', err);
