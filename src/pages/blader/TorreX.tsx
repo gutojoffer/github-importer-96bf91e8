@@ -95,16 +95,12 @@ export default function TorreX() {
 
     let final = pontos;
     if (!final) {
-      const { data: perfil } = await supabase
-        .from('profiles').select('cidade_blader, estado_blader')
-        .eq('id', userId).maybeSingle();
-      const { data: novo } = await supabase.from('torre_x_pontos').insert({
-        user_id: userId,
-        pontos: 0, andar: 1, tier: 'Iniciante',
-        cidade: perfil?.cidade_blader ?? null,
-        estado: perfil?.estado_blader ?? null,
-      }).select('*').single();
-      final = novo;
+      const { data: novo, error: errEnsure } = await (supabase as any)
+        .rpc('ensure_torre_x_row');
+      if (errEnsure) {
+        console.warn('[TorreX] ensure_torre_x_row falhou:', errEnsure.message);
+      }
+      final = novo as any;
     }
 
     const { data: prof } = await supabase
