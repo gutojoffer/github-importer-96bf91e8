@@ -159,13 +159,12 @@ export function useAmizades() {
       return false;
     }
     const { data: meu } = await supabase.from('profiles').select('nome_blader').eq('id', user.id).maybeSingle();
-    await supabase.from('notificacoes').insert({
-      user_id: destinatarioId,
-      tipo: 'pedido_amizade',
-      mensagem: `👋 ${(meu as any)?.nome_blader || 'Um blader'} quer ser seu amigo no BLADEX!`,
-      lida: false,
-      dados: { solicitante_id: user.id, solicitante_nome: (meu as any)?.nome_blader },
-    });
+    await sendNotificacao(
+      destinatarioId,
+      'pedido_amizade',
+      `👋 ${(meu as any)?.nome_blader || 'Um blader'} quer ser seu amigo no BLADEX!`,
+      { solicitante_id: user.id, solicitante_nome: (meu as any)?.nome_blader },
+    );
     toast.success('Solicitação enviada!');
     return true;
   }
