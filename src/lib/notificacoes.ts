@@ -57,6 +57,32 @@ export function formatarDataRelativa(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR');
 }
 
+/** Envia uma notificação para outro usuário via RPC server-side.
+ *  Não pode enviar para si mesmo (validado no banco). */
+export async function sendNotificacao(
+  targetUserId: string,
+  tipo: NotifTipo | string,
+  mensagem: string,
+  dados?: any
+): Promise<string | null> {
+  try {
+    const { data, error } = await (supabase as any).rpc('send_notificacao', {
+      _target_user_id: targetUserId,
+      _tipo: tipo,
+      _mensagem: mensagem,
+      _dados: dados ?? null,
+    });
+    if (error) {
+      console.warn('[notif] send_notificacao falhou:', error.message);
+      return null;
+    }
+    return (data as string) || null;
+  } catch (err: any) {
+    console.warn('[notif] send_notificacao exception:', err?.message);
+    return null;
+  }
+}
+
 /** Envia notificações ricas de resultado para todos os bladers do torneio.
  *  Substitui as notificações básicas geradas pela RPC apply_tournament_results. */
 export async function enviarNotificacoesResultado(torneioId: string) {
