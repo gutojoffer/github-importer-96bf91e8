@@ -173,13 +173,12 @@ export async function enviarNotificacoesInicio(torneioId: string) {
       .not('blader_id', 'is', null);
 
     for (const i of (inscricoes || []) as any[]) {
-      await supabase.from('notificacoes').insert({
-        user_id: i.blader_id,
-        tipo: 'torneio_iniciado',
-        mensagem: `⚔️ "${torneio.name}" começou! Vá para a arena.`,
-        lida: false,
-        dados: { torneio_id: torneioId } as any,
-      } as any);
+      await sendNotificacao(
+        i.blader_id,
+        'torneio_iniciado',
+        `⚔️ "${torneio.name}" começou! Vá para a arena.`,
+        { torneio_id: torneioId },
+      );
     }
   } catch (err) {
     console.error('enviarNotificacoesInicio:', err);
