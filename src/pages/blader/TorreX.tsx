@@ -193,12 +193,12 @@ export default function TorreX() {
         return;
       }
 
-      const { error: errNot } = await supabase.from('notificacoes').insert({
-        user_id: alvoId, tipo: 'torre_x_desafio',
-        mensagem: `⚔️ ${meuRow.nome_blader || 'Um blader'} te desafiou na Torre X!`,
-        lida: false, dados: { desafiante_id: userId } as any,
-      });
-      if (errNot) console.warn('[TorreX] notificação falhou:', errNot.message);
+      await sendNotificacao(
+        alvoId,
+        'torre_x_desafio',
+        `⚔️ ${meuRow.nome_blader || 'Um blader'} te desafiou na Torre X!`,
+        { desafiante_id: userId },
+      );
 
       toast.success(`Desafio enviado para ${alvoNome || 'oponente'}.`);
       void carregarDesafios();
