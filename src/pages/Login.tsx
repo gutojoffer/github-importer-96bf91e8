@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { verificarEExecutarMatch } from '@/lib/bladerMatch';
 
@@ -11,6 +12,15 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+
+  // Se a sessao ja existe, manda direto pro app (evita "tela de login piscando")
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate('/select-mode', { replace: true });
+    }
+  }, [authLoading, user, navigate]);
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
