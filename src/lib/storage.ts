@@ -19,9 +19,13 @@ export async function getPlayers(): Promise<Player[]> {
 
 async function fetchPlayers(ligaId: string | null): Promise<Player[]> {
 
+  const playersQuery = ligaId
+    ? supabase.from('players').select('id, name, nickname, avatar, xp, created_at').eq('liga_id', ligaId).order('created_at', { ascending: true })
+    : supabase.from('players').select('id, name, nickname, avatar, xp, created_at').order('created_at', { ascending: true }).limit(500);
+
   const [playersRes, profilesRes, tempRes] = await Promise.all([
-    supabase.from('players').select('id, name, nickname, avatar, xp, created_at').order('created_at', { ascending: true }),
-    supabase.from('profiles').select('id, nome_blader, avatar_blader_url, xp_total').eq('tem_perfil_blader', true).not('nome_blader', 'is', null),
+    playersQuery,
+    supabase.from('profiles').select('id, nome_blader, avatar_blader_url, xp_total').eq('tem_perfil_blader', true).not('nome_blader', 'is', null).limit(1000),
     ligaId
       ? supabase.from('bladers_temp').select('id, nome, apelido, avatar_url, created_at, vinculado_a').eq('organizador_id', ligaId)
       : Promise.resolve({ data: [] as any[] }),
