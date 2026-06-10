@@ -156,8 +156,12 @@ export async function getPlayerById(id: string): Promise<Player | undefined> {
 // ──────────── Stats ────────────
 
 export async function getAllStats(): Promise<PlayerStats[]> {
-  return cacheMemory('player_stats:all', 60_000, async () => {
-    const { data, error } = await supabase.from('player_stats').select('player_id, wins, losses, finish_wins, extreme_finish_wins, points, week_key, month_key');
+  let ligaId: string | null = null;
+  try { ligaId = await getLigaId(); } catch { /* anon */ }
+  return cacheMemory(`player_stats:${ligaId || 'all'}`, 60_000, async () => {
+    const query = supabase.from('player_stats').select('player_id, wins, losses, finish_wins, extreme_finish_wins, points, week_key, month_key');
+    if (ligaId) query.eq('liga_id', ligaId);
+    const { data, error } = await query;
     if (error) { console.error('getAllStats error:', error); return []; }
     return (data || []).map(row => ({
       playerId: row.player_id,
