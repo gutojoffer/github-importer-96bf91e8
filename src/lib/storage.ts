@@ -424,7 +424,11 @@ export async function saveActiveTournament(t: Tournament | null) {
 }
 
 export async function getCompletedTournaments(): Promise<Tournament[]> {
-  const { data, error } = await supabase.from('tournaments').select('*').eq('status', 'completed').order('created_at', { ascending: false });
+  let ligaId: string | null = null;
+  try { ligaId = await getLigaId(); } catch { /* anon */ }
+  const query = supabase.from('tournaments').select('*').eq('status', 'completed').order('created_at', { ascending: false }).limit(200);
+  if (ligaId) query.eq('liga_id', ligaId);
+  const { data, error } = await query;
   if (error) { console.error('getCompletedTournaments error:', error); return []; }
   return (data || []).map(tournamentFromRow);
 }
