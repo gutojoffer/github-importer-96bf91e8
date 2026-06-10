@@ -111,6 +111,7 @@ export function useAmizades() {
 
   const atualizarPresenca = useCallback(async () => {
     if (!user) return;
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
     await supabase.from('presenca_online').upsert({
       user_id: user.id,
       online: true,
@@ -124,7 +125,7 @@ export function useAmizades() {
     carregarPendentes();
     atualizarPresenca();
 
-    const interval = setInterval(atualizarPresenca, 30000);
+    const interval = setInterval(atualizarPresenca, 120000);
 
     const channel = supabase.channel(`amizades-${user.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'amizades', filter: `destinatario_id=eq.${user.id}` }, () => carregarPendentes())
