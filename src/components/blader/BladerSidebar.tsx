@@ -2,17 +2,19 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useActiveMode } from '@/contexts/ActiveModeContext';
-import { Home, Trophy, Clock, Star, User, Settings, LogOut, ChevronRight, Wrench, Bell, Building2, Users, Rss } from 'lucide-react';
+import { Home, Trophy, Clock, Star, User, Settings, LogOut, ChevronRight, Wrench, Bell, Building2, Users, Rss, Swords } from 'lucide-react';
 import BladerAvatar from '@/components/BladerAvatar';
 import { getBladerPalette } from '@/lib/bladerColors';
 import { useNotificacoesNaoLidas } from '@/hooks/useNotificacoesNaoLidas';
 import { useConvitesTimePendentes } from '@/hooks/useTimes';
+import { useDesafiosTorreXPendentes } from '@/hooks/useDesafiosTorreXPendentes';
 import { AmigosSidebar } from './AmigosSidebar';
 
 const NAV_ITEMS = [
   { title: 'Home', url: '/blader/home', icon: Home },
   { title: 'Torneios', url: '/blader/tournaments', icon: Trophy },
   { title: 'Torre X', url: '/blader/torre-x', icon: Building2 },
+  { title: 'Meus desafios', url: '/blader/torre-x/desafios', icon: Swords, showDesafiosBadge: true },
   { title: 'Feed', url: '/blader/feed', icon: Rss },
   { title: 'Meu histórico', url: '/blader/history', icon: Clock },
   { title: 'Rankings', url: '/blader/rankings', icon: Star },
@@ -37,6 +39,7 @@ export function BladerSidebar() {
   const { perfis, setMode } = useActiveMode();
   const naoLidas = useNotificacoesNaoLidas();
   const convitesTime = useConvitesTimePendentes();
+  const desafiosPend = useDesafiosTorreXPendentes();
 
   const bladerName = perfis.dadosBlader?.nome || profile?.nomeBlader || 'Blader';
   const bladerAvatar = perfis.dadosBlader?.avatar || profile?.avatarBladerUrl || null;
@@ -143,6 +146,19 @@ export function BladerSidebar() {
                     }}
                   >
                     {convitesTime > 99 ? '99+' : convitesTime}
+                  </span>
+                )}
+                {(item as any).showDesafiosBadge && desafiosPend > 0 && (
+                  <span
+                    className="font-body shrink-0"
+                    style={{
+                      minWidth: 18, height: 18, padding: '0 5px',
+                      borderRadius: 999, background: '#EF4444',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 10, fontWeight: 700, color: '#fff', lineHeight: 1,
+                    }}
+                  >
+                    {desafiosPend > 99 ? '99+' : desafiosPend}
                   </span>
                 )}
                 {(item as any).isNew && (

@@ -67,6 +67,8 @@ export default function TorreX() {
   const [loading, setLoading] = useState(true);
   const [iniciarDesafio, setIniciarDesafio] = useState<Desafio | null>(null);
   const [enviandoResultado, setEnviandoResultado] = useState(false);
+  const [confirmarDesafio, setConfirmarDesafio] = useState<{ id: string; nome: string | null } | null>(null);
+  const [cancelandoId, setCancelandoId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -408,7 +410,7 @@ export default function TorreX() {
                       <div style={{ fontSize: 9, color: 'rgba(255,255,255,.4)', letterSpacing: 1, textTransform: 'uppercase' }}>pts</div>
                     </div>
                     {!isMe && (
-                      <button onClick={() => enviarDesafio(r.user_id, r.nome_blader)} style={{
+                      <button onClick={() => setConfirmarDesafio({ id: r.user_id, nome: r.nome_blader })} style={{
                         padding: '6px 10px', borderRadius: 8,
                         background: 'rgba(239,68,68,.12)', border: '1px solid rgba(239,68,68,.3)',
                         color: '#F87171', fontSize: 11, fontWeight: 700, fontFamily: 'Rajdhani,sans-serif',
@@ -456,12 +458,36 @@ export default function TorreX() {
             <Section title={`Enviados (${enviados.filter(d => d.status === 'pendente').length})`}>
               {enviados.filter(d => d.status === 'pendente').length === 0 && <Empty text="Nenhum desafio enviado pendente." />}
               {enviados.filter(d => d.status === 'pendente').map(d => (
-                <DesafioCard key={d.id} desafio={d} eu={userId} enviado />
+                <DesafioCard
+                  key={d.id} desafio={d} eu={userId} enviado
+                  onCancelar={async () => {
+                    if (!confirm(`Cancelar o desafio enviado para ${d.desafiado_nome || 'esse blader'}?`)) return;
+                    setCancelandoId(d.id);
+                    const { error } = await supabase.from('torre_x_desafios').delete().eq('id', d.id);
+                    setCancelandoId(null);
+                    if (error) { toast.error(`Erro ao cancelar: ${error.message}`); return; }
+                    toast.success('Desafio cancelado.');
+                    void carregarDesafios();
+                  }}
+                  cancelando={cancelandoId === d.id}
+                />
               ))}
             </Section>
           </div>
         )}
       </div>
+
+      {confirmarDesafio && (
+        <ConfirmDesafioModal
+          nome={confirmarDesafio.nome}
+          onClose={() => setConfirmarDesafio(null)}
+          onConfirmar={async () => {
+            const c = confirmarDesafio;
+            setConfirmarDesafio(null);
+            if (c) await enviarDesafio(c.id, c.nome);
+          }}
+        />
+      )}
 
       {iniciarDesafio && (
         <ResultadoModal
@@ -496,10 +522,11 @@ function Empty({ text }: { text: string }) {
 }
 
 function DesafioCard({
-  desafio, eu, onAceitar, onRecusar, onIniciar, aceito, enviado,
+  desafio, eu, onAceitar, onRecusar, onIniciar, onCancelar, cancelando, aceito, enviado,
 }: {
   desafio: Desafio; eu?: string;
   onAceitar?: () => void; onRecusar?: () => void; onIniciar?: () => void;
+  onCancelar?: () => void; cancelando?: boolean;
   aceito?: boolean; enviado?: boolean;
 }) {
   const sou_desafiante = desafio.desafiante_id === eu;
@@ -542,6 +569,13 @@ function DesafioCard({
         <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 8px', borderRadius: 6, background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.25)', color: '#FBBF24', letterSpacing: 1, textTransform: 'uppercase' }}>
           Aguardando
         </span>
+      )}
+      {onCancelar && (
+        <button onClick={onCancelar} disabled={cancelando} style={{
+          padding: '6px 10px', borderRadius: 8, background: 'rgba(239,68,68,.12)',
+          border: '1px solid rgba(239,68,68,.3)', color: '#F87171',
+          fontSize: 11, fontWeight: 700, cursor: cancelando ? 'not-allowed' : 'pointer',
+        }}>{cancelando ? 'Cancelando…' : 'Cancelar'}</button>
       )}
       {onAceitar && (
         <>
@@ -643,6 +677,44 @@ function ResultadoModal({
             }}>
             {enviando ? 'Enviando…' : 'Confirmar'}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmDesafioModal({
+  nome, onClose, onConfirmar,
+}: { nome: string | null; onClose: () => void; onConfirmar: () => void }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 1000,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+    }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{
+        maxWidth: 380, width: '100%', background: '#0d1120',
+        border: '1px solid rgba(239,68,68,.3)', borderRadius: 14, padding: 24, color: '#fff',
+      }}>
+        <div style={{ fontSize: 32, marginBottom: 8 }}>⚔️</div>
+        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 800, fontSize: 20, letterSpacing: 1, marginBottom: 6 }}>
+          DESAFIAR {nome ? nome.toUpperCase() : 'OPONENTE'}?
+        </div>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,.6)', marginBottom: 18 }}>
+          Vocês precisarão se encontrar pra batalhar. Após o desafio, ambos terão que confirmar o resultado. Tem certeza?
+        </div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{
+            padding: '10px 16px', borderRadius: 8,
+            background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)',
+            color: 'rgba(255,255,255,.6)', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+          }}>Cancelar</button>
+          <button onClick={onConfirmar} style={{
+            padding: '10px 20px', borderRadius: 8,
+            background: 'linear-gradient(135deg,#EF4444,#B91C1C)',
+            border: 'none', color: '#fff',
+            fontSize: 12, fontWeight: 800, cursor: 'pointer',
+            letterSpacing: 1, textTransform: 'uppercase', fontFamily: 'Rajdhani,sans-serif',
+          }}>⚔️ Enviar desafio</button>
         </div>
       </div>
     </div>
