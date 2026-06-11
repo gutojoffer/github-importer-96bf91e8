@@ -458,12 +458,36 @@ export default function TorreX() {
             <Section title={`Enviados (${enviados.filter(d => d.status === 'pendente').length})`}>
               {enviados.filter(d => d.status === 'pendente').length === 0 && <Empty text="Nenhum desafio enviado pendente." />}
               {enviados.filter(d => d.status === 'pendente').map(d => (
-                <DesafioCard key={d.id} desafio={d} eu={userId} enviado />
+                <DesafioCard
+                  key={d.id} desafio={d} eu={userId} enviado
+                  onCancelar={async () => {
+                    if (!confirm(`Cancelar o desafio enviado para ${d.desafiado_nome || 'esse blader'}?`)) return;
+                    setCancelandoId(d.id);
+                    const { error } = await supabase.from('torre_x_desafios').delete().eq('id', d.id);
+                    setCancelandoId(null);
+                    if (error) { toast.error(`Erro ao cancelar: ${error.message}`); return; }
+                    toast.success('Desafio cancelado.');
+                    void carregarDesafios();
+                  }}
+                  cancelando={cancelandoId === d.id}
+                />
               ))}
             </Section>
           </div>
         )}
       </div>
+
+      {confirmarDesafio && (
+        <ConfirmDesafioModal
+          nome={confirmarDesafio.nome}
+          onClose={() => setConfirmarDesafio(null)}
+          onConfirmar={async () => {
+            const c = confirmarDesafio;
+            setConfirmarDesafio(null);
+            if (c) await enviarDesafio(c.id, c.nome);
+          }}
+        />
+      )}
 
       {iniciarDesafio && (
         <ResultadoModal
