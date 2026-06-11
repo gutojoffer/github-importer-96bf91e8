@@ -44,9 +44,18 @@ export function useNotificacoesNaoLidas() {
       )
       .subscribe();
 
+    const onRefresh = () => load();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') load();
+    };
+    window.addEventListener('notif:refresh', onRefresh);
+    document.addEventListener('visibilitychange', onVisible);
+
     return () => {
       cancelled = true;
       supabase.removeChannel(channel);
+      window.removeEventListener('notif:refresh', onRefresh);
+      document.removeEventListener('visibilitychange', onVisible);
     };
   }, [userId]);
 

@@ -12,7 +12,7 @@ import { AmigosSidebar } from './AmigosSidebar';
 const NAV_ITEMS = [
   { title: 'Home', url: '/blader/home', icon: Home },
   { title: 'Torneios', url: '/blader/tournaments', icon: Trophy },
-  { title: 'Torre X', url: '/blader/torre-x', icon: Building2, isNew: true },
+  { title: 'Torre X', url: '/blader/torre-x', icon: Building2 },
   { title: 'Feed', url: '/blader/feed', icon: Rss },
   { title: 'Meu histórico', url: '/blader/history', icon: Clock },
   { title: 'Rankings', url: '/blader/rankings', icon: Star },

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Notificacao } from '@/lib/notificacoes';
-import { Bell, CheckCheck } from 'lucide-react';
+import { Bell, CheckCheck, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const TIPOS_BLADER = [
@@ -431,12 +431,30 @@ export default function BladerNotificacoes() {
     if (!alvo || alvo.lida) return;
     setNotificacoes(prev => prev.map(n => (n.id === id ? { ...n, lida: true } : n)));
     await supabase.from('notificacoes').update({ lida: true }).eq('id', id);
+    window.dispatchEvent(new Event('notif:refresh'));
   }
 
   async function marcarTodasLidas() {
     if (!userId || naoLidas === 0) return;
     setNotificacoes(prev => prev.map(n => ({ ...n, lida: true })));
     await supabase.from('notificacoes').update({ lida: true }).eq('user_id', userId).eq('lida', false);
+    window.dispatchEvent(new Event('notif:refresh'));
+  }
+
+  const lidasCount = notificacoes.filter(n => n.lida).length;
+
+  async function excluirLidas() {
+    if (!userId || lidasCount === 0) return;
+    if (!confirm(`Excluir ${lidasCount} notificação(ões) lida(s)?`)) return;
+    setNotificacoes(prev => prev.filter(n => !n.lida));
+    const { error } = await supabase
+      .from('notificacoes')
+      .delete()
+      .eq('user_id', userId)
+      .eq('lida', true);
+    if (error) toast.error('Erro ao excluir');
+    else toast.success('Notificações lidas excluídas');
+    window.dispatchEvent(new Event('notif:refresh'));
   }
 
   const FILTROS: Filtro[] = ['Todas', 'Torneios', 'Conquistas', 'Sistema'];
@@ -489,27 +507,51 @@ export default function BladerNotificacoes() {
               </div>
             </div>
           </div>
-          {naoLidas > 0 && (
-            <button
-              onClick={marcarTodasLidas}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '8px 12px',
-                borderRadius: 10,
-                background: 'rgba(0,220,255,.08)',
-                border: '1px solid rgba(0,220,255,.2)',
-                color: '#00DCFF',
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              <CheckCheck size={14} strokeWidth={1.6} />
-              Marcar todas
-            </button>
-          )}
+          <div style={{ display: 'flex', gap: 6 }}>
+            {naoLidas > 0 && (
+              <button
+                onClick={marcarTodasLidas}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '8px 12px',
+                  borderRadius: 10,
+                  background: 'rgba(0,220,255,.08)',
+                  border: '1px solid rgba(0,220,255,.2)',
+                  color: '#00DCFF',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <CheckCheck size={14} strokeWidth={1.6} />
+                Marcar todas
+              </button>
+            )}
+            {lidasCount > 0 && (
+              <button
+                onClick={excluirLidas}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '8px 12px',
+                  borderRadius: 10,
+                  background: 'rgba(239,68,68,.08)',
+                  border: '1px solid rgba(239,68,68,.2)',
+                  color: '#F87171',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+                title="Excluir notificações lidas"
+              >
+                <Trash2 size={14} strokeWidth={1.6} />
+                Excluir lidas ({lidasCount})
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Filtros */}
