@@ -2,17 +2,19 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useActiveMode } from '@/contexts/ActiveModeContext';
-import { Home, Trophy, Clock, Star, User, Settings, LogOut, ChevronRight, Wrench, Bell, Building2, Users, Rss } from 'lucide-react';
+import { Home, Trophy, Clock, Star, User, Settings, LogOut, ChevronRight, Wrench, Bell, Building2, Users, Rss, Swords } from 'lucide-react';
 import BladerAvatar from '@/components/BladerAvatar';
 import { getBladerPalette } from '@/lib/bladerColors';
 import { useNotificacoesNaoLidas } from '@/hooks/useNotificacoesNaoLidas';
 import { useConvitesTimePendentes } from '@/hooks/useTimes';
+import { useDesafiosTorreXPendentes } from '@/hooks/useDesafiosTorreXPendentes';
 import { AmigosSidebar } from './AmigosSidebar';
 
 const NAV_ITEMS = [
   { title: 'Home', url: '/blader/home', icon: Home },
   { title: 'Torneios', url: '/blader/tournaments', icon: Trophy },
   { title: 'Torre X', url: '/blader/torre-x', icon: Building2 },
+  { title: 'Meus desafios', url: '/blader/torre-x/desafios', icon: Swords, showDesafiosBadge: true },
   { title: 'Feed', url: '/blader/feed', icon: Rss },
   { title: 'Meu histórico', url: '/blader/history', icon: Clock },
   { title: 'Rankings', url: '/blader/rankings', icon: Star },
