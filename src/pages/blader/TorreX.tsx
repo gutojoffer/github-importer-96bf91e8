@@ -267,7 +267,8 @@ export default function TorreX() {
 
   const recebidos = desafios.filter(d => d.desafiado_id === userId && d.status === 'pendente');
   const enviados = desafios.filter(d => d.desafiante_id === userId);
-  const aceitos = desafios.filter(d => d.status === 'aceito' || d.status === 'em_andamento');
+  const aceitos = desafios.filter(d => d.status === 'aceito' || d.status === 'em_andamento' || d.status === 'em_disputa');
+  const totalDesafios = recebidos.length + aceitos.length;
 
   return (
     <div style={{ minHeight: '100%', background: '#060912', color: '#fff', padding: '20px 24px' }}>
