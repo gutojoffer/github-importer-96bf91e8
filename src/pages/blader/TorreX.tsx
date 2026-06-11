@@ -29,6 +29,10 @@ type Desafio = {
   pontos_em_jogo: number;
   cidade: string | null;
   created_at: string;
+  resultado_relato_desafiante?: string | null;
+  resultado_relato_desafiado?: string | null;
+  confirmado_desafiante?: boolean | null;
+  confirmado_desafiado?: boolean | null;
   desafiante_nome?: string | null;
   desafiante_avatar?: string | null;
   desafiado_nome?: string | null;
@@ -61,6 +65,8 @@ export default function TorreX() {
   const [filtro, setFiltro] = useState<'cidade' | 'estado' | 'nacional'>('nacional');
   const [busca, setBusca] = useState('');
   const [loading, setLoading] = useState(true);
+  const [iniciarDesafio, setIniciarDesafio] = useState<Desafio | null>(null);
+  const [enviandoResultado, setEnviandoResultado] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
@@ -146,7 +152,7 @@ export default function TorreX() {
       .from('torre_x_desafios')
       .select('*')
       .or(`desafiante_id.eq.${userId},desafiado_id.eq.${userId}`)
-      .in('status', ['pendente', 'aceito', 'em_andamento'])
+      .in('status', ['pendente', 'aceito', 'em_andamento', 'em_disputa'])
       .order('created_at', { ascending: false });
     if (!data) { setDesafios([]); return; }
     const ids = Array.from(new Set(data.flatMap((d: any) => [d.desafiante_id, d.desafiado_id]).filter(Boolean)));
@@ -161,6 +167,33 @@ export default function TorreX() {
       desafiado_avatar: map.get(d.desafiado_id)?.avatar_blader_url ?? null,
     })));
   }
+
+  async function enviarResultado(d: Desafio, venci: boolean) {
+    try {
+      setEnviandoResultado(true);
+      const { data, error } = await (supabase as any).rpc('resolver_desafio_torre_x', {
+        _desafio_id: d.id, _eu_venci: venci,
+      });
+      if (error) throw error;
+      const status = (data as any)?.status;
+      if (status === 'aguardando_oponente') toast.success('Resultado registrado! Aguardando confirmação do oponente.');
+      else if (status === 'em_disputa') toast.error('Resultados divergentes — desafio em disputa.');
+      else if (status === 'finalizado') {
+        const delta = (data as any)?.delta ?? 0;
+        const sou_vencedor = (data as any)?.vencedor === userId;
+        toast.success(sou_vencedor ? `🏆 Vitória! +${delta} pts` : `Derrota registrada. -${delta} pts`);
+      }
+      setIniciarDesafio(null);
+      void carregarMeu();
+      void carregarDesafios();
+      invalidate('torre-x:rank:');
+    } catch (e: any) {
+      toast.error(`Erro: ${e?.message || e}`);
+    } finally {
+      setEnviandoResultado(false);
+    }
+  }
+
 
   async function enviarDesafio(alvoId: string, alvoNome: string | null) {
     try {
@@ -234,7 +267,8 @@ export default function TorreX() {
 
   const recebidos = desafios.filter(d => d.desafiado_id === userId && d.status === 'pendente');
   const enviados = desafios.filter(d => d.desafiante_id === userId);
-  const aceitos = desafios.filter(d => d.status === 'aceito' || d.status === 'em_andamento');
+  const aceitos = desafios.filter(d => d.status === 'aceito' || d.status === 'em_andamento' || d.status === 'em_disputa');
+  const totalDesafios = recebidos.length + aceitos.length;
 
   return (
     <div style={{ minHeight: '100%', background: '#060912', color: '#fff', padding: '20px 24px' }}>
@@ -301,7 +335,7 @@ export default function TorreX() {
         <div style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 10, background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)', marginBottom: 14 }}>
           {([
             { id: 'ranking', label: 'Ranking' },
-            { id: 'desafios', label: `Desafios${recebidos.length ? ` (${recebidos.length})` : ''}` },
+            { id: 'desafios', label: `Desafios${totalDesafios ? ` (${totalDesafios})` : ''}` },
           ] as const).map(t => (
             <button key={t.id} onClick={() => setAba(t.id)} style={{
               flex: 1, padding: 8, borderRadius: 8,
@@ -390,6 +424,18 @@ export default function TorreX() {
 
         {aba === 'desafios' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {recebidos.length > 0 && (
+              <div style={{
+                padding: 12, borderRadius: 10,
+                background: 'linear-gradient(135deg, rgba(239,68,68,.12), rgba(239,68,68,.04))',
+                border: '1px solid rgba(239,68,68,.3)',
+                fontSize: 12, color: '#FCA5A5', display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                <span style={{ fontSize: 18 }}>⚔️</span>
+                <span><strong>{recebidos.length}</strong> {recebidos.length === 1 ? 'desafio aguardando' : 'desafios aguardando'} sua resposta</span>
+              </div>
+            )}
+
             <Section title={`Recebidos (${recebidos.length})`}>
               {recebidos.length === 0 && <Empty text="Nenhum desafio recebido." />}
               {recebidos.map(d => (
@@ -400,7 +446,10 @@ export default function TorreX() {
             <Section title={`Em andamento (${aceitos.length})`}>
               {aceitos.length === 0 && <Empty text="Sem partidas em andamento." />}
               {aceitos.map(d => (
-                <DesafioCard key={d.id} desafio={d} eu={userId} aceito />
+                <DesafioCard
+                  key={d.id} desafio={d} eu={userId} aceito
+                  onIniciar={() => setIniciarDesafio(d)}
+                />
               ))}
             </Section>
 
@@ -413,6 +462,16 @@ export default function TorreX() {
           </div>
         )}
       </div>
+
+      {iniciarDesafio && (
+        <ResultadoModal
+          desafio={iniciarDesafio}
+          eu={userId}
+          enviando={enviandoResultado}
+          onClose={() => setIniciarDesafio(null)}
+          onConfirmar={(venci) => enviarResultado(iniciarDesafio, venci)}
+        />
+      )}
     </div>
   );
 }
@@ -437,20 +496,26 @@ function Empty({ text }: { text: string }) {
 }
 
 function DesafioCard({
-  desafio, eu, onAceitar, onRecusar, aceito, enviado,
+  desafio, eu, onAceitar, onRecusar, onIniciar, aceito, enviado,
 }: {
   desafio: Desafio; eu?: string;
-  onAceitar?: () => void; onRecusar?: () => void;
+  onAceitar?: () => void; onRecusar?: () => void; onIniciar?: () => void;
   aceito?: boolean; enviado?: boolean;
 }) {
   const sou_desafiante = desafio.desafiante_id === eu;
   const oponenteNome = sou_desafiante ? desafio.desafiado_nome : desafio.desafiante_nome;
   const oponenteAvatar = sou_desafiante ? desafio.desafiado_avatar : desafio.desafiante_avatar;
+  const meuRelato = sou_desafiante ? desafio.resultado_relato_desafiante : desafio.resultado_relato_desafiado;
+  const outroRelato = sou_desafiante ? desafio.resultado_relato_desafiado : desafio.resultado_relato_desafiante;
+  const emDisputa = desafio.status === 'em_disputa';
 
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px',
-      borderRadius: 10, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)',
+      borderRadius: 10,
+      background: emDisputa ? 'rgba(239,68,68,.06)' : 'rgba(255,255,255,.02)',
+      border: emDisputa ? '1px solid rgba(239,68,68,.3)' : '1px solid rgba(255,255,255,.05)',
+      flexWrap: 'wrap',
     }}>
       <AvatarBlader url={oponenteAvatar || null} nome={oponenteNome || null} size={36} />
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -458,12 +523,19 @@ function DesafioCard({
           {oponenteNome || 'Blader'}
         </div>
         <div style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>
-          {desafio.cidade || '—'} · {desafio.pontos_em_jogo} pts em jogo
+          {desafio.cidade || '—'} · ELO em jogo
+          {meuRelato && <> · você: <span style={{ color: meuRelato === 'venci' ? '#34D399' : '#F87171' }}>{meuRelato}</span></>}
+          {outroRelato && <> · oponente: <span style={{ color: outroRelato === 'venci' ? '#34D399' : '#F87171' }}>{outroRelato}</span></>}
         </div>
       </div>
-      {aceito && (
+      {emDisputa && (
+        <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 8px', borderRadius: 6, background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.35)', color: '#F87171', letterSpacing: 1, textTransform: 'uppercase' }}>
+          Em disputa
+        </span>
+      )}
+      {aceito && !emDisputa && (
         <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 8px', borderRadius: 6, background: 'rgba(16,185,129,.12)', border: '1px solid rgba(16,185,129,.25)', color: '#34D399', letterSpacing: 1, textTransform: 'uppercase' }}>
-          Aceito
+          {meuRelato ? 'Aguardando oponente' : 'Aceito'}
         </span>
       )}
       {enviado && (
@@ -485,6 +557,94 @@ function DesafioCard({
           }}>Aceitar</button>
         </>
       )}
+      {onIniciar && !meuRelato && (
+        <button onClick={onIniciar} style={{
+          padding: '8px 14px', borderRadius: 8,
+          background: 'linear-gradient(135deg, #00DCFF, #0EA5E9)',
+          border: 'none', color: '#031018',
+          fontSize: 11, fontWeight: 800, cursor: 'pointer',
+          letterSpacing: 1, textTransform: 'uppercase',
+          fontFamily: 'Rajdhani,sans-serif',
+        }}>▶ Iniciar desafio</button>
+      )}
+      {onIniciar && meuRelato && !emDisputa && (
+        <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 8px', borderRadius: 6, background: 'rgba(0,220,255,.08)', border: '1px solid rgba(0,220,255,.2)', color: '#00DCFF', letterSpacing: 1, textTransform: 'uppercase' }}>
+          Resultado enviado
+        </span>
+      )}
+    </div>
+  );
+}
+
+function ResultadoModal({
+  desafio, eu, enviando, onClose, onConfirmar,
+}: {
+  desafio: Desafio; eu?: string; enviando: boolean;
+  onClose: () => void; onConfirmar: (venci: boolean) => void;
+}) {
+  const [escolha, setEscolha] = useState<boolean | null>(null);
+  const sou_desafiante = desafio.desafiante_id === eu;
+  const oponenteNome = sou_desafiante ? desafio.desafiado_nome : desafio.desafiante_nome;
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 1000,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+    }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{
+        maxWidth: 420, width: '100%', background: '#0d1120',
+        border: '1px solid rgba(0,220,255,.25)', borderRadius: 14, padding: 24,
+        color: '#fff',
+      }}>
+        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 800, fontSize: 22, letterSpacing: 1, marginBottom: 4 }}>
+          RESULTADO DO DESAFIO
+        </div>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,.6)', marginBottom: 18 }}>
+          vs <strong style={{ color: '#fff' }}>{oponenteNome || 'oponente'}</strong> — registre se você venceu ou perdeu.
+          Os pontos só serão aplicados quando ambos confirmarem.
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
+          <button onClick={() => setEscolha(true)} style={{
+            flex: 1, padding: 16, borderRadius: 10, cursor: 'pointer',
+            background: escolha === true ? 'rgba(16,185,129,.2)' : 'rgba(255,255,255,.03)',
+            border: escolha === true ? '2px solid #10B981' : '1px solid rgba(255,255,255,.08)',
+            color: escolha === true ? '#34D399' : 'rgba(255,255,255,.7)',
+            fontFamily: 'Rajdhani,sans-serif', fontWeight: 800, fontSize: 16,
+          }}>
+            🏆<br />VENCI
+          </button>
+          <button onClick={() => setEscolha(false)} style={{
+            flex: 1, padding: 16, borderRadius: 10, cursor: 'pointer',
+            background: escolha === false ? 'rgba(239,68,68,.18)' : 'rgba(255,255,255,.03)',
+            border: escolha === false ? '2px solid #EF4444' : '1px solid rgba(255,255,255,.08)',
+            color: escolha === false ? '#F87171' : 'rgba(255,255,255,.7)',
+            fontFamily: 'Rajdhani,sans-serif', fontWeight: 800, fontSize: 16,
+          }}>
+            💥<br />PERDI
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button onClick={onClose} disabled={enviando} style={{
+            padding: '10px 16px', borderRadius: 8,
+            background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)',
+            color: 'rgba(255,255,255,.6)', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+          }}>Cancelar</button>
+          <button
+            onClick={() => escolha !== null && onConfirmar(escolha)}
+            disabled={escolha === null || enviando}
+            style={{
+              padding: '10px 20px', borderRadius: 8,
+              background: escolha === null ? 'rgba(255,255,255,.05)' : 'linear-gradient(135deg,#00DCFF,#0EA5E9)',
+              border: 'none', color: escolha === null ? 'rgba(255,255,255,.3)' : '#031018',
+              fontSize: 12, fontWeight: 800, cursor: escolha === null ? 'not-allowed' : 'pointer',
+              letterSpacing: 1, textTransform: 'uppercase', fontFamily: 'Rajdhani,sans-serif',
+            }}>
+            {enviando ? 'Enviando…' : 'Confirmar'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
