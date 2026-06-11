@@ -522,10 +522,11 @@ function Empty({ text }: { text: string }) {
 }
 
 function DesafioCard({
-  desafio, eu, onAceitar, onRecusar, onIniciar, aceito, enviado,
+  desafio, eu, onAceitar, onRecusar, onIniciar, onCancelar, cancelando, aceito, enviado,
 }: {
   desafio: Desafio; eu?: string;
   onAceitar?: () => void; onRecusar?: () => void; onIniciar?: () => void;
+  onCancelar?: () => void; cancelando?: boolean;
   aceito?: boolean; enviado?: boolean;
 }) {
   const sou_desafiante = desafio.desafiante_id === eu;
