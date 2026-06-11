@@ -1337,8 +1337,11 @@ export type Database = {
           created_at: string | null
           desafiado_id: string | null
           desafiante_id: string | null
+          finalizado_em: string | null
           id: string
           pontos_em_jogo: number | null
+          resultado_relato_desafiado: string | null
+          resultado_relato_desafiante: string | null
           score_desafiado: number | null
           score_desafiante: number | null
           status: string | null
@@ -1352,8 +1355,11 @@ export type Database = {
           created_at?: string | null
           desafiado_id?: string | null
           desafiante_id?: string | null
+          finalizado_em?: string | null
           id?: string
           pontos_em_jogo?: number | null
+          resultado_relato_desafiado?: string | null
+          resultado_relato_desafiante?: string | null
           score_desafiado?: number | null
           score_desafiante?: number | null
           status?: string | null
@@ -1367,8 +1373,11 @@ export type Database = {
           created_at?: string | null
           desafiado_id?: string | null
           desafiante_id?: string | null
+          finalizado_em?: string | null
           id?: string
           pontos_em_jogo?: number | null
+          resultado_relato_desafiado?: string | null
+          resultado_relato_desafiante?: string | null
           score_desafiado?: number | null
           score_desafiante?: number | null
           status?: string | null
@@ -1632,6 +1641,10 @@ export type Database = {
         Returns: undefined
       }
       recompute_elo_rankings: { Args: never; Returns: undefined }
+      resolver_desafio_torre_x: {
+        Args: { _desafio_id: string; _eu_venci: boolean }
+        Returns: Json
+      }
       send_notificacao: {
         Args: {
           _dados?: Json
