@@ -29,6 +29,10 @@ type Desafio = {
   pontos_em_jogo: number;
   cidade: string | null;
   created_at: string;
+  resultado_relato_desafiante?: string | null;
+  resultado_relato_desafiado?: string | null;
+  confirmado_desafiante?: boolean | null;
+  confirmado_desafiado?: boolean | null;
   desafiante_nome?: string | null;
   desafiante_avatar?: string | null;
   desafiado_nome?: string | null;
