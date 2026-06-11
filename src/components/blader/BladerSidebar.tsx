@@ -148,6 +148,19 @@ export function BladerSidebar() {
                     {convitesTime > 99 ? '99+' : convitesTime}
                   </span>
                 )}
+                {(item as any).showDesafiosBadge && desafiosPend > 0 && (
+                  <span
+                    className="font-body shrink-0"
+                    style={{
+                      minWidth: 18, height: 18, padding: '0 5px',
+                      borderRadius: 999, background: '#EF4444',
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 10, fontWeight: 700, color: '#fff', lineHeight: 1,
+                    }}
+                  >
+                    {desafiosPend > 99 ? '99+' : desafiosPend}
+                  </span>
+                )}
                 {(item as any).isNew && (
                   <span
                     className="font-body shrink-0"
