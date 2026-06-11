@@ -67,6 +67,8 @@ export default function TorreX() {
   const [loading, setLoading] = useState(true);
   const [iniciarDesafio, setIniciarDesafio] = useState<Desafio | null>(null);
   const [enviandoResultado, setEnviandoResultado] = useState(false);
+  const [confirmarDesafio, setConfirmarDesafio] = useState<{ id: string; nome: string | null } | null>(null);
+  const [cancelandoId, setCancelandoId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userId) return;
