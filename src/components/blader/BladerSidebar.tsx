@@ -39,6 +39,7 @@ export function BladerSidebar() {
   const { perfis, setMode } = useActiveMode();
   const naoLidas = useNotificacoesNaoLidas();
   const convitesTime = useConvitesTimePendentes();
+  const desafiosPend = useDesafiosTorreXPendentes();
 
   const bladerName = perfis.dadosBlader?.nome || profile?.nomeBlader || 'Blader';
   const bladerAvatar = perfis.dadosBlader?.avatar || profile?.avatarBladerUrl || null;
