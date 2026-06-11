@@ -335,7 +335,7 @@ export default function TorreX() {
         <div style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 10, background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)', marginBottom: 14 }}>
           {([
             { id: 'ranking', label: 'Ranking' },
-            { id: 'desafios', label: `Desafios${recebidos.length ? ` (${recebidos.length})` : ''}` },
+            { id: 'desafios', label: `Desafios${totalDesafios ? ` (${totalDesafios})` : ''}` },
           ] as const).map(t => (
             <button key={t.id} onClick={() => setAba(t.id)} style={{
               flex: 1, padding: 8, borderRadius: 8,
