@@ -570,6 +570,13 @@ function DesafioCard({
           Aguardando
         </span>
       )}
+      {onCancelar && (
+        <button onClick={onCancelar} disabled={cancelando} style={{
+          padding: '6px 10px', borderRadius: 8, background: 'rgba(239,68,68,.12)',
+          border: '1px solid rgba(239,68,68,.3)', color: '#F87171',
+          fontSize: 11, fontWeight: 700, cursor: cancelando ? 'not-allowed' : 'pointer',
+        }}>{cancelando ? 'Cancelando…' : 'Cancelar'}</button>
+      )}
       {onAceitar && (
         <>
           <button onClick={onRecusar} style={{
