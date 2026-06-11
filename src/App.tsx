@@ -198,6 +198,7 @@ const App = () => {
                           <Route path="/home" element={<BladerHome />} />
                           <Route path="/tournaments" element={<BladerTournaments />} />
                           <Route path="/torre-x" element={<TorreX />} />
+                          <Route path="/torre-x/desafios" element={<TorreXDesafios />} />
                           <Route path="/forjabey" element={<BladerForjaBey />} />
                           <Route path="/profile" element={<BladerProfile />} />
                           <Route path="/notificacoes" element={<BladerNotificacoes />} />
