@@ -44,6 +44,7 @@ const BladerForjaBey = lazy(() => import("@/pages/blader/BladerForjaBey"));
 const BladerNotificacoes = lazy(() => import("@/pages/blader/BladerNotificacoes"));
 const BladerFeed = lazy(() => import("@/pages/blader/BladerFeed"));
 const TorreX = lazy(() => import("@/pages/blader/TorreX"));
+const TorreXDesafios = lazy(() => import("@/pages/blader/TorreXDesafios"));
 const PerfilPublico = lazy(() => import("@/pages/blader/PerfilPublico"));
 const TimesPage = lazy(() => import("@/pages/blader/TimesPage"));
 const CriarTimePage = lazy(() => import("@/pages/blader/CriarTimePage"));
