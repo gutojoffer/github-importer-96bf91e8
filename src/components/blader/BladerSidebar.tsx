@@ -339,7 +339,10 @@ export function BladerSidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-heading font-bold truncate" style={{ fontSize: 13, color: '#E2E8F0' }}>{bladerName}</p>
-            <p style={{ fontSize: 11, color: getBladerPalette(bladerColor).accent }}>⚡ Blader</p>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,.5)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22C55E', boxShadow: '0 0 6px rgba(34,197,94,.6)' }} />
+              Online
+            </p>
           </div>
           <ChevronRight size={14} style={{ color: '#374151' }} className="shrink-0 ml-auto" />
         </div>
