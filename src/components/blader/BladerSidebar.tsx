@@ -298,7 +298,10 @@ export function BladerSidebar() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-body truncate" style={{ fontSize: 13, fontWeight: 600, color: '#60A5FA' }}>{perfis.dadosOrganizador.nomeLiga || 'Minha Liga'}</div>
-                  <div className="font-body" style={{ fontSize: 11, color: 'rgba(255,255,255,.4)' }}>🏆 Trocar para Organizador</div>
+                  <div className="font-body" style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22C55E', boxShadow: '0 0 6px rgba(34,197,94,.6)' }} />
+                    Online · Trocar para Organizador
+                  </div>
                 </div>
               </>
             ) : (
