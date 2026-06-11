@@ -410,7 +410,7 @@ export default function TorreX() {
                       <div style={{ fontSize: 9, color: 'rgba(255,255,255,.4)', letterSpacing: 1, textTransform: 'uppercase' }}>pts</div>
                     </div>
                     {!isMe && (
-                      <button onClick={() => enviarDesafio(r.user_id, r.nome_blader)} style={{
+                      <button onClick={() => setConfirmarDesafio({ id: r.user_id, nome: r.nome_blader })} style={{
                         padding: '6px 10px', borderRadius: 8,
                         background: 'rgba(239,68,68,.12)', border: '1px solid rgba(239,68,68,.3)',
                         color: '#F87171', fontSize: 11, fontWeight: 700, fontFamily: 'Rajdhani,sans-serif',
