@@ -682,3 +682,41 @@ function ResultadoModal({
     </div>
   );
 }
+
+function ConfirmDesafioModal({
+  nome, onClose, onConfirmar,
+}: { nome: string | null; onClose: () => void; onConfirmar: () => void }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', zIndex: 1000,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+    }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{
+        maxWidth: 380, width: '100%', background: '#0d1120',
+        border: '1px solid rgba(239,68,68,.3)', borderRadius: 14, padding: 24, color: '#fff',
+      }}>
+        <div style={{ fontSize: 32, marginBottom: 8 }}>⚔️</div>
+        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 800, fontSize: 20, letterSpacing: 1, marginBottom: 6 }}>
+          DESAFIAR {nome ? nome.toUpperCase() : 'OPONENTE'}?
+        </div>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,.6)', marginBottom: 18 }}>
+          Vocês precisarão se encontrar pra batalhar. Após o desafio, ambos terão que confirmar o resultado. Tem certeza?
+        </div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{
+            padding: '10px 16px', borderRadius: 8,
+            background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)',
+            color: 'rgba(255,255,255,.6)', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+          }}>Cancelar</button>
+          <button onClick={onConfirmar} style={{
+            padding: '10px 20px', borderRadius: 8,
+            background: 'linear-gradient(135deg,#EF4444,#B91C1C)',
+            border: 'none', color: '#fff',
+            fontSize: 12, fontWeight: 800, cursor: 'pointer',
+            letterSpacing: 1, textTransform: 'uppercase', fontFamily: 'Rajdhani,sans-serif',
+          }}>⚔️ Enviar desafio</button>
+        </div>
+      </div>
+    </div>
+  );
+}
