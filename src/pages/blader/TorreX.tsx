@@ -65,6 +65,8 @@ export default function TorreX() {
   const [filtro, setFiltro] = useState<'cidade' | 'estado' | 'nacional'>('nacional');
   const [busca, setBusca] = useState('');
   const [loading, setLoading] = useState(true);
+  const [iniciarDesafio, setIniciarDesafio] = useState<Desafio | null>(null);
+  const [enviandoResultado, setEnviandoResultado] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
