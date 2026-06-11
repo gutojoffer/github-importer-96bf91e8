@@ -152,7 +152,7 @@ export default function TorreX() {
       .from('torre_x_desafios')
       .select('*')
       .or(`desafiante_id.eq.${userId},desafiado_id.eq.${userId}`)
-      .in('status', ['pendente', 'aceito', 'em_andamento'])
+      .in('status', ['pendente', 'aceito', 'em_andamento', 'em_disputa'])
       .order('created_at', { ascending: false });
     if (!data) { setDesafios([]); return; }
     const ids = Array.from(new Set(data.flatMap((d: any) => [d.desafiante_id, d.desafiado_id]).filter(Boolean)));
@@ -167,6 +167,33 @@ export default function TorreX() {
       desafiado_avatar: map.get(d.desafiado_id)?.avatar_blader_url ?? null,
     })));
   }
+
+  async function enviarResultado(d: Desafio, venci: boolean) {
+    try {
+      setEnviandoResultado(true);
+      const { data, error } = await (supabase as any).rpc('resolver_desafio_torre_x', {
+        _desafio_id: d.id, _eu_venci: venci,
+      });
+      if (error) throw error;
+      const status = (data as any)?.status;
+      if (status === 'aguardando_oponente') toast.success('Resultado registrado! Aguardando confirmação do oponente.');
+      else if (status === 'em_disputa') toast.error('Resultados divergentes — desafio em disputa.');
+      else if (status === 'finalizado') {
+        const delta = (data as any)?.delta ?? 0;
+        const sou_vencedor = (data as any)?.vencedor === userId;
+        toast.success(sou_vencedor ? `🏆 Vitória! +${delta} pts` : `Derrota registrada. -${delta} pts`);
+      }
+      setIniciarDesafio(null);
+      void carregarMeu();
+      void carregarDesafios();
+      invalidate('torre-x:rank:');
+    } catch (e: any) {
+      toast.error(`Erro: ${e?.message || e}`);
+    } finally {
+      setEnviandoResultado(false);
+    }
+  }
+
 
   async function enviarDesafio(alvoId: string, alvoNome: string | null) {
     try {
