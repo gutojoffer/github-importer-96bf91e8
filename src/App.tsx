@@ -42,6 +42,7 @@ const BladerTournaments = lazy(() => import("@/pages/blader/BladerTournaments"))
 const BladerProfile = lazy(() => import("@/pages/blader/BladerProfile"));
 const BladerForjaBey = lazy(() => import("@/pages/blader/BladerForjaBey"));
 const BladerNotificacoes = lazy(() => import("@/pages/blader/BladerNotificacoes"));
+const BladerFeed = lazy(() => import("@/pages/blader/BladerFeed"));
 const TorreX = lazy(() => import("@/pages/blader/TorreX"));
 const PerfilPublico = lazy(() => import("@/pages/blader/PerfilPublico"));
 const TimesPage = lazy(() => import("@/pages/blader/TimesPage"));
@@ -199,6 +200,7 @@ const App = () => {
                           <Route path="/forjabey" element={<BladerForjaBey />} />
                           <Route path="/profile" element={<BladerProfile />} />
                           <Route path="/notificacoes" element={<BladerNotificacoes />} />
+                          <Route path="/feed" element={<BladerFeed />} />
                           <Route path="/profile/:userId" element={<BladerProfile />} />
                           <Route path="/profile/by-name/:name" element={<BladerProfile />} />
                           <Route path="/perfil/:id" element={<PerfilPublico />} />

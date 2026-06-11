@@ -18,7 +18,7 @@ import {
 import { ELOS, getElo, getProximoElo } from '@/lib/elo';
 import DashboardInsights from '@/components/blader/DashboardInsights';
 import { PedidosAmizade } from '@/components/blader/PedidosAmizade';
-import { FeedAmigos } from '@/components/blader/FeedAmigos';
+import { FeedPreviewHome } from '@/components/blader/FeedPreviewHome';
 import { PainelAmigos, usePainelAmigosColapsado } from '@/components/blader/PainelAmigos';
 import { useAmizades } from '@/hooks/useAmizades';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -360,7 +360,6 @@ export default function BladerHome() {
       {abaAtiva === 'Visão Geral' && (
         <>
           <PedidosAmizade />
-          <FeedAmigos />
 
           {/* Stats grid 3x2 */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
